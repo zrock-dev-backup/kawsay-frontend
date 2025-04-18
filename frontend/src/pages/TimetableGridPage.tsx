@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate} from 'react-router-dom';
 import {
     Container,
     Typography,
@@ -77,6 +77,7 @@ const TimetableGridPage: React.FC = () => {
     const [timetableData, setTimetableData] = useState<TimetableData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate()
 
     useEffect(() => {
         if (!id) {
@@ -122,8 +123,8 @@ const TimetableGridPage: React.FC = () => {
     // Click handler for lessons (implement actual navigation or action later)
     const handleLessonClick = (lesson: Lesson) => {
         console.log('Clicked Lesson:', lesson);
-        // Example: navigate(`/lesson-details/${lesson.lessonId}`); // If lessons have unique IDs
-        alert(`You clicked on: ${lesson.name}`);
+        navigate(`/edit-lesson/1`); // If lessons have unique IDs
+        // alert(`You clicked on: ${lesson.name}`);
     };
 
     // --- Render Logic ---

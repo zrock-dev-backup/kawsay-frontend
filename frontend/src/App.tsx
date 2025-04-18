@@ -5,6 +5,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import TimetableCreation from "./pages/TimetableCreation.tsx";
 import TrackSelectionPage from "./pages/TrackSelectionPage.tsx";
 import TimetableGridPage from "./pages/TimetableGridPage.tsx";
+import LessonEditPage from "./pages/LessonEditPage.tsx";
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                 <Route path="selection" element={<TrackSelectionPage />} />
                 <Route path="*" element={<NotFoundPage />} />
                 <Route path={"table/:id"} element={<TimetableGridPage />} />
+                <Route path={"edit-lesson/:lessonId"} element={<LessonEditPage />} />
             </Route>
         </Routes>
     );
