@@ -14,7 +14,10 @@ const Layout: React.FC = () => {
                         Home
                     </Button>
                     <Button color="inherit" component={RouterLink} to="/creation">
-                        New 7w7
+                        Create table
+                    </Button>
+                    <Button color="inherit" component={RouterLink} to="/selection">
+                        Select track
                     </Button>
                 </Toolbar>
             </AppBar>

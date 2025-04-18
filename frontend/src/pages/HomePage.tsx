@@ -1,7 +1,6 @@
 import {Box, Button, Typography} from "@mui/material";
 
 function HomePage() {
-
     return (
         <>
             <Box sx={{width: '100%', maxWidth: 500}}>
