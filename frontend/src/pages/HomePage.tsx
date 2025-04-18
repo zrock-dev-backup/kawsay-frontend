@@ -3,7 +3,7 @@ import {Box, Button, Typography} from "@mui/material";
 function HomePage() {
     return (
         <>
-            <Box sx={{width: '100%', maxWidth: 500}}>
+            <Box sx={{width: '100%', maxWidth: 1000}}>
                 <Typography variant="h2" gutterBottom>
                     Kawsay timetable management
                 </Typography>

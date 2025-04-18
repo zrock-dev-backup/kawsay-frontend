@@ -1,3 +1,4 @@
+// src/pages/TrackSelectionPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,69 +12,53 @@ import {
     Alert,
     Box,
 } from '@mui/material';
-import type { Track } from '../interfaces/Track.ts';
-
-const fetchTracksFromAPI = async (): Promise<Track[]> => {
-    console.log('Fetching tracks from API...');
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-
-    const mockData: Track[] = [
-        { id: 1, title: 'Spanish Track' },
-        { id: 2, title: 'English Track' },
-        { id: 3, title: 'Advanced Calculus Schedule' },
-        { id: 15, title: 'Beginner Programming Timetable' },
-    ];
-
-    console.log('Tracks fetched successfully.');
-    return mockData;
-};
-
+import type { Track } from '../interfaces/apiDataTypes'; // Import from consolidated file
+import { fetchTracks } from '../services/apiService'; // Import API function
 
 const TrackSelectionPage: React.FC = () => {
     const [tracks, setTracks] = useState<Track[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // Hook for navigation
 
     useEffect(() => {
-
+        // Define the async function to fetch data
         const loadTracks = async () => {
             setLoading(true);
-            setError(null);
+            setError(null); // Clear previous errors
             try {
-                const data = await fetchTracksFromAPI();
+                console.log('Attempting to fetch tracks...');
+                const data = await fetchTracks(); // Use the imported API service function
+                console.log('Tracks fetched successfully:', data);
                 setTracks(data);
             } catch (err) {
                 console.error('Error fetching tracks:', err);
                 setError(
-                    err instanceof Error ? err.message : 'An unknown error occurred.'
+                    err instanceof Error ? err.message : 'An unknown error occurred while fetching tracks.'
                 );
             } finally {
                 setLoading(false);
             }
         };
 
-
+        // Call the function
         loadTracks();
 
+    }, []); // Empty dependency array means this runs once on mount
 
-
-    }, []);
-
-
+    // Handler for clicking a track item
     const handleTrackClick = (id: number) => {
         console.log(`Navigating to /table/${id}`);
-        navigate(`/table/${id}`);
+        navigate(`/table/${id}`); // Navigate to the dynamic route
     };
 
-
+    // --- Conditional Rendering ---
     let content;
     if (loading) {
         content = (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                 <CircularProgress />
+                <Typography sx={{ ml: 2 }}>Loading tracks...</Typography>
             </Box>
         );
     } else if (error) {
