@@ -1,20 +1,19 @@
-import './App.css'
-import {Box, Button, Typography} from "@mui/material";
+import { Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/NotFoundPage';
+import TimetableCreation from "./pages/TimetableCreation.tsx";
 
 function App() {
-
     return (
-        <>
-            <Box sx={{width: '100%', maxWidth: 500}}>
-                <Typography variant="h2" gutterBottom>
-                    Kawsay timetable management
-                </Typography>
-                <Button variant={"contained"} href={"/creation"}>
-                    New timetable
-                </Button>
-            </Box>
-        </>
-    )
+        <Routes>
+            <Route path="/" element={<Layout />}>
+                <Route index element={<HomePage />} />
+                <Route path="creation" element={<TimetableCreation />} />
+                <Route path="*" element={<NotFoundPage />} />
+            </Route>
+        </Routes>
+    );
 }
 
-export default App
+export default App;
