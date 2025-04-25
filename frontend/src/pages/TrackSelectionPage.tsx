@@ -1,4 +1,3 @@
-// src/pages/TrackSelectionPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,23 +11,22 @@ import {
     Alert,
     Box,
 } from '@mui/material';
-import type { Track } from '../interfaces/apiDataTypes'; // Import from consolidated file
-import { fetchTracks } from '../services/apiService'; // Import API function
+import type { Track } from '../interfaces/apiDataTypes';
+import { fetchTracks } from '../services/apiService';
 
 const TrackSelectionPage: React.FC = () => {
     const [tracks, setTracks] = useState<Track[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate(); // Hook for navigation
+    const navigate = useNavigate();
 
     useEffect(() => {
-        // Define the async function to fetch data
         const loadTracks = async () => {
             setLoading(true);
-            setError(null); // Clear previous errors
+            setError(null);
             try {
                 console.log('Attempting to fetch tracks...');
-                const data = await fetchTracks(); // Use the imported API service function
+                const data = await fetchTracks();
                 console.log('Tracks fetched successfully:', data);
                 setTracks(data);
             } catch (err) {
@@ -41,18 +39,15 @@ const TrackSelectionPage: React.FC = () => {
             }
         };
 
-        // Call the function
         loadTracks();
 
-    }, []); // Empty dependency array means this runs once on mount
+    }, []);
 
-    // Handler for clicking a track item
     const handleTrackClick = (id: number) => {
         console.log(`Navigating to /table/${id}`);
-        navigate(`/table/${id}`); // Navigate to the dynamic route
+        navigate(`/table/${id}`);
     };
 
-    // --- Conditional Rendering ---
     let content;
     if (loading) {
         content = (

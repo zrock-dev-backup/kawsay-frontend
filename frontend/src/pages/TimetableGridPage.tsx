@@ -1,5 +1,4 @@
 
-// src/pages/TimetableGridPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -24,9 +23,9 @@ import isBetween from 'dayjs/plugin/isBetween';
 import { fetchTimetableById } from '../services/apiService';
 import type {
     ScheduleItemDto,
-    ProcessedScheduleMap, // Type definition updated in apiDataTypes.ts
+    ProcessedScheduleMap,
     ProcessedTimeslot,
-    Subject // Import the new Subject interface
+    Subject
 } from '../interfaces/apiDataTypes';
 
 dayjs.extend(customParseFormat);
@@ -71,7 +70,6 @@ const TimetableGridPage: React.FC = () => {
     loadData();
   }, [id]);
 
-  // --- Process Data for Grid Rendering using useMemo ---
   const processedData = useMemo(() => {
     if (!scheduleItems?.[0]?.timeslots) {
       return { uniqueDays: [], uniqueTimeslots: [], scheduleMap: {} };
@@ -80,7 +78,6 @@ const TimetableGridPage: React.FC = () => {
     const timeslotsSource = scheduleItems[0].timeslots;
     const daySet = new Set<string>();
     const timeslotMap = new Map<string, ProcessedTimeslot>();
-    // The type ProcessedScheduleMap now expects Subject[] as values
     const map: ProcessedScheduleMap = {};
 
     for (const timeslotItem of timeslotsSource) {
@@ -97,20 +94,17 @@ const TimetableGridPage: React.FC = () => {
           map[dayInfo.name] = {};
         }
         if (!map[dayInfo.name][timeslotKey]) {
-             map[dayInfo.name][timeslotKey] = []; // Initialize as empty Subject array
+             map[dayInfo.name][timeslotKey] = [];
         }
 
-        // Merge subjects, avoiding duplicates based on subject ID
         dayInfo.subjects.forEach(subject => {
-            // Check if a subject with the same ID already exists in this cell
             if (!map[dayInfo.name][timeslotKey].some(existingSub => existingSub.id === subject.id)) {
-                map[dayInfo.name][timeslotKey].push(subject); // Push the Subject object
+                map[dayInfo.name][timeslotKey].push(subject);
             }
         });
       }
     }
 
-    // Sort unique days
     const uniqueDays = Array.from(daySet).sort((a, b) => {
         const indexA = dayOrder.indexOf(a); const indexB = dayOrder.indexOf(b);
         if (indexA === -1 && indexB === -1) return a.localeCompare(b);
@@ -118,10 +112,9 @@ const TimetableGridPage: React.FC = () => {
         return indexA - indexB;
      });
 
-    // Sort unique timeslots
     const uniqueTimeslots = Array.from(timeslotMap.values()).sort((a, b) => {
         const timeA = dayjs(a.start, 'HH:mm'); const timeB = dayjs(b.start, 'HH:mm');
-        if (!timeA.isValid() || !timeB.isValid()) return 0; // Handle invalid times
+        if (!timeA.isValid() || !timeB.isValid()) return 0;
         if (timeA.isBefore(timeB)) return -1; if (timeA.isAfter(timeB)) return 1;
         const endA = dayjs(a.end, 'HH:mm'); const endB = dayjs(b.end, 'HH:mm');
         if (!endA.isValid() || !endB.isValid()) return 0;
@@ -135,16 +128,11 @@ const TimetableGridPage: React.FC = () => {
 
   const { uniqueDays, uniqueTimeslots, scheduleMap } = processedData;
 
-  // Click handler for subjects - UPDATED to accept Subject object
   const handleLessonClick = (subject: Subject, day: string, timeslot: ProcessedTimeslot) => {
     console.log(`Clicked Subject: ID=${subject.id}, Title=${subject.title}, Day: ${day}, Time: ${timeslot.key}`);
-    // Navigate to edit page using subject ID
-    // Ensure the route /edit-lesson/:lessonId corresponds to these subject IDs
-    // and that the backend /api/lesson/{id} endpoint can serve data for these IDs.
     navigate(`/edit-lesson/${subject.id}`);
   };
 
-  // --- Render Logic ---
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -162,7 +150,6 @@ const TimetableGridPage: React.FC = () => {
      );
   }
 
-  // Check after loading and error checks
   if (!scheduleItems || uniqueDays.length === 0 || uniqueTimeslots.length === 0) {
      return (
        <Container>
@@ -179,7 +166,7 @@ const TimetableGridPage: React.FC = () => {
 
       <TableContainer component={Paper} elevation={3}>
         <Table sx={{ minWidth: 700 }} aria-label={`Timetable ${id}`}>
-          {/* Table Header */}
+          
           <TableHead sx={{ backgroundColor: 'grey.200' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 'bold', width: '120px', position: 'sticky', left: 0, zIndex: 1, backgroundColor: 'grey.200' }}>Time</TableCell>
@@ -189,32 +176,28 @@ const TimetableGridPage: React.FC = () => {
             </TableRow>
           </TableHead>
 
-          {/* Table Body */}
+          
           <TableBody>
             {uniqueTimeslots.map((timeslot) => (
               <TableRow key={timeslot.key} hover>
-                {/* Timeslot Cell */}
+                
                 <TableCell component="th" scope="row" sx={{ fontWeight: 'medium', verticalAlign: 'top', position: 'sticky', left: 0, zIndex: 1, backgroundColor: 'background.paper' }}>
                   {`${timeslot.start} - ${timeslot.end}`}
                 </TableCell>
 
-                {/* Subject Cells */}
+                
                 {uniqueDays.map((dayName) => {
-                  // Find Subject objects for the current cell
                   const subjectsInCell: Subject[] = scheduleMap[dayName]?.[timeslot.key] || [];
 
                   return (
                     <TableCell key={`${dayName}-${timeslot.key}`} align="center" sx={{ verticalAlign: 'top', border: '1px solid rgba(224, 224, 224, 1)', p: 1 }}>
                       {subjectsInCell.length > 0 ? (
                         <Stack spacing={1} direction="column" alignItems="stretch">
-                          {/* Map over Subject objects */}
+                          
                           {subjectsInCell.map((subject) => (
                             <Chip
-                              // Use subject.id for a stable key
                               key={subject.id}
-                              // Display subject.title
                               label={subject.title}
-                              // Pass the whole subject object to the handler
                               onClick={() => handleLessonClick(subject, dayName, timeslot)}
                               variant="outlined"
                               color="primary"

@@ -1,8 +1,8 @@
-// src/services/apiService.ts
+
 import type {
     Track,
     CreateTimetableRequest,
-    ScheduleItemDto, // This type now reflects the updated structure via apiDataTypes.ts
+    ScheduleItemDto,
     LessonApiData
 } from '../interfaces/apiDataTypes';
 
@@ -27,20 +27,20 @@ async function handleResponse<T>(response: Response): Promise<T> {
     if (contentType && contentType.indexOf("application/json") !== -1) {
         const text = await response.text();
         try {
-            // Handle empty body even with JSON header
+           
             return text ? JSON.parse(text) as T : null as T;
         }
         catch (e) {
              console.warn(`Received JSON content type but failed to parse body for ${response.url}`);
-             return null as T; // Or throw specific error
+             return null as T;
         }
     } else {
-        // Handle non-JSON responses (like 204 No Content)
+       
         return null as T;
     }
 }
 
-// --- API Functions ---
+
 
 export const fetchTracks = async (): Promise<Track[]> => {
     console.log(`Fetching tracks from ${API_BASE_URL}/api/table/tracks`);
@@ -61,7 +61,7 @@ export const createTimetable = async (data: CreateTimetableRequest): Promise<{ m
     return handleResponse<{ message: string; trackId: number }>(response);
 };
 
-// Type hint ScheduleItemDto[] now implicitly uses the updated interface
+
 export const fetchTimetableById = async (id: string): Promise<ScheduleItemDto[]> => {
     console.log(`Fetching timetable by ID ${id} from ${API_BASE_URL}/api/table/${id}`);
     const response = await fetch(`${API_BASE_URL}/api/table/${id}`);

@@ -23,7 +23,7 @@ const Layout: React.FC = () => {
             </AppBar>
 
             <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
-                <Outlet /> {/* Child routes defined in App.tsx will render here */}
+                <Outlet /> 
             </Container>
 
             <Box component="footer" sx={{ p: 2, mt: 'auto', backgroundColor: 'grey.200' }}>
