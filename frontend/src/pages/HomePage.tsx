@@ -3,9 +3,12 @@ import {Box, Button, Typography} from "@mui/material";
 function HomePage() {
     return (
         <>
-            <Box sx={{width: '100%', maxWidth: 1000}}>
+            <Box sx={{width: '100%'}}>
+                <Typography variant="h1" gutterBottom>
+                    Kawsay
+                </Typography>
                 <Typography variant="h2" gutterBottom>
-                    Kawsay timetable management
+                    timetable management
                 </Typography>
                 <Button variant={"contained"} href={"/creation"}>
                     New timetable

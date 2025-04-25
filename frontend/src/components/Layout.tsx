@@ -4,8 +4,8 @@ import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/materi
 
 const Layout: React.FC = () => {
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <AppBar position="static">
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
+            <AppBar position="static" sx={{ width: '100%' }}>
                 <Toolbar>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                         Kawsay
@@ -21,12 +21,10 @@ const Layout: React.FC = () => {
                     </Button>
                 </Toolbar>
             </AppBar>
-
             <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
-                <Outlet /> 
+                <Outlet />
             </Container>
-
-            <Box component="footer" sx={{ p: 2, mt: 'auto', backgroundColor: 'grey.200' }}>
+            <Box component="footer" sx={{ p: 2, mt: 'auto', backgroundColor: 'grey.200', width: '100%' }}>
                 <Typography variant="body2" color="text.secondary" align="center">
                     {new Date().getFullYear()}
                     {'.'}
