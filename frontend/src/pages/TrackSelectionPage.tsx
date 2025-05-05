@@ -1,3 +1,5 @@
+// src/pages/TrackSelectionPage.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,39 +13,45 @@ import {
     Alert,
     Box,
 } from '@mui/material';
-import type { Track } from '../interfaces/apiDataTypes';
-import { fetchTracks } from '../services/apiService';
+// Import the new TimetableStructure interface
+import type { TimetableStructure } from '../interfaces/apiDataTypes';
+// Import the new function to fetch timetables
+import { fetchTimetables } from '../services/apiService';
 
 const TrackSelectionPage: React.FC = () => {
-    const [tracks, setTracks] = useState<Track[]>([]);
+    // Update state type to TimetableStructure[]
+    const [timetables, setTimetables] = useState<TimetableStructure[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const loadTracks = async () => {
+        const loadTimetables = async () => {
             setLoading(true);
             setError(null);
             try {
-                console.log('Attempting to fetch tracks...');
-                const data = await fetchTracks();
-                console.log('Tracks fetched successfully:', data);
-                setTracks(data);
+                console.log('Attempting to fetch timetables...');
+                // Call the new fetchTimetables function
+                const data = await fetchTimetables();
+                console.log('Timetables fetched successfully:', data);
+                // Update state with the fetched timetables
+                setTimetables(data);
             } catch (err) {
-                console.error('Error fetching tracks:', err);
+                console.error('Error fetching timetables:', err);
                 setError(
-                    err instanceof Error ? err.message : 'An unknown error occurred while fetching tracks.'
+                    err instanceof Error ? err.message : 'An unknown error occurred while fetching timetables.'
                 );
             } finally {
                 setLoading(false);
             }
         };
 
-        loadTracks();
+        loadTimetables();
 
     }, []);
 
-    const handleTrackClick = (id: number) => {
+    // Keep the click handler, it uses the ID which is consistent
+    const handleTimetableClick = (id: number) => {
         console.log(`Navigating to /table/${id}`);
         navigate(`/table/${id}`);
     };
@@ -53,7 +61,7 @@ const TrackSelectionPage: React.FC = () => {
         content = (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                 <CircularProgress />
-                <Typography sx={{ ml: 2 }}>Loading tracks...</Typography>
+                <Typography sx={{ ml: 2 }}>Loading timetables...</Typography>
             </Box>
         );
     } else if (error) {
@@ -62,18 +70,20 @@ const TrackSelectionPage: React.FC = () => {
                 {error}
             </Alert>
         );
-    } else if (tracks.length === 0) {
+    } else if (timetables.length === 0) {
         content = (
-            <Typography sx={{mt: 2}}>No tracks found.</Typography>
+            <Typography sx={{mt: 2}}>No timetables found.</Typography>
         );
     }
     else {
         content = (
             <List sx={{ width: '100%', bgcolor: 'background.paper', mt: 2 }}>
-                {tracks.map((track) => (
-                    <ListItem key={track.id} disablePadding>
-                        <ListItemButton onClick={() => handleTrackClick(track.id)}>
-                            <ListItemText primary={track.title} />
+                {/* Map over timetables and use timetable.name */}
+                {timetables.map((timetable) => (
+                    <ListItem key={timetable.id} disablePadding>
+                        <ListItemButton onClick={() => handleTimetableClick(timetable.id)}>
+                            {/* Use timetable.name for display */}
+                            <ListItemText primary={timetable.name} />
                         </ListItemButton>
                     </ListItem>
                 ))}
@@ -84,7 +94,7 @@ const TrackSelectionPage: React.FC = () => {
     return (
         <Container maxWidth="sm">
             <Typography variant="h4" gutterBottom>
-                Select a Timetable Track
+                Select a Timetable
             </Typography>
             {content}
         </Container>

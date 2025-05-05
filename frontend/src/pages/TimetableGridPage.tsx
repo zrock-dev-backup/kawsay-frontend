@@ -1,7 +1,8 @@
+// src/pages/TimetableGridPage.tsx
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
+import { // ... other imports
   Container,
   Typography,
   Box,
@@ -16,197 +17,199 @@ import {
   Alert,
   Chip,
   Stack,
+  Button, // Import Button
 } from '@mui/material';
-import dayjs from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
-import isBetween from 'dayjs/plugin/isBetween';
-import { fetchTimetableById } from '../services/apiService';
-import type {
-    ScheduleItemDto,
-    ProcessedScheduleMap,
-    ProcessedTimeslot,
-    Subject
-} from '../interfaces/apiDataTypes';
+import AddIcon from '@mui/icons-material/Add'; // Import AddIcon
+// ... other imports
 
-dayjs.extend(customParseFormat);
-dayjs.extend(isBetween);
-
-const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+// ... (rest of the component code)
 
 const TimetableGridPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>(); // Timetable ID
+  const navigate = useNavigate(); // Keep useNavigate as we'll use it for the button
 
-  const [scheduleItems, setScheduleItems] = useState<ScheduleItemDto[] | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // ... (state and useEffect for fetching data)
 
-  useEffect(() => {
-    if (!id) {
-      setError('No timetable ID provided in URL.');
-      setLoading(false);
-      return;
-    }
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        console.log(`Attempting to fetch timetable for ID: ${id}`);
-        const data = await fetchTimetableById(id);
-        console.log(`Timetable data received for ID ${id}:`, data);
-        if (!data || data.length === 0 || !data[0]?.timeslots) {
-            console.warn("Received data is missing expected structure:", data);
-            throw new Error("Timetable data is incomplete or in unexpected format.");
-        }
-        setScheduleItems(data);
-      } catch (err) {
-        console.error(`Error fetching timetable for ID ${id}:`, err);
-        setError(err instanceof Error ? err.message : 'Failed to load timetable data.');
-        setScheduleItems(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [id]);
+  // ... (useMemo for processing data)
 
-  const processedData = useMemo(() => {
-    if (!scheduleItems?.[0]?.timeslots) {
-      return { uniqueDays: [], uniqueTimeslots: [], scheduleMap: {} };
-    }
-
-    const timeslotsSource = scheduleItems[0].timeslots;
-    const daySet = new Set<string>();
-    const timeslotMap = new Map<string, ProcessedTimeslot>();
-    const map: ProcessedScheduleMap = {};
-
-    for (const timeslotItem of timeslotsSource) {
-      const timeslotKey = `${timeslotItem.tStart}-${timeslotItem.tEnd}`;
-
-      if (!timeslotMap.has(timeslotKey)) {
-          timeslotMap.set(timeslotKey, { key: timeslotKey, start: timeslotItem.tStart, end: timeslotItem.tEnd });
-      }
-
-      for (const dayInfo of timeslotItem.day) {
-        daySet.add(dayInfo.name);
-
-        if (!map[dayInfo.name]) {
-          map[dayInfo.name] = {};
-        }
-        if (!map[dayInfo.name][timeslotKey]) {
-             map[dayInfo.name][timeslotKey] = [];
-        }
-
-        dayInfo.subjects.forEach(subject => {
-            if (!map[dayInfo.name][timeslotKey].some(existingSub => existingSub.id === subject.id)) {
-                map[dayInfo.name][timeslotKey].push(subject);
-            }
-        });
-      }
-    }
-
-    const uniqueDays = Array.from(daySet).sort((a, b) => {
-        const indexA = dayOrder.indexOf(a); const indexB = dayOrder.indexOf(b);
-        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-        if (indexA === -1) return 1; if (indexB === -1) return -1;
-        return indexA - indexB;
-     });
-
-    const uniqueTimeslots = Array.from(timeslotMap.values()).sort((a, b) => {
-        const timeA = dayjs(a.start, 'HH:mm'); const timeB = dayjs(b.start, 'HH:mm');
-        if (!timeA.isValid() || !timeB.isValid()) return 0;
-        if (timeA.isBefore(timeB)) return -1; if (timeA.isAfter(timeB)) return 1;
-        const endA = dayjs(a.end, 'HH:mm'); const endB = dayjs(b.end, 'HH:mm');
-        if (!endA.isValid() || !endB.isValid()) return 0;
-         if (endA.isBefore(endB)) return -1; if (endA.isAfter(endB)) return 1;
-        return 0;
-     });
-
-    return { uniqueDays, uniqueTimeslots, scheduleMap: map };
-
-  }, [scheduleItems]);
-
-  const { uniqueDays, uniqueTimeslots, scheduleMap } = processedData;
-
-  const handleLessonClick = (subject: Subject, day: string, timeslot: ProcessedTimeslot) => {
-    console.log(`Clicked Subject: ID=${subject.id}, Title=${subject.title}, Day: ${day}, Time: ${timeslot.key}`);
-    navigate(`/edit-lesson/${subject.id}`);
+  // Handle click on a class chip (no navigation in this version)
+  const handleLessonClick = (classId: number) => { // Receive classId
+    console.log(`Clicked Class ID: ${classId}. Opening details modal.`);
+    setSelectedClassId(classId);
+    setIsModalOpen(true);
   };
 
+  const handleCloseModal = () => {
+      setIsModalOpen(false);
+      setSelectedClassId(null);
+  };
+
+  // Handler for the "Create Class" button
+  const handleCreateClassClick = () => {
+      if (id) {
+          console.log(`Navigating to class creation for timetable ID: ${id}`);
+          navigate(`/table/${id}/create-class`);
+      }
+  };
+
+
+  // --- Render Logic ---
+
   if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <CircularProgress />
-         <Typography sx={{ ml: 2 }}>Loading timetable...</Typography>
-      </Box>
-    );
+    // ... (loading state)
   }
 
-  if (error) {
-     return (
-       <Container>
-         <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
-       </Container>
-     );
+  if (error && !timetableStructure) {
+    // ... (error state)
   }
 
-  if (!scheduleItems || uniqueDays.length === 0 || uniqueTimeslots.length === 0) {
-     return (
-       <Container>
-         <Typography sx={{ mt: 2 }}>No timetable data available or data is empty for ID: {id}.</Typography>
-       </Container>
-     );
+  if (!timetableStructure) {
+      // ... (no structure state)
+   }
+
+  // If we have structure but no days/periods, show message
+  if (timetableStructure && (uniqueDays.length === 0 || uniquePeriods.length === 0)) {
+      return (
+        <Container maxWidth="lg"> {/* Use lg for consistency */}
+            <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', my: 3 }}>
+                Timetable: {timetableStructure.name} {id ? `(ID: ${id})` : ''}
+            </Typography>
+            <Alert severity="info" sx={{ mt: 2 }}>
+                This timetable has no days or time periods defined. You cannot schedule classes until periods are added.
+            </Alert>
+             {/* Optionally add a button to edit timetable structure here later */}
+        </Container>
+      );
   }
 
+
+   // If we have structure and periods/days, but no classes, show message and Create button
+  if (timetableStructure && classes.length === 0) {
+       return (
+         <Container maxWidth="lg"> {/* Use lg for consistency */}
+           <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', my: 3 }}>
+             Timetable: {timetableStructure.name} {id ? `(ID: ${id})` : ''}
+           </Typography>
+           <Alert severity="info" sx={{ mt: 2 }}>
+               No classes scheduled for this timetable yet.
+           </Alert>
+            {/* Add Create Class Button here */}
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleCreateClassClick}
+                    disabled={!timetableStructure || uniqueDays.length === 0 || uniquePeriods.length === 0} // Disable if structure is incomplete
+                >
+                    Add First Class
+                </Button>
+            </Box>
+         </Container>
+       );
+   }
+
+
+   // If we reach here, we have timetable structure AND classes to display
+   // Render the grid and the "Add Class" button
   return (
     <Container maxWidth="lg">
       <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', my: 3 }}>
-        Timetable {id ? `(ID: ${id})` : ''}
+        Timetable: {timetableStructure.name} {id ? `(ID: ${id})` : ''}
       </Typography>
 
-      <TableContainer component={Paper} elevation={3}>
+      {/* Add Create Class Button above the grid */}
+      <Box sx={{ mb: 2, textAlign: 'right' }}>
+           <Button
+               variant="contained"
+               startIcon={<AddIcon />}
+               onClick={handleCreateClassClick}
+               disabled={!timetableStructure || uniqueDays.length === 0 || uniquePeriods.length === 0} // Disable if structure is incomplete
+           >
+               Add Class
+           </Button>
+       </Box>
+
+
+      <TableContainer component={Paper} elevation={3} sx={{ overflowX: 'auto' }}>
         <Table sx={{ minWidth: 700 }} aria-label={`Timetable ${id}`}>
-          
+
+          {/* Table Header (Days) */}
           <TableHead sx={{ backgroundColor: 'grey.200' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold', width: '120px', position: 'sticky', left: 0, zIndex: 1, backgroundColor: 'grey.200' }}>Time</TableCell>
-              {uniqueDays.map((dayName) => (
-                <TableCell key={dayName} align="center" sx={{ fontWeight: 'bold' }}>{dayName}</TableCell>
+              {/* Corner cell for Time */}
+              <TableCell sx={{ fontWeight: 'bold', width: '120px', minWidth: '120px', position: 'sticky', left: 0, zIndex: 2, backgroundColor: 'grey.200' }}>Time</TableCell>
+              {/* Day headers */}
+              {uniqueDays.map((day) => (
+                <TableCell key={day.id} align="center" sx={{ fontWeight: 'bold', minWidth: '150px' }}>{day.name}</TableCell>
               ))}
             </TableRow>
           </TableHead>
 
-          
+          {/* Table Body (Periods and Classes) */}
           <TableBody>
-            {uniqueTimeslots.map((timeslot) => (
-              <TableRow key={timeslot.key} hover>
-                
-                <TableCell component="th" scope="row" sx={{ fontWeight: 'medium', verticalAlign: 'top', position: 'sticky', left: 0, zIndex: 1, backgroundColor: 'background.paper' }}>
-                  {`${timeslot.start} - ${timeslot.end}`}
+            {uniquePeriods.map((period) => (
+              <TableRow key={period.id} hover>
+                {/* Time Period Cell */}
+                <TableCell
+                    component="th"
+                    scope="row"
+                    sx={{
+                        fontWeight: 'medium',
+                        verticalAlign: 'top',
+                        position: 'sticky',
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: 'background.paper',
+                        width: '120px',
+                        minWidth: '120px'
+                    }}
+                >
+                  {`${period.start} - ${period.end}`}
                 </TableCell>
 
-                
-                {uniqueDays.map((dayName) => {
-                  const subjectsInCell: Subject[] = scheduleMap[dayName]?.[timeslot.key] || [];
+                {/* Cells for each Day/Period intersection */}
+                {uniqueDays.map((day) => {
+                  // Get occurrences that START in this specific day/period cell
+                  const occurrencesInCell: GridCellContent[] = scheduleMap[day.id]?.[period.id] || [];
+
+                  // Note: This current rendering approach places *all* occurrences that start in a cell
+                  // within that cell. For occurrences spanning multiple periods, you might want
+                  // a more advanced rendering logic (e.g., calculating rowSpan, or placing the chip
+                  // only in the first cell and visually extending it).
+                  // For simplicity in this refactor, we'll just list all occurrences starting here.
+                  // A future enhancement would be to calculate rowSpan based on occurrence.length
+                  // and hide chips in subsequent cells covered by a longer occurrence.
 
                   return (
-                    <TableCell key={`${dayName}-${timeslot.key}`} align="center" sx={{ verticalAlign: 'top', border: '1px solid rgba(224, 224, 224, 1)', p: 1 }}>
-                      {subjectsInCell.length > 0 ? (
+                    <TableCell
+                        key={`${day.id}-${period.id}`}
+                        align="center"
+                        sx={{
+                            verticalAlign: 'top',
+                            border: '1px solid rgba(224, 224, 224, 1)',
+                            p: 1,
+                            minWidth: '150px'
+                        }}
+                    >
+                      {occurrencesInCell.length > 0 ? (
                         <Stack spacing={1} direction="column" alignItems="stretch">
-                          
-                          {subjectsInCell.map((subject) => (
+                          {/* Render chips for each occurrence starting in this cell */}
+                          {occurrencesInCell.map((content) => (
                             <Chip
-                              key={subject.id}
-                              label={subject.title}
-                              onClick={() => handleLessonClick(subject, dayName, timeslot)}
+                              key={content.occurrenceId} // Use occurrence ID as key
+                              label={`${content.courseName} ${content.teacherName ? `(${content.teacherName})` : ''} (${content.length} periods)`} // Display course, teacher, length
+                              onClick={() => handleLessonClick(content.classId)} // Pass class ID to handler
                               variant="outlined"
                               color="primary"
                               size="small"
-                              sx={{ cursor: 'pointer', width: '100%', justifyContent: 'flex-start', textAlign: 'left' }}
+                              sx={{ cursor: 'pointer', width: '100%', justifyContent: 'flex-start', textAlign: 'left', height: 'auto' }}
                             />
                           ))}
                         </Stack>
-                      ) : ( null )}
+                      ) : (
+                         // Render an empty box or similar if no classes start in this slot
+                         <Box sx={{ minHeight: '24px' }}></Box> // Add minHeight to keep rows consistent
+                      )}
                     </TableCell>
                   );
                 })}
@@ -215,6 +218,15 @@ const TimetableGridPage: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Class Details Modal */}
+      <ClassDetailsModal
+          classId={selectedClassId}
+          open={isModalOpen}
+          onClose={handleCloseModal}
+          timetableStructure={timetableStructure} // Pass structure to modal for time/day mapping
+      />
+
     </Container>
   );
 };
