@@ -1,95 +1,100 @@
+// src/interfaces/apiDataTypes.ts
 
+import type { Dayjs } from 'dayjs'; // Keep for frontend state types
 
-import type { Dayjs } from 'dayjs';
+// --- Basic Entities ---
 
-
-
-export interface Track {
+export interface Course {
     id: number;
-    title: string;
-}
-
-
-
-/** Data structure for a single timeslot in the creation request */
-export interface CreateTimeSlotDto {
-    start: string;
-    end: string;  
-}
-
-/** Data structure for the entire timetable creation request body */
-export interface CreateTimetableRequest {
-    title: string;
-    timeslots: CreateTimeSlotDto[];
-}
-
-
-
-
-
-export interface Subject {
-    id: number;
-    title: string;
-}
-
-/** Information about subjects for a specific day within a timeslot */
-export interface DaySubjectInfo {
     name: string;
-   
-    subjects: Subject[];
+    code: string;
 }
 
-/** Information about a specific timeslot, including days/subjects within it */
-export interface TimeslotInfo {
-    tStart: string;
-    tEnd: string;  
-    day: DaySubjectInfo[];
+export interface Teacher {
+    id: number;
+    name: string;
+    type: "Professor" | "Faculty Practitioner"; // Using literal types for validation hint
 }
 
-/** Represents the object within the 'schedule' array */
-export interface ScheduleItemDto {
-    timeslots: TimeslotInfo[];
+// --- Timetable Structure ---
+
+export interface TimetableDay {
+    id: number;
+    name: string; // e.g., "Monday"
 }
 
-/** The root structure of the API response for GET /api/table/{id} */
-export interface ScheduleApiResponse {
-    schedule: ScheduleItemDto[];
+export interface TimetablePeriod {
+    id: number;
+    start: string; // HH:mm format, e.g., "08:00"
+    end: string;   // HH:mm format, e.g., "08:30"
+}
+
+export interface TimetableStructure {
+    id: number;
+    name: string; // Renamed from 'title' in old API
+    days: TimetableDay[];
+    periods: TimetablePeriod[];
+}
+
+// --- Timetable Creation ---
+
+// Request body for POST /kawsay/timetable
+export interface CreateTimetableRequest {
+    name: string; // Renamed from 'title'
+    days: string[]; // Array of day names (strings)
+    periods: { // Array of periods (start/end strings)
+        start: string; // HH:mm
+        end: string;   // HH:mm
+    }[];
+}
+
+// Response body for POST /kawsay/timetable is TimetableStructure
+
+// --- Class and Occurrences ---
+
+export interface ClassOccurrence {
+    id?: number; // Optional for POST, present in GET/PUT response
+    dayId: number; // References TimetableDay.id
+    startPeriodId: number; // References TimetablePeriod.id
+    length: number; // Number of consecutive periods
+}
+
+export interface Class {
+    id: number;
+    timetableId: number; // References TimetableStructure.id
+    course: Course; // Embedded Course object in GET/PUT response
+    teacher: Teacher | null; // Embedded Teacher object (or null) in GET/PUT response
+    occurrences: ClassOccurrence[];
+    // Note: name and code are derived from the Course object
+}
+
+// Request body for POST /kawsay/class
+export interface CreateClassRequest {
+    timetableId: number;
+    courseId: number; // References Course.id
+    teacherId: number | null; // References Teacher.id (or null)
+    occurrences: Omit<ClassOccurrence, 'id'>[]; // Occurrences without IDs for creation
+}
+
+// Request body for PUT /kawsay/class/{id}
+export interface UpdateClassRequest {
+    id: number; // Matches URL param
+    timetableId: number; // Should match the class's current timetableId
+    courseId: number; // References Course.id
+    teacherId: number | null; // References Teacher.id (or null)
+    occurrences: ClassOccurrence[]; // Include IDs for existing occurrences
 }
 
 
-
-/** Represents a unique timeslot row in the grid */
-export interface ProcessedTimeslot {
-    key: string;
-    start: string;
-    end: string;
-}
-
-/** The structure of the map used for efficient subject lookup in the grid */
-export type ProcessedScheduleMap = {
-    [dayName: string]: {
-       
-        [timeslotKey: string]: Subject[];
-    };
-};
-
-
-
-
-/** Data structure expected by the API for GET/PUT lesson requests */
-export interface LessonApiData {
-    tStart: string;
-    tEnd: string;  
-    day: string;
-    subject: string;
-   
-   
-}
-
-/** Data structure used for the state within the LessonEditPage component */
+// --- Frontend State Types (needs review/refactoring later) ---
+// This interface is from the old frontend structure and will likely need
+// significant changes when refactoring LessonEditPage to work with the
+// new Class/Occurrence data model. Keeping it here for now as it exists
+// in the original file, but it's marked for future refactoring.
 export interface LessonEditState {
     tStart: Dayjs | null;
-    tEnd: Dayjs | null;  
+    tEnd: Dayjs | null;
     day: string;
     subject: string;
+    // Additional fields might be needed based on new API (e.g., occurrenceId, classId, dayId, startPeriodId, length)
 }
