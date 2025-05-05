@@ -24,14 +24,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import dayjs, { Dayjs } from 'dayjs'; // Import dayjs for time validation
 import customParseFormat from 'dayjs/plugin/customParseFormat'; // Import plugin
-import isBefore from 'dayjs/plugin/isBefore'; // Import plugin
 // Import the new interfaces and api service function
 import type { CreateTimetableRequest, TimetableStructure } from '../interfaces/apiDataTypes';
 import { createTimetable } from '../services/apiService';
 
 // Extend dayjs with necessary plugins
 dayjs.extend(customParseFormat);
-dayjs.extend(isBefore);
 
 
 interface TimeRangeUI {
