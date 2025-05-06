@@ -1,5 +1,3 @@
-// src/pages/TimetableCreation.tsx
-
 import React, { useState } from 'react';
 import {
     Container,
@@ -12,64 +10,49 @@ import {
     Paper,
     Alert,
     CircularProgress,
-    FormControlLabel, // Added for checkboxes
-    Checkbox, // Added for checkboxes
-    FormGroup, // Added for checkboxes
-    FormLabel, // Added for checkboxes
+    FormControlLabel,
+    Checkbox,
+    FormGroup,
+    FormLabel,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import dayjs, { Dayjs } from 'dayjs'; // Import dayjs for time validation
-import customParseFormat from 'dayjs/plugin/customParseFormat'; // Import plugin
-// Import the new interfaces and api service function
+import dayjs, { Dayjs } from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import type { CreateTimetableRequest, TimetableStructure } from '../interfaces/apiDataTypes';
 import { createTimetable } from '../services/apiService';
-
-// Extend dayjs with necessary plugins
 dayjs.extend(customParseFormat);
-
-
 interface TimeRangeUI {
     id: number;
     start: Dayjs | null;
     end: Dayjs | null;
 }
-
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
 const TimetableCreationPage: React.FC = () => {
     const [timetableName, setTimetableName] = useState<string>('');
-    // New state for selected days
     const [selectedDays, setSelectedDays] = useState<string[]>([]);
     const [timeRanges, setTimeRanges] = useState<TimeRangeUI[]>([]);
     const [nextId, setNextId] = useState<number>(1);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
     const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setTimetableName(event.target.value);
         setSubmitStatus(null);
     };
-
-    // New handler for day checkbox changes
     const handleDayChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const dayName = event.target.name;
         setSelectedDays(prevSelectedDays => {
             if (event.target.checked) {
-                // Add the day if checked
                 return [...prevSelectedDays, dayName];
             } else {
-                // Remove the day if unchecked
                 return prevSelectedDays.filter(day => day !== dayName);
             }
         });
         setSubmitStatus(null);
     };
-
-
     const handleAddRange = () => {
         const newRange: TimeRangeUI = {
             id: nextId,
@@ -80,14 +63,12 @@ const TimetableCreationPage: React.FC = () => {
         setNextId((prevId) => prevId + 1);
         setSubmitStatus(null);
     };
-
     const handleRemoveRange = (idToRemove: number) => {
         setTimeRanges((prevRanges) =>
             prevRanges.filter((range) => range.id !== idToRemove)
         );
         setSubmitStatus(null);
     };
-
     const handleTimeChange = (
         id: number,
         type: 'start' | 'end',
@@ -100,49 +81,36 @@ const TimetableCreationPage: React.FC = () => {
         );
         setSubmitStatus(null);
     };
-
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         setSubmitStatus(null);
-
-        // Add validation for selected days
         if (!timetableName || selectedDays.length === 0 || timeRanges.length === 0) {
             setSubmitStatus({ type: 'error', message: 'Please provide a name, select at least one day, and add at least one time range.' });
             return;
         }
-
         const invalidRange = timeRanges.find(r => !r.start || !r.end || r.end.isBefore(r.start));
         if (invalidRange) {
             setSubmitStatus({ type: 'error', message: `Invalid time range found. End time must be after start time, and both must be set.` });
             return;
         }
-
         setIsSubmitting(true);
-
-        // Construct the new API request payload
         const apiPayload: CreateTimetableRequest = {
-            name: timetableName, // Use 'name' instead of 'title'
-            days: selectedDays, // Include the selected days
-            periods: timeRanges.map(range => ({ // Use 'periods' instead of 'timeslots'
+            name: timetableName,
+            days: selectedDays,
+            periods: timeRanges.map(range => ({
                 start: range.start!.format('HH:mm'),
                 end: range.end!.format('HH:mm'),
             })),
         };
-
         try {
             console.log('Submitting timetable creation:', apiPayload);
-            // Call the updated createTimetable function
-            const result: TimetableStructure = await createTimetable(apiPayload); // Expect TimetableStructure response
+            const result: TimetableStructure = await createTimetable(apiPayload);
             console.log('Timetable creation successful:', result);
-            // Update success message to use data from the new response
             setSubmitStatus({ type: 'success', message: `Timetable "${result.name}" created successfully! (ID: ${result.id})` });
-
-            // Clear form fields on success
             setTimetableName('');
-            setSelectedDays([]); // Clear selected days
+            setSelectedDays([]);
             setTimeRanges([]);
             setNextId(1);
-
         } catch (err) {
             console.error('Error creating timetable:', err);
             setSubmitStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to create timetable.' });
@@ -150,25 +118,19 @@ const TimetableCreationPage: React.FC = () => {
             setIsSubmitting(false);
         }
     };
-
-
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Container maxWidth="md">
                 <Typography variant="h4" gutterBottom>
                     Create New Timetable
                 </Typography>
-
                 {/* Status Alert */}
                 {submitStatus && (
                     <Alert severity={submitStatus.type} sx={{ mt: 2, mb: 2 }}>
                         {submitStatus.message}
                     </Alert>
                 )}
-
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-
-                    {/* Timetable Name */}
                     <TextField
                         margin="normal"
                         required
@@ -182,7 +144,6 @@ const TimetableCreationPage: React.FC = () => {
                         sx={{ mb: 3 }}
                         disabled={isSubmitting}
                     />
-
                     {/* Day Selection */}
                     <FormLabel component="legend" sx={{ mb: 1 }}>Select Days *</FormLabel>
                     <FormGroup row sx={{ mb: 3 }}>
@@ -201,13 +162,9 @@ const TimetableCreationPage: React.FC = () => {
                             />
                         ))}
                     </FormGroup>
-
-
                     <Typography variant="h6" gutterBottom>
                         Time Periods *
                     </Typography>
-
-                    {/* Time Ranges List */}
                     <Stack spacing={2} sx={{ mb: 2 }}>
                         {timeRanges.map((range) => (
                             <Paper
@@ -224,7 +181,7 @@ const TimetableCreationPage: React.FC = () => {
                                     ampm={false}
                                     disabled={isSubmitting}
                                     sx={{ flexGrow: 1 }}
-                                    slotProps={{ textField: { required: true } }} // Mark as required
+                                    slotProps={{ textField: { required: true } }}
                                 />
                                 <Typography sx={{ mx: 1 }}>to</Typography>
                                 <TimePicker
@@ -235,9 +192,9 @@ const TimetableCreationPage: React.FC = () => {
                                     }
                                     ampm={false}
                                     sx={{ flexGrow: 1 }}
-                                    minTime={range.start ?? undefined} // End time cannot be before start time
-                                    disabled={isSubmitting || !range.start} // Disable end time picker until start is set
-                                     slotProps={{ textField: { required: true } }} // Mark as required
+                                    minTime={range.start ?? undefined}
+                                    disabled={isSubmitting || !range.start}
+                                     slotProps={{ textField: { required: true } }}
                                 />
                                 <IconButton
                                     aria-label="delete time range"
@@ -253,8 +210,6 @@ const TimetableCreationPage: React.FC = () => {
                             <Typography color="text.secondary">Add at least one time period.</Typography>
                         )}
                     </Stack>
-
-                    {/* Add Time Range Button */}
                     <Button
                         variant="outlined"
                         startIcon={<AddCircleOutlineIcon />}
@@ -264,7 +219,6 @@ const TimetableCreationPage: React.FC = () => {
                     >
                         Add Time Period
                     </Button>
-
                     {/* Create Button */}
                     <Button
                         type="submit"
@@ -281,5 +235,4 @@ const TimetableCreationPage: React.FC = () => {
         </LocalizationProvider>
     );
 };
-
 export default TimetableCreationPage;

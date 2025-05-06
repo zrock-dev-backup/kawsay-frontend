@@ -1,7 +1,6 @@
 import React from 'react';
 import { Outlet, Link as RouterLink } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/material';
-
 const Layout: React.FC = () => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
@@ -33,5 +32,4 @@ const Layout: React.FC = () => {
         </Box>
     );
 };
-
 export default Layout;
