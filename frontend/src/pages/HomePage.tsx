@@ -1,5 +1,4 @@
 import {Box, Button, Typography} from "@mui/material";
-
 function HomePage() {
     return (
         <>
@@ -17,5 +16,4 @@ function HomePage() {
         </>
     )
 }
-
 export default HomePage
