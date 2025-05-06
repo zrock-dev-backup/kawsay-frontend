@@ -10,7 +10,6 @@ import TimetableGridPage from "./pages/TimetableGridPage.tsx";
 // Import the new Class Creation Page
 import ClassCreationPage from "./pages/ClassCreationPage.tsx";
 
-
 function App() {
     return (
         <Routes>
@@ -23,6 +22,7 @@ function App() {
                 <Route path={"table/:id"} element={<TimetableGridPage />} />
                 {/* New Route for Class Creation, nested under timetable ID */}
                 <Route path={"table/:timetableId/create-class"} element={<ClassCreationPage />} />
+                {/* Remove any route referencing LessonEditPage */}
             </Route>
         </Routes>
     );
