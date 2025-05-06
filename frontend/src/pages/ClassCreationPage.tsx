@@ -1,6 +1,6 @@
 // src/pages/ClassCreationPage.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -18,12 +18,15 @@ import {
     SelectChangeEvent,
     Paper,
     IconButton,
-    Grid,
-    FormLabel,
+    Grid, // Keep Grid if needed for layout, maybe not essential here
+    FormHelperText, // For validation feedback
     InputAdornment,
+    Skeleton, // For more granular loading feedback
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
+import dayjs from 'dayjs'; // For sorting periods
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 // Import API types and service functions
 import type {
@@ -42,102 +45,220 @@ import {
     createClass
 } from '../services/apiService';
 
+dayjs.extend(customParseFormat);
+
 // Define a type for the UI state of a single occurrence in the form
 interface OccurrenceFormState {
     id: number; // Unique ID for form management (not API ID)
-    dayId: number | ''; // Selected day ID
-    startPeriodId: number | ''; // Selected start period ID
-    length: number | ''; // Number of periods
+    dayId: number | null; // Use null for unselected state
+    startPeriodId: number | null; // Use null for unselected state
+    length: number | string; // Allow string during input, parse to number later
+}
+
+// Define a type for validation errors
+interface FormValidationErrors {
+    courseId?: string;
+    teacherId?: string; // Optional teacher, so less critical
+    occurrences?: string; // General error for the occurrences section
+    occurrenceFields?: { [key: number]: { dayId?: string; startPeriodId?: string; length?: string } }; // Specific errors per occurrence ID
+    submit?: string; // Error related to submission itself
 }
 
 const ClassCreationPage: React.FC = () => {
-    // Get timetableId from URL params
     const { timetableId } = useParams<{ timetableId: string }>();
     const navigate = useNavigate();
 
-    // State for fetched data
+    // --- State ---
+
+    // Fetched Data State
     const [courses, setCourses] = useState<Course[]>([]);
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [timetableStructure, setTimetableStructure] = useState<TimetableStructure | null>(null);
 
-    // State for form inputs
-    const [selectedCourseId, setSelectedCourseId] = useState<number | ''>('');
-    const [selectedTeacherId, setSelectedTeacherId] = useState<number | ''>(''); // Use number | '' for optional ID
+    // Form Input State
+    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null); // Use null for unselected
+    const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null); // Use null for unselected/optional
     const [occurrences, setOccurrences] = useState<OccurrenceFormState[]>([]);
     const [nextOccurrenceFormId, setNextOccurrenceFormId] = useState(1); // For managing form occurrence IDs
 
-    // State for loading and submission
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    // Loading State (more granular)
+    const [loadingStructure, setLoadingStructure] = useState<boolean>(true);
+    const [loadingCourses, setLoadingCourses] = useState<boolean>(true);
+    const [loadingTeachers, setLoadingTeachers] = useState<boolean>(true);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+    // Error & Status State
+    const [fetchError, setFetchError] = useState<string | null>(null); // Errors during initial data fetch
+    const [validationErrors, setValidationErrors] = useState<FormValidationErrors>({});
     const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-    // Fetch initial data (courses, teachers, timetable structure)
+
+    // --- Data Fetching ---
+
+    // Utility function to fetch data with loading/error state management
+    const fetchData = useCallback(async <T,>(
+        fetchFn: () => Promise<T>,
+        setData: React.Dispatch<React.SetStateAction<T>>,
+        setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+        setErrorMsg: string // Generic error message for this fetch
+    ): Promise<boolean> => { // Returns true on success, false on failure
+        setLoading(true);
+        try {
+            const data = await fetchFn();
+            setData(data);
+            return true; // Indicate success
+        } catch (err) {
+            console.error(setErrorMsg, err);
+            // Append to general fetch error, don't overwrite other potential errors
+            setFetchError(prev => `${prev ? prev + '; ' : ''}${setErrorMsg}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            return false; // Indicate failure
+        } finally {
+            setLoading(false);
+        }
+    }, []); // No dependencies as it uses passed-in functions/state setters
+
+
+    // Fetch initial data (structure, courses, teachers)
     useEffect(() => {
         if (!timetableId) {
-            setError('No timetable ID provided in URL.');
-            setLoading(false);
+            setFetchError('No timetable ID provided in URL.');
+            setLoadingStructure(false);
+            setLoadingCourses(false);
+            setLoadingTeachers(false);
             return;
         }
 
-        const loadInitialData = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                console.log('Fetching initial data for class creation...');
-                const [coursesData, teachersData, timetableData] = await Promise.all([
-                    fetchCourses(),
-                    fetchTeachers(),
-                    fetchTimetableStructureById(timetableId)
+        setFetchError(null); // Reset errors on new load
+        setLoadingStructure(true);
+        setLoadingCourses(true);
+        setLoadingTeachers(true);
+
+        const loadAllData = async () => {
+            // Fetch structure first, as it's needed for context
+            const structureSuccess = await fetchData(
+                () => fetchTimetableStructureById(timetableId),
+                setTimetableStructure,
+                setLoadingStructure,
+                'Failed to load timetable structure'
+            );
+
+            // Fetch courses and teachers in parallel if structure loaded successfully
+            if (structureSuccess) {
+                await Promise.all([
+                    fetchData(fetchCourses, setCourses, setLoadingCourses, 'Failed to load courses'),
+                    fetchData(fetchTeachers, setTeachers, setLoadingTeachers, 'Failed to load teachers')
                 ]);
-
-                console.log('Initial data fetched:', { coursesData, teachersData, timetableData });
-
-                setCourses(coursesData);
-                setTeachers(teachersData);
-                setTimetableStructure(timetableData);
-
-            } catch (err) {
-                console.error('Error fetching initial data:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load data for class creation.');
-            } finally {
-                setLoading(false);
+            } else {
+                // If structure failed, don't bother loading others
+                setLoadingCourses(false);
+                setLoadingTeachers(false);
             }
         };
 
-        loadInitialData();
+        loadAllData();
 
-    }, [timetableId]); // Re-run effect if timetableId changes
+    }, [timetableId, fetchData]); // Include fetchData in dependencies
 
-    // Handlers for form inputs
-    const handleCourseChange = (event: SelectChangeEvent<number | ''>) => {
-        setSelectedCourseId(event.target.value as number | '');
-        setSubmitStatus(null);
+    // --- Derived Data (Memoized) ---
+    const sortedPeriods = useMemo(() => {
+        if (!timetableStructure?.periods) return [];
+        // Sort periods chronologically for better UX in dropdown
+        return [...timetableStructure.periods].sort((a, b) =>
+            dayjs(a.start, 'HH:mm').diff(dayjs(b.start, 'HH:mm'))
+        );
+    }, [timetableStructure?.periods]);
+
+
+    // --- Validation Logic ---
+
+    // Function to validate a single occurrence
+    const validateOccurrence = (occ: OccurrenceFormState): { dayId?: string; startPeriodId?: string; length?: string } => {
+        const errors: { dayId?: string; startPeriodId?: string; length?: string } = {};
+        if (occ.dayId === null) errors.dayId = 'Required';
+        if (occ.startPeriodId === null) errors.startPeriodId = 'Required';
+        if (occ.length === '' || Number(occ.length) <= 0) errors.length = 'Must be > 0';
+        else if (isNaN(Number(occ.length))) errors.length = 'Must be a number';
+        // Advanced validation: Check if length exceeds available periods (example)
+        else if (timetableStructure && occ.startPeriodId !== null) {
+            const startIndex = sortedPeriods.findIndex(p => p.id === occ.startPeriodId);
+            if (startIndex !== -1 && startIndex + Number(occ.length) > sortedPeriods.length) {
+                errors.length = `Exceeds available periods (${sortedPeriods.length - startIndex})`;
+            }
+        }
+        return errors;
     };
 
-    const handleTeacherChange = (event: SelectChangeEvent<number | ''>) => {
-        setSelectedTeacherId(event.target.value as number | '');
-        setSubmitStatus(null);
-    };
+    // Function to validate the entire form
+    const validateForm = useCallback((): boolean => {
+        const errors: FormValidationErrors = { occurrenceFields: {} };
+        let isValid = true;
 
-    const handleAddOccurrence = () => {
+        // Validate Course
+        if (selectedCourseId === null) {
+            errors.courseId = 'Please select a Course.';
+            isValid = false;
+        }
+
+        // Validate Occurrences (general and specific)
+        if (occurrences.length === 0) {
+            errors.occurrences = 'Please add at least one Occurrence.';
+            isValid = false;
+        } else {
+            occurrences.forEach(occ => {
+                const occErrors = validateOccurrence(occ);
+                if (Object.keys(occErrors).length > 0) {
+                    errors.occurrenceFields![occ.id] = occErrors;
+                    isValid = false;
+                }
+            });
+        }
+
+        setValidationErrors(errors);
+        return isValid;
+    }, [selectedCourseId, occurrences, timetableStructure, sortedPeriods]); // Dependencies for validation logic
+
+    // --- Event Handlers (Memoized) ---
+
+    const handleCourseChange = useCallback((event: SelectChangeEvent<number | null>) => { // Allow null
+        const value = event.target.value === '' ? null : (event.target.value as number);
+        setSelectedCourseId(value);
+        setSubmitStatus(null);
+        // Clear validation error for this field when changed
+        setValidationErrors(prev => ({ ...prev, courseId: undefined }));
+    }, []);
+
+    const handleTeacherChange = useCallback((event: SelectChangeEvent<number | null>) => { // Allow null
+        const value = event.target.value === '' ? null : (event.target.value as number);
+        setSelectedTeacherId(value);
+        setSubmitStatus(null);
+    }, []);
+
+    const handleAddOccurrence = useCallback(() => {
         setOccurrences(prevOccurrences => [
             ...prevOccurrences,
-            { id: nextOccurrenceFormId, dayId: '', startPeriodId: '', length: '' }
+            { id: nextOccurrenceFormId, dayId: null, startPeriodId: null, length: '' } // Use null defaults
         ]);
         setNextOccurrenceFormId(prevId => prevId + 1);
         setSubmitStatus(null);
-    };
+        // Clear general occurrence validation error when adding
+        setValidationErrors(prev => ({ ...prev, occurrences: undefined }));
+    }, [nextOccurrenceFormId]);
 
-    const handleRemoveOccurrence = (idToRemove: number) => {
+    const handleRemoveOccurrence = useCallback((idToRemove: number) => {
         setOccurrences(prevOccurrences => prevOccurrences.filter(occ => occ.id !== idToRemove));
         setSubmitStatus(null);
-    };
+        // Clear specific errors for the removed occurrence
+        setValidationErrors(prev => {
+            const newOccFields = { ...prev.occurrenceFields };
+            delete newOccFields[idToRemove];
+            return { ...prev, occurrenceFields: newOccFields };
+        });
+    }, []);
 
-    const handleOccurrenceChange = (
+    const handleOccurrenceChange = useCallback((
         id: number,
-        field: keyof Omit<OccurrenceFormState, 'id'>, // Only allow changing dayId, startPeriodId, length
-        value: number | string | ''
+        field: keyof Omit<OccurrenceFormState, 'id'>,
+        value: number | string | null // Allow null for selects
     ) => {
         setOccurrences(prevOccurrences =>
             prevOccurrences.map(occ =>
@@ -145,49 +266,43 @@ const ClassCreationPage: React.FC = () => {
             )
         );
         setSubmitStatus(null);
-    };
+        // Clear validation error for the specific field being changed
+        setValidationErrors(prev => {
+            const newOccFields = { ...prev.occurrenceFields };
+            if (newOccFields[id]) {
+                delete newOccFields[id][field]; // Clear the specific field error
+                if (Object.keys(newOccFields[id]).length === 0) {
+                    delete newOccFields[id]; // Remove the entry if no errors left for this occurrence
+                }
+            }
+            return { ...prev, occurrenceFields: newOccFields };
+        });
+    }, []);
 
-    // Form Submission
-    const handleSubmit = async (event: React.FormEvent) => {
+    // Form Submission Handler
+    const handleSubmit = useCallback(async (event: React.FormEvent) => {
         event.preventDefault();
         setSubmitStatus(null);
-        setError(null); // Clear general error
+        setValidationErrors({}); // Clear previous submission errors
 
-        if (!timetableId) {
-             setError('Timetable ID is missing.');
-             return;
+        // Perform validation
+        if (!validateForm() || !timetableId || selectedCourseId === null) {
+             // validateForm sets specific errors, maybe add a general submit error too
+             setValidationErrors(prev => ({ ...prev, submit: 'Please fix the errors above.'}))
+             return; // Stop submission if validation fails
         }
 
-        // Basic validation
-        if (!selectedCourseId) {
-            setError('Please select a Course.');
-            return;
-        }
-        if (occurrences.length === 0) {
-            setError('Please add at least one Occurrence.');
-            return;
-        }
-
-        // Validate each occurrence
-        const invalidOccurrence = occurrences.find(occ =>
-            occ.dayId === '' || occ.startPeriodId === '' || occ.length === '' || Number(occ.length) <= 0
-        );
-        if (invalidOccurrence) {
-            setError('Please ensure all Occurrence fields (Day, Start Time, Length) are filled and Length is positive.');
-            return;
-        }
-
-        // Map form state to API request format
+        // Map form state to API request format (only if validation passes)
         const apiOccurrences: Omit<ClassOccurrence, 'id'>[] = occurrences.map(occ => ({
-            dayId: Number(occ.dayId),
-            startPeriodId: Number(occ.startPeriodId),
-            length: Number(occ.length),
+            dayId: occ.dayId!, // Assert non-null because validation passed
+            startPeriodId: occ.startPeriodId!, // Assert non-null because validation passed
+            length: Number(occ.length), // Convert valid string/number to number
         }));
 
         const apiPayload: CreateClassRequest = {
             timetableId: Number(timetableId),
-            courseId: Number(selectedCourseId),
-            teacherId: selectedTeacherId === '' ? null : Number(selectedTeacherId), // Send null if no teacher selected
+            courseId: selectedCourseId, // Already validated non-null
+            teacherId: selectedTeacherId, // Can be null
             occurrences: apiOccurrences,
         };
 
@@ -199,192 +314,271 @@ const ClassCreationPage: React.FC = () => {
             console.log('Class creation successful:', result);
             setSubmitStatus({ type: 'success', message: `Class "${result.course.name}" created successfully! (ID: ${result.id})` });
 
-            // Optionally redirect to the timetable grid page after success
-            // navigate(`/table/${timetableId}`);
-
-            // Or clear the form to add another class
-             setSelectedCourseId('');
-             setSelectedTeacherId('');
+            // Clear the form for adding another class
+             setSelectedCourseId(null);
+             setSelectedTeacherId(null);
              setOccurrences([]);
              setNextOccurrenceFormId(1);
+             setValidationErrors({}); // Clear validation errors on success
 
         } catch (err) {
             console.error('Error creating class:', err);
-            setSubmitStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to create class.' });
+            // Set specific submission error from API if possible
+            const apiErrorMessage = err instanceof Error ? err.message : 'Failed to create class.';
+            setSubmitStatus({ type: 'error', message: `Submission Error: ${apiErrorMessage}` });
+             // Also put it in the general validation errors for visibility
+             setValidationErrors(prev => ({ ...prev, submit: apiErrorMessage }));
         } finally {
             setIsSubmitting(false);
         }
-    };
+    }, [validateForm, timetableId, selectedCourseId, selectedTeacherId, occurrences]); // Include dependencies
+
 
     // --- Render Logic ---
 
-    if (loading) {
+    // Initial Loading State (Structure is critical)
+    if (loadingStructure) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <CircularProgress />
-                <Typography sx={{ ml: 2 }}>Loading data for class creation...</Typography>
-            </Box>
-        );
-    }
-
-    if (error && !timetableStructure) {
-        return (
-            <Container>
-                <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+            <Container maxWidth="md">
+                 <Typography variant="h4" gutterBottom>
+                     Create New Class for Timetable...
+                 </Typography>
+                <Skeleton variant="text" height={60} />
+                <Skeleton variant="rectangular" height={56} sx={{ mt: 2 }} />
+                <Skeleton variant="rectangular" height={56} sx={{ mt: 2 }} />
+                <Skeleton variant="text" height={40} sx={{ mt: 3 }}/>
+                 <Skeleton variant="rectangular" height={70} sx={{ mt: 1 }}/>
+                 <Skeleton variant="rectangular" height={40} width={150} sx={{ mt: 2 }}/>
+                 <Skeleton variant="rectangular" height={56} sx={{ mt: 3 }}/>
             </Container>
         );
     }
 
+    // Error State (If structure failed to load)
+    if (fetchError && !timetableStructure) {
+        return (
+            <Container maxWidth="md">
+                <Typography variant="h4" gutterBottom color="error">
+                    Error Loading Page Data
+                </Typography>
+                <Alert severity="error" sx={{ mt: 2 }}>
+                    Could not load essential timetable data. Please try again later.
+                    <br />
+                    Details: {fetchError}
+                </Alert>
+                {/* Optional: Add a retry button here */}
+            </Container>
+        );
+    }
+
+    // Should not happen if loading is false and no error, but safeguard
     if (!timetableStructure) {
          return (
-             <Container>
+             <Container maxWidth="md">
                  <Typography sx={{ mt: 2 }}>Could not load timetable structure for ID: {timetableId}. Cannot create class.</Typography>
              </Container>
          );
     }
 
-
+    // --- Main Form Render ---
     return (
         <Container maxWidth="md">
             <Typography variant="h4" gutterBottom>
                 Create New Class for Timetable: {timetableStructure.name} (ID: {timetableId})
             </Typography>
 
-            {/* Status Alert */}
+            {/* Display general fetch errors that occurred after structure loaded */}
+             {fetchError && timetableStructure && (
+                <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                    Warning: Some data failed to load, functionality may be limited. Details: {fetchError}
+                </Alert>
+             )}
+
+            {/* Submission Status Alert */}
             {submitStatus && (
                 <Alert severity={submitStatus.type} sx={{ mt: 2, mb: 2 }}>
                     {submitStatus.message}
                 </Alert>
             )}
-             {/* General Error Alert (for validation issues) */}
-            {error && !isSubmitting && <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>}
+             {/* Display general validation error related to submit */}
+            {validationErrors.submit && !isSubmitting && (
+                 <Alert severity="warning" sx={{ mb: 2 }}>{validationErrors.submit}</Alert>
+             )}
 
 
             <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
 
                 {/* Course Selection */}
-                <FormControl fullWidth required margin="normal" disabled={isSubmitting}>
+                <FormControl
+                    fullWidth
+                    required
+                    margin="normal"
+                    disabled={isSubmitting || loadingCourses}
+                    error={!!validationErrors.courseId}
+                 >
                     <InputLabel id="course-select-label">Course</InputLabel>
                     <Select
                         labelId="course-select-label"
                         id="course-select"
-                        value={selectedCourseId}
-                        label="Course"
+                        value={selectedCourseId ?? ''} // Use '' for Select value when null
+                        label="Course *" // Add asterisk for visual cue
                         onChange={handleCourseChange}
+                        renderValue={(selected) => { // Handle display when loading
+                            if (loadingCourses) return <Skeleton variant="text" width="80%"/>;
+                            if (selected === null || selected === '') return <em>Select a Course</em>;
+                            const course = courses.find(c => c.id === selected);
+                            return course ? `${course.name} (${course.code})` : '';
+                        }}
+                        aria-describedby="course-helper-text"
                     >
-                        <MenuItem value="">
-                            <em>Select a Course</em>
+                         {/* Placeholder */}
+                        <MenuItem value="" disabled={loadingCourses}>
+                            <em>{loadingCourses ? 'Loading...' : 'Select a Course'}</em>
                         </MenuItem>
-                        {courses.map((course) => (
+                        {/* Course Options */}
+                        {!loadingCourses && courses.map((course) => (
                             <MenuItem key={course.id} value={course.id}>
                                 {course.name} ({course.code})
                             </MenuItem>
                         ))}
                     </Select>
+                     {/* Validation Helper Text */}
+                    <FormHelperText id="course-helper-text" error={!!validationErrors.courseId}>
+                        {validationErrors.courseId || (loadingCourses ? 'Loading courses...' : ' ')} {/* Show loading or error */}
+                    </FormHelperText>
                 </FormControl>
 
                 {/* Teacher Selection */}
-                <FormControl fullWidth margin="normal" disabled={isSubmitting}>
+                <FormControl
+                    fullWidth
+                    margin="normal"
+                    disabled={isSubmitting || loadingTeachers}
+                 >
                     <InputLabel id="teacher-select-label">Teacher (Optional)</InputLabel>
                     <Select
                         labelId="teacher-select-label"
                         id="teacher-select"
-                        value={selectedTeacherId}
+                        value={selectedTeacherId ?? ''} // Use '' for Select value when null
                         label="Teacher (Optional)"
                         onChange={handleTeacherChange}
+                        renderValue={(selected) => { // Handle display when loading
+                            if (loadingTeachers) return <Skeleton variant="text" width="80%"/>;
+                             if (selected === null || selected === '') return <em>None</em>;
+                            const teacher = teachers.find(t => t.id === selected);
+                            return teacher ? `${teacher.name} (${teacher.type})` : '';
+                         }}
                     >
+                         {/* Placeholder */}
                         <MenuItem value="">
-                            <em>None</em>
+                            <em>{loadingTeachers ? 'Loading...' : 'None'}</em>
                         </MenuItem>
-                        {teachers.map((teacher) => (
+                        {/* Teacher Options */}
+                        {!loadingTeachers && teachers.map((teacher) => (
                             <MenuItem key={teacher.id} value={teacher.id}>
                                 {teacher.name} ({teacher.type})
                             </MenuItem>
                         ))}
                     </Select>
+                     <FormHelperText>
+                        {loadingTeachers ? 'Loading teachers...' : ' '}
+                     </FormHelperText>
                 </FormControl>
 
                 <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
                     Schedule Occurrences *
+                     {validationErrors.occurrences && ( // Display general occurrence error
+                        <Typography component="span" color="error.main" variant="caption" sx={{ ml: 1 }}>
+                             ({validationErrors.occurrences})
+                         </Typography>
+                     )}
                 </Typography>
 
                 {/* Occurrences List */}
                 <Stack spacing={2} sx={{ mb: 2 }}>
-                    {occurrences.map((occurrence) => (
-                        <Paper
-                            key={occurrence.id}
-                            elevation={2}
-                            sx={{ p: 2, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', gap: 2 }}
-                        >
-                            {/* Day Selection for Occurrence */}
-                            <FormControl required sx={{ minWidth: 120, flexGrow: 1 }} disabled={isSubmitting}>
-                                <InputLabel id={`day-select-label-${occurrence.id}`}>Day</InputLabel>
-                                <Select
-                                    labelId={`day-select-label-${occurrence.id}`}
-                                    id={`day-select-${occurrence.id}`}
-                                    value={occurrence.dayId}
-                                    label="Day"
-                                    onChange={(e) => handleOccurrenceChange(occurrence.id, 'dayId', e.target.value as number)}
-                                >
-                                     <MenuItem value=""><em>Select Day</em></MenuItem>
-                                    {timetableStructure.days.map((day) => (
-                                        <MenuItem key={day.id} value={day.id}>
-                                            {day.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            {/* Start Period Selection for Occurrence */}
-                             <FormControl required sx={{ minWidth: 120, flexGrow: 1 }} disabled={isSubmitting}>
-                                <InputLabel id={`period-select-label-${occurrence.id}`}>Start Time</InputLabel>
-                                <Select
-                                    labelId={`period-select-label-${occurrence.id}`}
-                                    id={`period-select-${occurrence.id}`}
-                                    value={occurrence.startPeriodId}
-                                    label="Start Time"
-                                    onChange={(e) => handleOccurrenceChange(occurrence.id, 'startPeriodId', e.target.value as number)}
-                                >
-                                    <MenuItem value=""><em>Select Time</em></MenuItem>
-                                    {/* Sort periods chronologically for better UX */}
-                                    {[...timetableStructure.periods].sort((a, b) => dayjs(a.start, 'HH:mm').diff(dayjs(b.start, 'HH:mm')))}
-                                    .map((period) => (
-                                        <MenuItem key={period.id} value={period.id}>
-                                            {`${period.start} - ${period.end}`}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            {/* Length Input for Occurrence */}
-                            <TextField
-                                required
-                                label="Length"
-                                type="number"
-                                value={occurrence.length}
-                                onChange={(e) => handleOccurrenceChange(occurrence.id, 'length', e.target.value)}
-                                InputProps={{
-                                    endAdornment: <InputAdornment position="end">periods</InputAdornment>,
-                                    inputProps: { min: 1 } // Minimum length is 1
-                                }}
-                                sx={{ width: { xs: '100%', sm: 100 } }}
-                                disabled={isSubmitting}
-                            />
-
-
-                            {/* Remove Occurrence Button */}
-                            <IconButton
-                                aria-label="delete occurrence"
-                                onClick={() => handleRemoveOccurrence(occurrence.id)}
-                                color="error"
-                                disabled={isSubmitting}
+                    {occurrences.map((occurrence, index) => {
+                        const occErrors = validationErrors.occurrenceFields?.[occurrence.id] ?? {};
+                        return (
+                            <Paper
+                                key={occurrence.id}
+                                elevation={2}
+                                sx={{ p: 2, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start', gap: 2 }}
                             >
-                                <DeleteIcon />
-                            </IconButton>
-                        </Paper>
-                    ))}
+                                {/* Day Selection */}
+                                <FormControl required sx={{ minWidth: 120, flexGrow: 1 }} disabled={isSubmitting} error={!!occErrors.dayId}>
+                                    <InputLabel id={`day-select-label-${occurrence.id}`}>Day</InputLabel>
+                                    <Select
+                                        labelId={`day-select-label-${occurrence.id}`}
+                                        id={`day-select-${occurrence.id}`}
+                                        value={occurrence.dayId ?? ''}
+                                        label="Day *"
+                                        onChange={(e) => handleOccurrenceChange(occurrence.id, 'dayId', e.target.value === '' ? null : Number(e.target.value))}
+                                        aria-describedby={`day-helper-${occurrence.id}`}
+                                    >
+                                        <MenuItem value="" disabled><em>Select Day</em></MenuItem>
+                                        {timetableStructure.days.map((day) => (
+                                            <MenuItem key={day.id} value={day.id}>
+                                                {day.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                    <FormHelperText id={`day-helper-${occurrence.id}`} error={!!occErrors.dayId}>{occErrors.dayId || ' '}</FormHelperText>
+                                </FormControl>
+
+                                {/* Start Period Selection */}
+                                <FormControl required sx={{ minWidth: 180, flexGrow: 1 }} disabled={isSubmitting} error={!!occErrors.startPeriodId}>
+                                    <InputLabel id={`period-select-label-${occurrence.id}`}>Start Time</InputLabel>
+                                    <Select
+                                        labelId={`period-select-label-${occurrence.id}`}
+                                        id={`period-select-${occurrence.id}`}
+                                        value={occurrence.startPeriodId ?? ''}
+                                        label="Start Time *"
+                                        onChange={(e) => handleOccurrenceChange(occurrence.id, 'startPeriodId', e.target.value === '' ? null : Number(e.target.value))}
+                                        aria-describedby={`period-helper-${occurrence.id}`}
+                                    >
+                                        <MenuItem value="" disabled><em>Select Time</em></MenuItem>
+                                        {sortedPeriods.map((period) => (
+                                            <MenuItem key={period.id} value={period.id}>
+                                                {`${period.start} - ${period.end}`}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                     <FormHelperText id={`period-helper-${occurrence.id}`} error={!!occErrors.startPeriodId}>{occErrors.startPeriodId || ' '}</FormHelperText>
+                                </FormControl>
+
+                                {/* Length Input */}
+                                <TextField
+                                    required
+                                    label="Length"
+                                    type="number"
+                                    id={`length-input-${occurrence.id}`}
+                                    value={occurrence.length}
+                                    onChange={(e) => handleOccurrenceChange(occurrence.id, 'length', e.target.value)} // Value is string here
+                                    InputProps={{
+                                        endAdornment: <InputAdornment position="end">periods</InputAdornment>,
+                                        inputProps: { min: 1, step: 1 }
+                                    }}
+                                    sx={{ width: { xs: '100%', sm: 120 } }}
+                                    disabled={isSubmitting}
+                                    error={!!occErrors.length}
+                                    helperText={occErrors.length || ' '}
+                                    aria-describedby={`length-helper-${occurrence.id}`} // Though helperText might cover it
+                                />
+
+                                {/* Remove Occurrence Button */}
+                                <IconButton
+                                    aria-label={`delete occurrence ${index + 1}`}
+                                    onClick={() => handleRemoveOccurrence(occurrence.id)}
+                                    color="error"
+                                    disabled={isSubmitting}
+                                    sx={{ mt: { xs: 1, sm: 1 } }} // Adjust margin for alignment
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Paper>
+                        );
+                     })}
                     {occurrences.length === 0 && !isSubmitting && (
-                        <Typography color="text.secondary">Add at least one occurrence.</Typography>
+                        <Typography color="text.secondary">Add at least one occurrence using the button below.</Typography>
                     )}
                 </Stack>
 
@@ -395,19 +589,21 @@ const ClassCreationPage: React.FC = () => {
                     onClick={handleAddOccurrence}
                     sx={{ mb: 3 }}
                     disabled={isSubmitting}
+                    aria-label="Add schedule occurrence"
                 >
                     Add Occurrence
                 </Button>
 
-                {/* Create Class Button */}
+                {/* Submit Button */}
                 <Button
                     type="submit"
                     fullWidth
                     variant="contained"
                     sx={{ mt: 3, mb: 2 }}
-                    disabled={!selectedCourseId || occurrences.length === 0 || isSubmitting || occurrences.some(occ => occ.dayId === '' || occ.startPeriodId === '' || occ.length === '' || Number(occ.length) <= 0)}
+                    disabled={isSubmitting || loadingStructure || loadingCourses || loadingTeachers} // Disable during any loading or submission
+                    aria-busy={isSubmitting}
                 >
-                    {isSubmitting ? <CircularProgress size={24} /> : 'Create Class'}
+                    {isSubmitting ? <CircularProgress size={24} color="inherit"/> : 'Create Class'}
                 </Button>
             </Box>
         </Container>

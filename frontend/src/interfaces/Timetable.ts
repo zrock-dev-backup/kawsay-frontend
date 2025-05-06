@@ -1,5 +1,6 @@
+// src/interfaces/Timetable.ts
 
-
+// --- Grid Processing Related Types (Keep for now) ---
 export interface DaySubjectInfo {
     name: string;
     subjects: string[];
@@ -33,19 +34,3 @@ export type ProcessedScheduleMap = {
         [timeslotKey: string]: string[];
     };
 };
-
-export interface CreateTimeSlotDto {
-    start: string;
-    end: string;  
-}
-
-export interface CreateTimetableRequest {
-    title: string;
-    timeslots: CreateTimeSlotDto[];
-}
-
-
-export interface Track {
-    id: number;
-    title: string;
-}
