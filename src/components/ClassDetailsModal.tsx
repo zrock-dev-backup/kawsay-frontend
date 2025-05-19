@@ -113,10 +113,10 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({ classId, open, on
                 {!loading && !error && classData && timetableStructure && (
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
-                            <Typography variant="body1"><strong>Course:</strong> {classData.course.name} ({classData.course.code})</Typography>
+                            <Typography variant="body1"><strong>Course:</strong> {classData.courseDto.name} ({classData.courseDto.code})</Typography>
                         </Grid>
                         <Grid item xs={12}>
-                             <Typography variant="body1"><strong>Teacher:</strong> {classData.teacher ? `${classData.teacher.name} (${classData.teacher.type})` : 'Not Assigned'}</Typography>
+                             <Typography variant="body1"><strong>Teacher:</strong> {classData.teacherDto ? `${classData.teacherDto.name} (${classData.teacherDto.type})` : 'Not Assigned'}</Typography>
                         </Grid>
                          <Grid item xs={12}>
                              <Typography variant="body1"><strong>Timetable ID:</strong> {classData.timetableId}</Typography>

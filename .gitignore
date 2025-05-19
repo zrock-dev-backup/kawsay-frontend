@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 files
 *.out
+dev-server.sh
+.env

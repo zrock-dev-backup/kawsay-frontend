@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, {useState, useEffect, useMemo} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
 import {
     Container,
     Typography,
@@ -22,10 +22,16 @@ import AddIcon from '@mui/icons-material/Add';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import type { TimetableStructure, TimetableDay, TimetablePeriod, Class as ApiClass, ClassOccurrence } from '../interfaces/apiDataTypes';
-import { fetchTimetableStructureById, fetchClassesForTimetable, generateScheduleForTimetable } from '../services/apiService';
+import type {TimetableStructure, TimetableDay, TimetablePeriod, Class as ApiClass} from '../interfaces/apiDataTypes';
+import {
+    fetchTimetableStructureById,
+    fetchClassesForTimetable,
+    generateScheduleForTimetable
+} from '../services/apiService';
 import ClassDetailsModal from '../components/ClassDetailsModal';
+
 dayjs.extend(customParseFormat);
+
 interface GridCellContent {
     classId: number;
     occurrenceId: number;
@@ -33,13 +39,14 @@ interface GridCellContent {
     teacherName: string | null;
     length: number;
 }
+
 type ProcessedScheduleMap = {
     [dayId: number]: {
         [startPeriodId: number]: GridCellContent[];
     };
 };
 const TimetableGridPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [timetableStructure, setTimetableStructure] = useState<TimetableStructure | null>(null);
     const [classes, setClasses] = useState<ApiClass[]>([]);
@@ -49,7 +56,10 @@ const TimetableGridPage: React.FC = () => {
     const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
     const [refreshKey, setRefreshKey] = useState<number>(0);
     const [isGenerating, setIsGenerating] = useState<boolean>(false);
-    const [generateStatus, setGenerateStatus] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
+    const [generateStatus, setGenerateStatus] = useState<{
+        type: 'success' | 'error' | 'warning';
+        message: string
+    } | null>(null);
     useEffect(() => {
         if (!id) {
             setError('No Timetable ID provided in URL.');
@@ -65,7 +75,7 @@ const TimetableGridPage: React.FC = () => {
                     fetchTimetableStructureById(id),
                     fetchClassesForTimetable(id)
                 ]);
-                console.log('Timetable data fetched:', { structureData, classesData });
+                console.log('Timetable data fetched:', {structureData, classesData});
                 setTimetableStructure(structureData);
                 setClasses(classesData);
             } catch (err) {
@@ -79,7 +89,7 @@ const TimetableGridPage: React.FC = () => {
         };
         loadData();
     }, [id, refreshKey]);
-    const { scheduleMap, uniqueDays, uniquePeriods } = useMemo(() => {
+    const {scheduleMap, uniqueDays, uniquePeriods} = useMemo(() => {
         const map: ProcessedScheduleMap = {};
         let days: TimetableDay[] = [];
         let periods: TimetablePeriod[] = [];
@@ -88,28 +98,28 @@ const TimetableGridPage: React.FC = () => {
             days = [...timetableStructure.days].sort((a, b) => dayOrder.indexOf(a.name) - dayOrder.indexOf(b.name));
             periods = [...timetableStructure.periods].sort((a, b) => dayjs(a.start, 'HH:mm').diff(dayjs(b.start, 'HH:mm')));
             classes.forEach(cls => {
-                 if (cls.occurrences && cls.occurrences.length > 0) {
-                     cls.occurrences.forEach(occ => {
-                         if (!map[occ.dayId]) {
-                             map[occ.dayId] = {};
-                         }
-                         if (!map[occ.dayId][occ.startPeriodId]) {
-                             map[occ.dayId][occ.startPeriodId] = [];
-                         }
-                         map[occ.dayId][occ.startPeriodId].push({
-                             classId: cls.id,
-                             occurrenceId: occ.id ?? 0,
-                             courseName: cls.course.name,
-                             teacherName: cls.teacher?.name ?? null,
-                             length: occ.length,
-                         });
-                     });
-                 }
+                if (cls.classOccurrences && cls.length > 0) {
+                    cls.classOccurrences.forEach(occ => {
+                        if (!map[occ.dayId]) {
+                            map[occ.dayId] = {};
+                        }
+                        if (!map[occ.dayId][occ.startPeriodId]) {
+                            map[occ.dayId][occ.startPeriodId] = [];
+                        }
+                        map[occ.dayId][occ.startPeriodId].push({
+                            classId: cls.id,
+                            occurrenceId: occ.id ?? 0,
+                            courseName: cls.courseDto.name,
+                            teacherName: cls.teacherDto?.name ?? null,
+                            length: cls.length,
+                        });
+                    });
+                }
             });
         }
-        return { scheduleMap: map, uniqueDays: days, uniquePeriods: periods };
+        return {scheduleMap: map, uniqueDays: days, uniquePeriods: periods};
     }, [timetableStructure, classes]);
-     const handleLessonClick = (classId: number) => {
+    const handleLessonClick = (classId: number) => {
         console.log(`Clicked Class ID: ${classId}. Opening details modal.`);
         setSelectedClassId(classId);
         setIsModalOpen(true);
@@ -118,7 +128,7 @@ const TimetableGridPage: React.FC = () => {
         setIsModalOpen(false);
         setSelectedClassId(null);
     };
-     const handleCreateClassClick = () => {
+    const handleCreateClassClick = () => {
         if (id) {
             console.log(`Navigating to class creation for timetable ID: ${id}`);
             navigate(`/table/${id}/create-class`);
@@ -134,15 +144,15 @@ const TimetableGridPage: React.FC = () => {
             const result = await generateScheduleForTimetable(id);
             console.log('Schedule generation response:', result);
             let statusType: 'success' | 'warning' = 'success';
-             if (result?.message?.toLowerCase().includes('failed') || result?.message?.toLowerCase().includes('conflict')) {
-                 statusType = 'warning';
-             }
-            setGenerateStatus({ type: statusType, message: result?.message || "Schedule generation process finished." });
+            if (result?.message?.toLowerCase().includes('failed') || result?.message?.toLowerCase().includes('conflict')) {
+                statusType = 'warning';
+            }
+            setGenerateStatus({type: statusType, message: result?.message || "Schedule generation process finished."});
             setRefreshKey(prev => prev + 1);
         } catch (err) {
             console.error('Error during schedule generation request:', err);
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during schedule generation.';
-            setGenerateStatus({ type: 'error', message: `Generation Error: ${errorMessage}` });
+            setGenerateStatus({type: 'error', message: `Generation Error: ${errorMessage}`});
             setError(`Generation Error: ${errorMessage}`);
         } finally {
             setIsGenerating(false);
@@ -150,16 +160,16 @@ const TimetableGridPage: React.FC = () => {
     };
     if (loading && !timetableStructure) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <CircularProgress />
-                <Typography sx={{ ml: 2 }}>Loading timetable data...</Typography>
+            <Box sx={{display: 'flex', justifyContent: 'center', mt: 4}}>
+                <CircularProgress/>
+                <Typography sx={{ml: 2}}>Loading timetable data...</Typography>
             </Box>
         );
     }
     if (error && !timetableStructure) {
         return (
             <Container maxWidth="lg">
-                <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+                <Alert severity="error" sx={{mt: 2}}>{error}</Alert>
                 {/* Optional: Add retry button */}
             </Container>
         );
@@ -167,18 +177,19 @@ const TimetableGridPage: React.FC = () => {
     if (!timetableStructure) {
         return (
             <Container maxWidth="lg">
-                <Typography sx={{ mt: 2 }}>Timetable structure could not be loaded.</Typography>
+                <Typography sx={{mt: 2}}>Timetable structure could not be loaded.</Typography>
             </Container>
         );
     }
     if (uniqueDays.length === 0 || uniquePeriods.length === 0) {
         return (
             <Container maxWidth="lg">
-                <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', my: 3 }}>
+                <Typography variant="h4" gutterBottom sx={{textAlign: 'center', my: 3}}>
                     Timetable: {timetableStructure.name} {id ? `(ID: ${id})` : ''}
                 </Typography>
-                <Alert severity="info" sx={{ mt: 2 }}>
-                    This timetable structure is incomplete. It needs defined Days and Periods before classes can be scheduled or displayed.
+                <Alert severity="info" sx={{mt: 2}}>
+                    This timetable structure is incomplete. It needs defined Days and Periods before classes can be
+                    scheduled or displayed.
                 </Alert>
             </Container>
         );
@@ -186,55 +197,66 @@ const TimetableGridPage: React.FC = () => {
     // --- Main Grid Rendering ---
     return (
         <Container maxWidth="lg">
-            <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', my: 3 }}>
+            <Typography variant="h4" gutterBottom sx={{textAlign: 'center', my: 3}}>
                 Timetable: {timetableStructure.name} {id ? `(ID: ${id})` : ''}
-                 {loading && <CircularProgress size={20} sx={{ ml: 1 }} />} {}
+                {loading && <CircularProgress size={20} sx={{ml: 1}}/>} {}
             </Typography>
-             {/* Display Generation Status */}
-             {generateStatus && (
-                 <Alert severity={generateStatus.type} sx={{ mt: 2, mb: 2 }} onClose={() => setGenerateStatus(null)}> {/* Allow dismissing */}
-                     {generateStatus.message}
-                 </Alert>
-             )}
-              {error && timetableStructure && (
-                 <Alert severity="error" sx={{ mt: 2, mb: 2 }} onClose={() => setError(null)}>
-                     Error loading data: {error}
-                 </Alert>
-              )}
+            {/* Display Generation Status */}
+            {generateStatus && (
+                <Alert severity={generateStatus.type} sx={{mt: 2, mb: 2}}
+                       onClose={() => setGenerateStatus(null)}> {/* Allow dismissing */}
+                    {generateStatus.message}
+                </Alert>
+            )}
+            {error && timetableStructure && (
+                <Alert severity="error" sx={{mt: 2, mb: 2}} onClose={() => setError(null)}>
+                    Error loading data: {error}
+                </Alert>
+            )}
             {/* Action Buttons */}
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                 <Button
-                     variant="outlined"
-                     startIcon={isGenerating ? <CircularProgress size={20}/> : <AutoAwesomeIcon />}
-                     onClick={handleGenerateScheduleClick}
-                     disabled={isGenerating || loading}
-                 >
-                     {isGenerating ? 'Generating...' : 'Generate Schedule'}
-                 </Button>
+            <Box sx={{mb: 2, display: 'flex', justifyContent: 'flex-end', gap: 1}}>
+                <Button
+                    variant="outlined"
+                    startIcon={isGenerating ? <CircularProgress size={20}/> : <AutoAwesomeIcon/>}
+                    onClick={handleGenerateScheduleClick}
+                    disabled={isGenerating || loading}
+                >
+                    {isGenerating ? 'Generating...' : 'Generate Schedule'}
+                </Button>
                 <Button
                     variant="contained"
-                    startIcon={<AddIcon />}
+                    startIcon={<AddIcon/>}
                     onClick={handleCreateClassClick}
                     disabled={isGenerating || loading}
                 >
                     Add Class Manually
                 </Button>
             </Box>
-            <Divider sx={{ mb: 2 }}/>
-             {classes.length === 0 && !loading && (
-                 <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
-                     No classes defined for this timetable. Add classes manually or use "Generate Schedule" if requirements are set.
-                 </Alert>
-             )}
+            <Divider sx={{mb: 2}}/>
+            {classes.length === 0 && !loading && (
+                <Alert severity="info" sx={{mt: 2, mb: 2}}>
+                    No classes defined for this timetable. Add classes manually or use "Generate Schedule" if
+                    requirements are set.
+                </Alert>
+            )}
             {/* Render the table only if there are periods and days */}
             {(uniquePeriods.length > 0 && uniqueDays.length > 0) && (
-                <TableContainer component={Paper} elevation={3} sx={{ overflowX: 'auto' }}>
-                    <Table sx={{ minWidth: 700 }} aria-label={`Timetable ${id}`}>
-                        <TableHead sx={{ backgroundColor: 'grey.200' }}>
+                <TableContainer component={Paper} elevation={3} sx={{overflowX: 'auto'}}>
+                    <Table sx={{minWidth: 700}} aria-label={`Timetable ${id}`}>
+                        <TableHead sx={{backgroundColor: 'grey.200'}}>
                             <TableRow>
-                                <TableCell sx={{ fontWeight: 'bold', width: '120px', minWidth: '120px', position: 'sticky', left: 0, zIndex: 2, backgroundColor: 'grey.200' }}>Time</TableCell>
+                                <TableCell sx={{
+                                    fontWeight: 'bold',
+                                    width: '120px',
+                                    minWidth: '120px',
+                                    position: 'sticky',
+                                    left: 0,
+                                    zIndex: 2,
+                                    backgroundColor: 'grey.200'
+                                }}>Time</TableCell>
                                 {uniqueDays.map((day) => (
-                                    <TableCell key={day.id} align="center" sx={{ fontWeight: 'bold', minWidth: '150px' }}>{day.name}</TableCell>
+                                    <TableCell key={day.id} align="center"
+                                               sx={{fontWeight: 'bold', minWidth: '150px'}}>{day.name}</TableCell>
                                 ))}
                             </TableRow>
                         </TableHead>
@@ -278,19 +300,34 @@ const TimetableGridPage: React.FC = () => {
                                                             <Chip
                                                                 key={`${content.classId}-${content.occurrenceId}`}
                                                                 label={
-                                                                    <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', textAlign: 'left' }}>
-                                                                         <Typography variant="caption" display="block" sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>
+                                                                    <Box sx={{
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'normal',
+                                                                        textAlign: 'left'
+                                                                    }}>
+                                                                        <Typography variant="caption" display="block"
+                                                                                    sx={{
+                                                                                        fontWeight: 'bold',
+                                                                                        lineHeight: 1.2
+                                                                                    }}>
                                                                             {content.courseName}
-                                                                         </Typography>
+                                                                        </Typography>
                                                                         {content.teacherName && (
-                                                                             <Typography variant="caption" display="block" sx={{ lineHeight: 1.2 }}>
+                                                                            <Typography variant="caption"
+                                                                                        display="block"
+                                                                                        sx={{lineHeight: 1.2}}>
                                                                                 {content.teacherName}
                                                                             </Typography>
-                                                                         )}
-                                                                          <Typography variant="caption" display="block" sx={{ lineHeight: 1.2, color: 'text.secondary' }}>
+                                                                        )}
+                                                                        <Typography variant="caption" display="block"
+                                                                                    sx={{
+                                                                                        lineHeight: 1.2,
+                                                                                        color: 'text.secondary'
+                                                                                    }}>
                                                                             ({content.length}p)
-                                                                         </Typography>
-                                                                     </Box>
+                                                                        </Typography>
+                                                                    </Box>
                                                                 }
                                                                 onClick={() => handleLessonClick(content.classId)}
                                                                 variant="outlined"
@@ -311,10 +348,10 @@ const TimetableGridPage: React.FC = () => {
                                                             />
                                                         ))}
                                                     </Stack>
-                                                 )}
-                                                 {occurrencesInCell.length === 0 && (
-                                                     <Box sx={{ minHeight: '40px' }}></Box>
-                                                 )}
+                                                )}
+                                                {occurrencesInCell.length === 0 && (
+                                                    <Box sx={{minHeight: '40px'}}></Box>
+                                                )}
                                             </TableCell>
                                         );
                                     })}
@@ -325,12 +362,12 @@ const TimetableGridPage: React.FC = () => {
                 </TableContainer>
             )} {}
             {timetableStructure && (
-                 <ClassDetailsModal
-                     classId={selectedClassId}
-                     open={isModalOpen}
-                     onClose={handleCloseModal}
-                     timetableStructure={timetableStructure}
-                 />
+                <ClassDetailsModal
+                    classId={selectedClassId}
+                    open={isModalOpen}
+                    onClose={handleCloseModal}
+                    timetableStructure={timetableStructure}
+                />
             )}
         </Container>
     );

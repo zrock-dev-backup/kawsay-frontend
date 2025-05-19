@@ -238,7 +238,7 @@ const ClassCreationPage: React.FC = () => {
             console.log('Submitting class creation:', apiPayload);
             const result = await createClass(apiPayload);
             console.log('Class creation successful:', result);
-            setSubmitStatus({ type: 'success', message: `Class "${result.course.name}" created successfully! (ID: ${result.id})` });
+            setSubmitStatus({ type: 'success', message: `Class "${result.courseDto.name}" created successfully! (ID: ${result.id})` });
              setSelectedCourseId(null);
              setSelectedTeacherId(null);
              setOccurrences([]);
