@@ -43,6 +43,11 @@ export interface ClassOccurrence {
     startPeriodId: number;
 }
 
+export interface PeriodPreference {
+    id: number;
+    startPeriodId: number;
+}
+
 export interface Class {
     id: number;
     timetableId: number;
@@ -50,11 +55,18 @@ export interface Class {
     teacherDto: Teacher | null;
     classOccurrences: ClassOccurrence[];
     length: number;
+    frequency: number;
+}
+
+export interface CreatePeriodPreferenceRequest {
+    startPeriodId: number;
 }
 
 export interface CreateClassRequest {
     timetableId: number;
     courseId: number;
-    teacherId: number | null;
-    classOccurrences: Omit<ClassOccurrence, 'id'>[];
+    teacherId: number;
+    length: number;
+    frequency: number;
+    periodPreferencesList: CreatePeriodPreferenceRequest[];
 }

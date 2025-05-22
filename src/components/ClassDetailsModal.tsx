@@ -11,13 +11,12 @@ import {
     ListItemText,
     IconButton,
     Grid,
-    Paper
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import type { Class, TimetableStructure, TimetablePeriod, TimetableDay } from '../interfaces/apiDataTypes';
-import { fetchClassById, fetchTimetableStructureById } from '../services/apiService';
+import type { Class, TimetableStructure } from '../interfaces/apiDataTypes';
+import { fetchClassById } from '../services/apiService';
 dayjs.extend(customParseFormat);
 interface ClassDetailsModalProps {
     classId: number | null;
@@ -123,13 +122,13 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({ classId, open, on
                         </Grid>
                         <Grid item xs={12}>
                             <Typography variant="h6" component="h3" sx={{ mt: 2, mb: 1 }}>Scheduled Occurrences:</Typography>
-                            {classData.occurrences.length > 0 ? (
+                            {classData.classOccurrences.length > 0 ? (
                                 <List dense>
-                                    {classData.occurrences.map((occurrence, index) => (
+                                    {classData.classOccurrences.map((occurrence, index) => (
                                         <ListItem key={occurrence.id || index} disablePadding>
                                             <ListItemText
                                                 primary={`${getDayName(occurrence.dayId)}: ${getOccurrenceTimeRange(occurrence)}`}
-                                                secondary={`Length: ${occurrence.length} period${occurrence.length > 1 ? 's' : ''}`}
+                                                secondary={`Length: ${classData.length} period${classData.length > 1 ? 's' : ''}`}
                                             />
                                         </ListItem>
                                     ))}
