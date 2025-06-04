@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ViewListIcon from '@mui/icons-material/ViewList';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import type {TimetableStructure, TimetableDay, TimetablePeriod, Class as ApiClass} from '../interfaces/apiDataTypes';
@@ -29,6 +30,7 @@ import {
     generateScheduleForTimetable
 } from '../services/apiService';
 import ClassDetailsModal from '../components/ClassDetailsModal';
+import ClassListModal from '../components/ClassListModal';
 
 dayjs.extend(customParseFormat);
 
@@ -54,12 +56,14 @@ const TimetableGridPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+    const [isClassListModalOpen, setIsClassListModalOpen] = useState<boolean>(false);
     const [refreshKey, setRefreshKey] = useState<number>(0);
     const [isGenerating, setIsGenerating] = useState<boolean>(false);
     const [generateStatus, setGenerateStatus] = useState<{
         type: 'success' | 'error' | 'warning';
         message: string
     } | null>(null);
+
     useEffect(() => {
         if (!id) {
             setError('No Timetable ID provided in URL.');
@@ -89,6 +93,7 @@ const TimetableGridPage: React.FC = () => {
         };
         loadData();
     }, [id, refreshKey]);
+
     const {scheduleMap, uniqueDays, uniquePeriods} = useMemo(() => {
         const map: ProcessedScheduleMap = {};
         let days: TimetableDay[] = [];
@@ -119,21 +124,34 @@ const TimetableGridPage: React.FC = () => {
         }
         return {scheduleMap: map, uniqueDays: days, uniquePeriods: periods};
     }, [timetableStructure, classes]);
+
     const handleLessonClick = (classId: number) => {
         console.log(`Clicked Class ID: ${classId}. Opening details modal.`);
         setSelectedClassId(classId);
         setIsModalOpen(true);
     };
+
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setSelectedClassId(null);
     };
+
+    const handleOpenClassListModal = () => {
+        setIsClassListModalOpen(true);
+    };
+
+    const handleSelectClassFromList = (classId: number) => {
+        setIsClassListModalOpen(false);
+        handleLessonClick(classId);
+    };
+
     const handleCreateClassClick = () => {
         if (id) {
             console.log(`Navigating to class creation for timetable ID: ${id}`);
             navigate(`/table/${id}/create-class`);
         }
     };
+
     const handleGenerateScheduleClick = async () => {
         if (!id) return;
         setIsGenerating(true);
@@ -158,6 +176,7 @@ const TimetableGridPage: React.FC = () => {
             setIsGenerating(false);
         }
     };
+
     if (loading && !timetableStructure) {
         return (
             <Box sx={{display: 'flex', justifyContent: 'center', mt: 4}}>
@@ -166,14 +185,15 @@ const TimetableGridPage: React.FC = () => {
             </Box>
         );
     }
+
     if (error && !timetableStructure) {
         return (
             <Container maxWidth="lg">
                 <Alert severity="error" sx={{mt: 2}}>{error}</Alert>
-                {/* Optional: Add retry button */}
             </Container>
         );
     }
+
     if (!timetableStructure) {
         return (
             <Container maxWidth="lg">
@@ -181,6 +201,8 @@ const TimetableGridPage: React.FC = () => {
             </Container>
         );
     }
+    
+    // Display this message if structure is loaded but it's empty
     if (uniqueDays.length === 0 || uniquePeriods.length === 0) {
         return (
             <Container maxWidth="lg">
@@ -191,16 +213,54 @@ const TimetableGridPage: React.FC = () => {
                     This timetable structure is incomplete. It needs defined Days and Periods before classes can be
                     scheduled or displayed.
                 </Alert>
+                 {/* Action Buttons even if structure is empty */}
+                <Box sx={{my: 2, display: 'flex', justifyContent: 'flex-end', gap: 1}}>
+                    <Button
+                        variant="outlined"
+                        startIcon={isGenerating ? <CircularProgress size={20}/> : <AutoAwesomeIcon/>}
+                        onClick={handleGenerateScheduleClick}
+                        disabled={isGenerating || loading}
+                    >
+                        {isGenerating ? 'Generating...' : 'Generate Schedule'}
+                    </Button>
+                     <Button
+                        variant="outlined"
+                        startIcon={<ViewListIcon />}
+                        onClick={handleOpenClassListModal}
+                        disabled={loading || classes.length === 0}
+                    >
+                        View Classes
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon/>}
+                        onClick={handleCreateClassClick}
+                        disabled={isGenerating || loading}
+                    >
+                        Add Class Manually
+                    </Button>
+                </Box>
+                {timetableStructure && (
+                    <ClassListModal
+                        open={isClassListModalOpen}
+                        onClose={() => setIsClassListModalOpen(false)}
+                        classes={classes}
+                        onClassSelect={handleSelectClassFromList}
+                        timetableName={timetableStructure.name}
+                    />
+                )}
             </Container>
         );
     }
+
     // --- Main Grid Rendering ---
     return (
         <Container maxWidth="lg">
             <Typography variant="h4" gutterBottom sx={{textAlign: 'center', my: 3}}>
                 Timetable: {timetableStructure.name} {id ? `(ID: ${id})` : ''}
-                {loading && <CircularProgress size={20} sx={{ml: 1}}/>} {}
+                {loading && <CircularProgress size={20} sx={{ml: 1}}/>}
             </Typography>
+
             {/* Display Generation Status */}
             {generateStatus && (
                 <Alert severity={generateStatus.type} sx={{mt: 2, mb: 2}}
@@ -208,11 +268,14 @@ const TimetableGridPage: React.FC = () => {
                     {generateStatus.message}
                 </Alert>
             )}
+
+            {/* Display general error if structure is loaded but classes/etc failed */}
             {error && timetableStructure && (
                 <Alert severity="error" sx={{mt: 2, mb: 2}} onClose={() => setError(null)}>
                     Error loading data: {error}
                 </Alert>
             )}
+
             {/* Action Buttons */}
             <Box sx={{mb: 2, display: 'flex', justifyContent: 'flex-end', gap: 1}}>
                 <Button
@@ -224,6 +287,14 @@ const TimetableGridPage: React.FC = () => {
                     {isGenerating ? 'Generating...' : 'Generate Schedule'}
                 </Button>
                 <Button
+                    variant="outlined"
+                    startIcon={<ViewListIcon />}
+                    onClick={handleOpenClassListModal}
+                    disabled={loading || classes.length === 0}
+                >
+                    View Classes
+                </Button>
+                <Button
                     variant="contained"
                     startIcon={<AddIcon/>}
                     onClick={handleCreateClassClick}
@@ -233,12 +304,14 @@ const TimetableGridPage: React.FC = () => {
                 </Button>
             </Box>
             <Divider sx={{mb: 2}}/>
-            {classes.length === 0 && !loading && (
+
+            {classes.length === 0 && !loading && (uniqueDays.length > 0 && uniquePeriods.length > 0) && (
                 <Alert severity="info" sx={{mt: 2, mb: 2}}>
                     No classes defined for this timetable. Add classes manually or use "Generate Schedule" if
                     requirements are set.
                 </Alert>
             )}
+
             {/* Render the table only if there are periods and days */}
             {(uniquePeriods.length > 0 && uniqueDays.length > 0) && (
                 <TableContainer component={Paper} elevation={3} sx={{overflowX: 'auto'}}>
@@ -349,6 +422,7 @@ const TimetableGridPage: React.FC = () => {
                                                         ))}
                                                     </Stack>
                                                 )}
+                                                {/* Placeholder Box if no occurrences, to maintain cell height */}
                                                 {occurrencesInCell.length === 0 && (
                                                     <Box sx={{minHeight: '40px'}}></Box>
                                                 )}
@@ -360,7 +434,9 @@ const TimetableGridPage: React.FC = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
-            )} {}
+            )}
+
+            {/* Class Details Modal */}
             {timetableStructure && (
                 <ClassDetailsModal
                     classId={selectedClassId}
@@ -369,7 +445,19 @@ const TimetableGridPage: React.FC = () => {
                     timetableStructure={timetableStructure}
                 />
             )}
+
+            {/* Render the Class List Modal */}
+            {timetableStructure && (
+                <ClassListModal
+                    open={isClassListModalOpen}
+                    onClose={() => setIsClassListModalOpen(false)}
+                    classes={classes}
+                    onClassSelect={handleSelectClassFromList}
+                    timetableName={timetableStructure.name}
+                />
+            )}
         </Container>
     );
 };
+
 export default TimetableGridPage;
