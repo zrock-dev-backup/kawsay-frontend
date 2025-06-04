@@ -1,0 +1,12 @@
+services:
+  kawsayUI-test:
+    image: kawsay-ui-test:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    volumes:
+      - .:/app
+      - /app/node_modules
+
