@@ -125,10 +125,10 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({classId, open, onC
                                 {classData.teacherDto ? `${classData.teacherDto.name} (${classData.teacherDto.type})` : 'Not Assigned'}
                             </Typography>
                         </Grid>
-                        <Grid item xs={12}>
-                            <Typography variant="body1"><strong>Timetable ID:</strong> {classData.timetableId}
-                            </Typography>
-                        </Grid>
+                        {/*<Grid item xs={12}>*/}
+                        {/*    <Typography variant="body1"><strong>Timetable ID:</strong> {classData.timetableId}*/}
+                        {/*    </Typography>*/}
+                        {/*</Grid>*/}
                         <Grid item xs={12}>
                             <Typography variant="h6" component="h3" sx={{mt: 2, mb: 1}}>Scheduled
                                 Occurrences:</Typography>

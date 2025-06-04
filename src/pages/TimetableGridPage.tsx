@@ -237,7 +237,7 @@ const TimetableGridPage: React.FC = () => {
                         onClick={handleCreateClassClick}
                         disabled={isGenerating || loading}
                     >
-                        Add Class Manually
+                        Add Class
                     </Button>
                 </Box>
                 {timetableStructure && (
@@ -257,7 +257,8 @@ const TimetableGridPage: React.FC = () => {
     return (
         <Container maxWidth="lg">
             <Typography variant="h4" gutterBottom sx={{textAlign: 'center', my: 3}}>
-                Timetable: {timetableStructure.name} {id ? `(ID: ${id})` : ''}
+                {/*Timetable: {timetableStructure.name} {id ? `(ID: ${id})` : ''}*/}
+                Timetable: {timetableStructure.name}
                 {loading && <CircularProgress size={20} sx={{ml: 1}}/>}
             </Typography>
 
@@ -300,7 +301,7 @@ const TimetableGridPage: React.FC = () => {
                     onClick={handleCreateClassClick}
                     disabled={isGenerating || loading}
                 >
-                    Add Class Manually
+                    Add Class
                 </Button>
             </Box>
             <Divider sx={{mb: 2}}/>
