@@ -83,6 +83,7 @@ const TimetableGridPage: React.FC = () => {
                     scheduleMap={scheduleMap}
                     sortedPeriods={sortedPeriods}
                     onLessonClick={handleLessonClick}
+                    activeDays={structure.days}
                 />
             ) : (
                 <MonthView
