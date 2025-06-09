@@ -212,7 +212,7 @@ const ClassCreationPage: React.FC = () => {
     return (
         <Container maxWidth="md">
             <Typography variant="h4" gutterBottom>
-                Create New Class for Timetable: {timetableStructure.name} (ID: {timetableId})
+                Create New Class for Timetable: {timetableStructure.name}
             </Typography>
 
             {/* Error messages */}
@@ -276,12 +276,12 @@ const ClassCreationPage: React.FC = () => {
                     disabled={isSubmitting || loadingTeachers}
                     error={!!errors.teacherId}
                 >
-                    <InputLabel id="teacher-select-label">Teacher (Optional)</InputLabel>
+                    <InputLabel id="teacher-select-label">Teacher</InputLabel>
                     <Select
                         labelId="teacher-select-label"
                         id="teacher-select"
                         {...register("teacherId")}
-                        label="Teacher (Optional)"
+                        label="Teacher"
                         renderValue={(selected) => {
                             if (loadingTeachers) return <Skeleton variant="text" width="80%"/>;
                             if (!selected) return <em>None</em>;

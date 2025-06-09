@@ -24,12 +24,16 @@ export interface TimetablePeriod {
 export interface TimetableStructure {
     id: number;
     name: string;
+    startDate: string; // Format: "YYYY-MM-DD"
+    endDate: string;   // Format: "YYYY-MM-DD"
     days: TimetableDay[];
     periods: TimetablePeriod[];
 }
 
 export interface CreateTimetableRequest {
     name: string;
+    startDate: string; // Format: "YYYY-MM-DD"
+    endDate: string;   // Format: "YYYY-MM-DD"
     days: string[];
     periods: {
         start: string;
@@ -39,7 +43,7 @@ export interface CreateTimetableRequest {
 
 export interface ClassOccurrence {
     id?: number;
-    dayId: number;
+    date: string; // Format: "YYYY-MM-DD"
     startPeriodId: number;
 }
 
