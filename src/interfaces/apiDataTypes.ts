@@ -63,6 +63,7 @@ export interface Class {
 }
 
 export interface CreatePeriodPreferenceRequest {
+    dayId: number;
     startPeriodId: number;
 }
 
@@ -72,5 +73,5 @@ export interface CreateClassRequest {
     teacherId: number;
     length: number;
     frequency: number;
-    periodPreferencesList: CreatePeriodPreferenceRequest[];
+    periodPreferences: CreatePeriodPreferenceRequest[];
 }
