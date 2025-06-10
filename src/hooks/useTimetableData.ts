@@ -1,16 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
+import {useState, useEffect, useMemo} from 'react';
 import dayjs from 'dayjs';
-import { fetchTimetableStructureById, fetchClassesForTimetable } from '../services/apiService';
-import type { TimetableStructure, Class as ApiClass } from '../interfaces/apiDataTypes';
+import {fetchTimetableStructureById, fetchClassesForTimetable} from '../services/apiService';
+import type {TimetableStructure, Class as ApiClass} from '../interfaces/apiDataTypes';
 
 interface GridCellContent {
     classId: number;
     courseName: string;
+    courseCode: string;
     teacherName: string | null;
     length: number;
 }
 
-type ProcessedScheduleMap = Map<string, GridCellContent[]>; // Key is now "YYYY-MM-DD_periodId"
+type ProcessedScheduleMap = Map<string, GridCellContent[]>;
 export function useTimetableData(timetableId: string | undefined) {
     const [structure, setStructure] = useState<TimetableStructure | null>(null);
     const [classes, setClasses] = useState<ApiClass[]>([]);
@@ -50,7 +51,6 @@ export function useTimetableData(timetableId: string | undefined) {
 
         classes.forEach(cls => {
             cls.classOccurrences.forEach(occ => {
-                // --- REFINED KEY ---
                 const key = `${occ.date}_${occ.startPeriodId}`;
                 if (!map.has(key)) {
                     map.set(key, []);
@@ -58,6 +58,7 @@ export function useTimetableData(timetableId: string | undefined) {
                 map.get(key)!.push({
                     classId: cls.id,
                     courseName: cls.courseDto.name,
+                    courseCode: cls.courseDto.code, // Added courseCode
                     teacherName: cls.teacherDto?.name ?? null,
                     length: cls.length,
                 });
@@ -77,5 +78,5 @@ export function useTimetableData(timetableId: string | undefined) {
         setRefreshKey(prev => prev + 1);
     };
 
-    return { structure, classes, loading, error, scheduleMap, sortedPeriods, refreshData };
+    return {structure, classes, loading, error, scheduleMap, sortedPeriods, refreshData};
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Typography} from '@mui/material';
+import {Typography, Box} from '@mui/material';
 import {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
 import type {TimetablePeriod, TimetableDay} from '../interfaces/apiDataTypes';
@@ -9,13 +9,16 @@ import {
     DayHeaderCell,
     TimeLabelCell,
     BackgroundCell,
-    EventPaper,
+    SingleEventPaper,
+    EventStack,
+    EventChip,
     TopLeftCell
 } from './WeekView.styles';
 
 interface GridCellContent {
     classId: number;
     courseName: string;
+    courseCode: string; // Ensure this is here
     teacherName: string | null;
     length: number;
 }
@@ -46,37 +49,10 @@ const WeekView: React.FC<WeekViewProps> = ({
     sortedPeriods.forEach((period, index) => {
         periodIdToRowIndexMap.set(period.id, index + 2);
     });
+
     const dayToColumnIndexMap = new Map<number, number>();
     weekDays.forEach((day, index) => {
         dayToColumnIndexMap.set(day.day(), index + 2);
-    });
-
-    const eventsToRender = Array.from(scheduleMap.entries()).flatMap(([key, contents]) => {
-        const [dateStr, periodIdStr] = key.split('_');
-        const eventDate = dayjs(dateStr);
-        const startPeriodId = parseInt(periodIdStr, 10);
-
-        const gridRowStart = periodIdToRowIndexMap.get(startPeriodId);
-        const gridColumn = dayToColumnIndexMap.get(eventDate.day());
-
-        if (!gridRowStart || !gridColumn) return [];
-
-        const startPeriodIndex = sortedPeriods.findIndex(p => p.id === startPeriodId);
-        if (startPeriodIndex === -1) return [];
-
-        return contents.map(content => {
-            const endPeriodIndex = startPeriodIndex + content.length - 1;
-            const startPeriod = sortedPeriods[startPeriodIndex];
-            const endPeriod = sortedPeriods[endPeriodIndex] || startPeriod;
-
-            return {
-                ...content,
-                id: `${key}-${content.classId}`,
-                gridRowStart,
-                gridColumn,
-                timeString: `${startPeriod.start} - ${endPeriod.end}`,
-            };
-        });
     });
 
     return (
@@ -103,51 +79,76 @@ const WeekView: React.FC<WeekViewProps> = ({
             {/* Time Labels & Background Grid Cells */}
             {sortedPeriods.map((period, periodIndex) => (
                 <React.Fragment key={period.id}>
-                    {/* Time Label */}
-                    <TimeLabelCell
-                        sx={{
-                            gridRow: periodIndex + 2,
-                            gridColumn: 1,
-                        }}
-                    >
-                        <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{position: 'relative', top: '-0.5em'}}
-                        >
+                    <TimeLabelCell sx={{gridRow: periodIndex + 2, gridColumn: 1}}>
+                        <Typography variant="caption" color="text.secondary" sx={{position: 'relative', top: '-0.5em'}}>
                             {period.start}
                         </Typography>
                     </TimeLabelCell>
-                    {/* Background Cells for this row */}
                     {weekDays.map((day, dayIndex) => (
                         <BackgroundCell
                             key={`${period.id}-${day.format('D')}`}
-                            sx={{
-                                gridRow: periodIndex + 2,
-                                gridColumn: dayIndex + 2,
-                            }}
+                            sx={{gridRow: periodIndex + 2, gridColumn: dayIndex + 2}}
                         />
                     ))}
                 </React.Fragment>
             ))}
 
-            {/* Event Blocks */}
-            {eventsToRender.map(event => (
-                <EventPaper
-                    key={event.id}
-                    elevation={0}
-                    onClick={() => onLessonClick(event.classId)}
-                    sx={{
-                        gridColumn: event.gridColumn,
-                        gridRowStart: event.gridRowStart,
-                        gridRowEnd: `span ${event.length}`,
-                    }}
-                >
-                    <Typography variant="caption" noWrap>{event.timeString}</Typography>
-                    <Typography variant="body2" fontWeight="bold" noWrap>{event.courseName}</Typography>
-                </EventPaper>
-            ))}
+            {/* Render Events */}
+            {Array.from(scheduleMap.entries()).map(([key, contents]) => {
+                const [dateStr, periodIdStr] = key.split('_');
+                const eventDate = dayjs(dateStr);
+                const startPeriodId = parseInt(periodIdStr, 10);
+
+                const gridRowStart = periodIdToRowIndexMap.get(startPeriodId);
+                const gridColumn = dayToColumnIndexMap.get(eventDate.day());
+
+                if (!gridRowStart || !gridColumn || contents.length === 0) return null;
+
+                const firstEvent = contents[0];
+                const eventLength = firstEvent.length;
+
+                const eventContainerStyle = {
+                    gridColumn,
+                    gridRowStart,
+                    gridRowEnd: `span ${eventLength}`,
+                };
+
+                if (contents.length === 1) {
+                    // --- RENDER SINGLE EVENT ---
+                    return (
+                        <Box key={key} sx={eventContainerStyle}>
+                            <SingleEventPaper
+                                elevation={0}
+                                onClick={() => onLessonClick(firstEvent.classId)}
+                            >
+                                <Typography variant="body2" fontWeight="bold" noWrap>
+                                    {firstEvent.courseCode}
+                                </Typography>
+                                <Typography variant="caption" noWrap>
+                                    {firstEvent.teacherName}
+                                </Typography>
+                            </SingleEventPaper>
+                        </Box>
+                    );
+                } else {
+                    // --- RENDER STACKED EVENTS ---
+                    return (
+                        <EventStack key={key} sx={eventContainerStyle}>
+                            {contents.map(event => (
+                                <EventChip
+                                    key={event.classId}
+                                    label={event.courseCode}
+                                    onClick={() => onLessonClick(event.classId)}
+                                    size="small"
+                                    title={`${event.courseName} - ${event.teacherName}`}
+                                />
+                            ))}
+                        </EventStack>
+                    );
+                }
+            })}
         </GridContainer>
     );
 };
+
 export default WeekView;

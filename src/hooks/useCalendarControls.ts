@@ -1,37 +1,40 @@
-import { useState, useCallback } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
+import {useState, useCallback} from 'react';
+import dayjs, {Dayjs} from 'dayjs';
+import {View} from 'react-big-calendar';
 
 export function useCalendarControls(initialDate?: Dayjs) {
-    const [view, setView] = useState<'week' | 'month'>('week');
+    const [view, setView] = useState<View>('week');
     const [displayDate, setDisplayDate] = useState(() => initialDate || dayjs());
 
-    const handleViewChange = useCallback((
-        event: React.MouseEvent<HTMLElement>,
-        newView: 'week' | 'month' | null
-    ) => {
-        if (newView !== null) {
-            setView(newView);
-        }
+    const handleViewChange = useCallback((newView: View) => {
+        if (newView) setView(newView);
+    }, []);
+
+    const handleNavigate = useCallback((newDate: Date) => {
+        setDisplayDate(dayjs(newDate));
     }, []);
 
     const handlePrev = useCallback(() => {
-        setDisplayDate(prev => prev.subtract(1, view));
-    }, [view]);
+        const newDate = displayDate.subtract(1, view === 'month' ? 'month' : 'week').toDate();
+        handleNavigate(newDate);
+    }, [view, displayDate, handleNavigate]);
 
     const handleNext = useCallback(() => {
-        setDisplayDate(prev => prev.add(1, view));
-    }, [view]);
+        const newDate = displayDate.add(1, view === 'month' ? 'month' : 'week').toDate();
+        handleNavigate(newDate);
+    }, [view, displayDate, handleNavigate]);
 
     const handleToday = useCallback(() => {
-        setDisplayDate(dayjs());
-    }, []);
+        handleNavigate(new Date());
+    }, [handleNavigate]);
 
     return {
         view,
         displayDate,
         handleViewChange,
+        handleNavigate,
         handlePrev,
         handleNext,
-        handleToday
+        handleToday,
     };
 }
