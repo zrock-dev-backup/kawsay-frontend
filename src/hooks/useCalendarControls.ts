@@ -1,15 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
 export function useCalendarControls(initialDate?: Dayjs) {
     const [view, setView] = useState<'week' | 'month'>('week');
-    const [displayDate, setDisplayDate] = useState(initialDate || dayjs());
-
-    useEffect(() => {
-        if (initialDate && !displayDate.isSame(initialDate, 'day')) {
-            setDisplayDate(initialDate);
-        }
-    }, [initialDate, displayDate]);
+    const [displayDate, setDisplayDate] = useState(() => initialDate || dayjs());
 
     const handleViewChange = useCallback((
         event: React.MouseEvent<HTMLElement>,
