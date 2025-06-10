@@ -1,36 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
     Container,
     Typography,
     List,
     ListItem,
-    ListItemButton,
     ListItemText,
     CircularProgress,
     Alert,
     Box,
+    IconButton,
+    Stack,
+    Tooltip,
 } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import type { TimetableStructure } from '../interfaces/apiDataTypes';
 import { fetchTimetables } from '../services/apiService';
+
 const TrackSelectionPage: React.FC = () => {
     const [timetables, setTimetables] = useState<TimetableStructure[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+
     useEffect(() => {
         const loadTimetables = async () => {
             setLoading(true);
             setError(null);
             try {
-                console.log('Attempting to fetch timetables...');
                 const data = await fetchTimetables();
-                console.log('Timetables fetched successfully:', data);
                 setTimetables(data);
             } catch (err) {
-                console.error('Error fetching timetables:', err);
                 setError(
-                    err instanceof Error ? err.message : 'An unknown error occurred while fetching timetables.'
+                    err instanceof Error ? err.message : 'An unknown error occurred.'
                 );
             } finally {
                 setLoading(false);
@@ -38,49 +41,66 @@ const TrackSelectionPage: React.FC = () => {
         };
         loadTimetables();
     }, []);
-    const handleTimetableClick = (id: number) => {
-        console.log(`Navigating to /table/${id}`);
-        navigate(`/table/${id}`);
-    };
-    let content;
+
     if (loading) {
-        content = (
+        return (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                 <CircularProgress />
-                <Typography sx={{ ml: 2 }}>Loading timetables...</Typography>
             </Box>
         );
-    } else if (error) {
-        content = (
-            <Alert severity="error" sx={{ mt: 2 }}>
-                {error}
-            </Alert>
-        );
-    } else if (timetables.length === 0) {
-        content = (
-            <Typography sx={{mt: 2}}>No timetables found.</Typography>
-        );
     }
-    else {
-        content = (
-            <List sx={{ width: '100%', bgcolor: 'background.paper', mt: 2 }}>
-                {timetables.map((timetable) => (
-                    <ListItem key={timetable.id} disablePadding>
-                        <ListItemButton onClick={() => handleTimetableClick(timetable.id)}>
-                            <ListItemText primary={timetable.name} />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
-            </List>
-        );
+
+    if (error) {
+        return <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>;
     }
+
     return (
-        <Container maxWidth="sm">
+        <Container maxWidth="md">
             <Typography variant="h4" gutterBottom>
                 Select a Timetable
             </Typography>
-            {content}
+            {timetables.length === 0 ? (
+                <Typography sx={{ mt: 2 }}>No timetables found.</Typography>
+            ) : (
+                <List sx={{ width: '100%', bgcolor: 'background.paper', mt: 2 }}>
+                    {timetables.map((timetable) => (
+                        <ListItem
+                            key={timetable.id}
+                            disablePadding
+                            secondaryAction={
+                                <Stack direction="row" spacing={1}>
+                                    <Tooltip title="View Timetable Grid">
+                                        <IconButton
+                                            edge="end"
+                                            aria-label="view"
+                                            onClick={() => navigate(`/table/${timetable.id}`)}
+                                        >
+                                            <PlayArrowIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="End-of-Module Processing">
+                                        <IconButton
+                                            edge="end"
+                                            aria-label="process"
+                                            component={RouterLink}
+                                            to={`/module-processing/${timetable.id}`}
+                                        >
+                                            <EventRepeatIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Stack>
+                            }
+                        >
+                            <ListItemText 
+                                primary={timetable.name} 
+                                secondary={`${timetable.startDate} - ${timetable.endDate}`}
+                            />
+                        </ListItem>
+                    ))}
+                </List>
+            )}
         </Container>
     );
 };
+
 export default TrackSelectionPage;

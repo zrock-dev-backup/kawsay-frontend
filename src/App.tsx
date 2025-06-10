@@ -6,6 +6,7 @@ import TimetableCreation from "./pages/TimetableCreation.tsx";
 import TrackSelectionPage from "./pages/TrackSelectionPage.tsx";
 import TimetableGridPage from "./pages/TimetableGridPage.tsx";
 import ClassCreationPage from "./pages/ClassCreationPage.tsx";
+import EndofModulePage from "./pages/EndofModulePage.tsx";
 function App() {
     return (
         <Routes>
@@ -16,6 +17,7 @@ function App() {
                 <Route path="*" element={<NotFoundPage />} />
                 <Route path={"table/:id"} element={<TimetableGridPage />} />
                 <Route path={"table/:timetableId/create-class"} element={<ClassCreationPage />} />
+                <Route path={"module-processing/:timetableId"} element={<EndofModulePage />} />
             </Route>
         </Routes>
     );

@@ -75,3 +75,20 @@ export interface CreateClassRequest {
     frequency: number;
     periodPreferences: CreatePeriodPreferenceRequest[];
 }
+
+export interface GradeIngestionDto {
+    studentId: number;
+    courseId: number;
+    gradeValue: number;
+}
+
+export interface StudentDto {
+    id: number;
+    name: string;
+    standing: 'GoodStanding' | 'AcademicProbation' | 'Suspended' | 'Withdrawn' | string; // Allow for other string values
+}
+
+export interface StudentCohortDto {
+    advancingStudents: StudentDto[];
+    retakeStudents: StudentDto[];
+}

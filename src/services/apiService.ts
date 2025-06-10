@@ -5,6 +5,8 @@ import type {
     CreateTimetableRequest,
     Class,
     CreateClassRequest,
+    GradeIngestionDto,
+    StudentCohortDto,
 } from '../interfaces/apiDataTypes';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/kawsay`;
@@ -124,4 +126,23 @@ export const generateScheduleForTimetable = async (timetableId: string | number)
         },
     });
     return handleResponse<GenerateScheduleResponse>(response);
+};
+
+export const ingestGrades = async (timetableId: string | number, gradeData: GradeIngestionDto[]): Promise<{ message: string }> => {
+    console.log(`Ingesting ${gradeData.length} grades for timetable ID ${timetableId}`);
+    const response = await fetch(`${API_BASE_URL}/module-processing/${timetableId}/ingest-grades`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify(gradeData),
+    });
+    return handleResponse<{ message: string }>(response);
+};
+
+export const getModuleCohorts = async (timetableId: string | number): Promise<StudentCohortDto> => {
+    console.log(`Fetching cohorts for timetable ID ${timetableId}`);
+    const response = await fetch(`${API_BASE_URL}/module-processing/${timetableId}/cohorts`);
+    return handleResponse<StudentCohortDto>(response);
 };
