@@ -6,16 +6,13 @@ import {
     CircularProgress,
     Alert,
     Divider,
-    List,
-    ListItem,
-    ListItemText,
     IconButton,
     Grid,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import type {Class, ClassOccurrence, TimetableStructure} from '../interfaces/apiDataTypes';
+import type {Class, TimetableStructure} from '../interfaces/apiDataTypes';
 import {fetchClassById} from '../services/apiService';
 
 dayjs.extend(customParseFormat);
@@ -67,26 +64,7 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({classId, open, onC
         };
         loadClassData();
     }, [classId, open]);
-    const getDayName = (dayId: number): string => {
-        return timetableStructure?.days.find(day => day.id === dayId)?.name || `Unknown Day (ID: ${dayId})`;
-    };
-    const getPeriodTimes = (periodId: number): { start: string; end: string } | null => {
-        return timetableStructure?.periods.find(period => period.id === periodId) || null;
-    };
-    const getOccurrenceTimeRange = (occurrence: ClassOccurrence): string => {
-        if (!timetableStructure) return 'Loading times...';
-        if (!classData) return ('No fetched class data')
-        const startPeriod = getPeriodTimes(occurrence.startPeriodId);
-        if (!startPeriod) return `Invalid Start Period (ID: ${occurrence.startPeriodId})`;
-        const startIndex = timetableStructure.periods.findIndex(p => p.id === occurrence.startPeriodId);
-        if (startIndex === -1) return `Invalid Start Period (ID: ${occurrence.startPeriodId})`;
-        const endPeriodIndex = startIndex + classData.length - 1;
-        if (endPeriodIndex >= timetableStructure.periods.length) {
-            return `${startPeriod.start} - Invalid End Time (Length: ${classData.length})`;
-        }
-        const endPeriod = timetableStructure.periods[endPeriodIndex];
-        return `${startPeriod.start} - ${endPeriod.end}`;
-    };
+
     return (
         <Modal
             open={open}
@@ -124,29 +102,6 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({classId, open, onC
                                 variant="body1"><strong>Teacher:</strong>
                                 {classData.teacherDto ? `${classData.teacherDto.name} (${classData.teacherDto.type})` : 'Not Assigned'}
                             </Typography>
-                        </Grid>
-                        {/*<Grid item xs={12}>*/}
-                        {/*    <Typography variant="body1"><strong>Timetable ID:</strong> {classData.timetableId}*/}
-                        {/*    </Typography>*/}
-                        {/*</Grid>*/}
-                        <Grid item xs={12}>
-                            <Typography variant="h6" component="h3" sx={{mt: 2, mb: 1}}>Scheduled
-                                Occurrences:</Typography>
-                            {classData.classOccurrences.length > 0 ? (
-                                <List dense>
-                                    {classData.classOccurrences.map((occurrence, index) => (
-                                        <ListItem key={occurrence.id || index} disablePadding>
-                                            <ListItemText
-                                                primary={`${getDayName(occurrence.dayId)}: ${getOccurrenceTimeRange(occurrence)}`}
-                                                secondary={`Length: ${classData.length} period${classData.length > 1 ? 's' : ''}`}
-                                            />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            ) : (
-                                <Typography variant="body2" color="text.secondary">No occurrences scheduled for this
-                                    class.</Typography>
-                            )}
                         </Grid>
                     </Grid>
                 )}
