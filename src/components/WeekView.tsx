@@ -1,8 +1,17 @@
 import React from 'react';
-import {Box, Paper, Typography} from '@mui/material';
+import {Typography} from '@mui/material';
 import {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
 import type {TimetablePeriod, TimetableDay} from '../interfaces/apiDataTypes';
+
+import {
+    GridContainer,
+    DayHeaderCell,
+    TimeLabelCell,
+    BackgroundCell,
+    EventPaper,
+    TopLeftCell
+} from './WeekView.styles';
 
 interface GridCellContent {
     classId: number;
@@ -71,123 +80,74 @@ const WeekView: React.FC<WeekViewProps> = ({
     });
 
     return (
-        <Paper elevation={3} sx={{overflow: 'hidden'}}>
-            <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: '60px repeat(7, 1fr)',
-                    gridTemplateRows: `auto repeat(${periodCount}, minmax(60px, auto))`,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                    minWidth: '800px',
-                }}
-            >
-                {/* Top-left empty cell */}
-                <Box sx={{
-                    gridRow: 1,
-                    gridColumn: 1,
-                    borderRight: '1px solid',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider'
-                }}/>
+        <GridContainer sx={{gridTemplateRows: `auto repeat(${periodCount}, minmax(60px, auto))`}}>
+            {/* Top-left empty cell */}
+            <TopLeftCell sx={{gridRow: 1, gridColumn: 1}}/>
 
-                {/* Day Headers */}
-                {weekDays.map((day) => {
-                    const dayName = day.format('dddd');
-                    const isActive = activeDayNames.has(dayName);
-                    return (
-                        <Box
-                            key={day.format('YYYY-MM-DD')}
-                            sx={{
-                                gridRow: 1,
-                                gridColumn: dayToColumnIndexMap.get(day.day()),
-                                p: 1,
-                                textAlign: 'center',
-                                borderBottom: '1px solid',
-                                borderLeft: '1px solid',
-                                borderColor: 'divider',
-                                // Visually distinguish active vs inactive days
-                                bgcolor: isActive ? 'grey.100' : 'grey.50',
-                                color: isActive ? 'text.primary' : 'text.disabled',
-                            }}
-                        >
-                            <Typography variant="caption"
-                                        sx={{textTransform: 'uppercase'}}>{day.format('ddd')}</Typography>
-                            <Typography variant="h6">{day.format('D')}</Typography>
-                        </Box>
-                    );
-                })}
+            {/* Day Headers */}
+            {weekDays.map((day) => {
+                const dayName = day.format('dddd');
+                const isActive = activeDayNames.has(dayName);
+                return (
+                    <DayHeaderCell
+                        key={day.format('YYYY-MM-DD')}
+                        isactive={isActive.toString() as 'true' | 'false'}
+                        sx={{gridRow: 1, gridColumn: dayToColumnIndexMap.get(day.day())}}
+                    >
+                        <Typography variant="caption" sx={{textTransform: 'uppercase'}}>{day.format('ddd')}</Typography>
+                        <Typography variant="h6">{day.format('D')}</Typography>
+                    </DayHeaderCell>
+                );
+            })}
 
-                {sortedPeriods.map((period, periodIndex) => (
-                    <React.Fragment key={period.id}>
-                        {/* Time Label */}
-                        <Box
-                            sx={{
-                                gridRow: periodIndex + 2,
-                                gridColumn: 1,
-                                p: 1,
-                                textAlign: 'right',
-                                borderRight: '1px solid',
-                                borderTop: '1px solid',
-                                borderColor: 'divider',
-                                position: 'relative',
-                            }}
-                        >
-                            <Typography variant="caption" color="text.secondary"
-                                        sx={{position: 'relative', top: '-0.5em'}}>
-                                {period.start}
-                            </Typography>
-                        </Box>
-
-                        {/* Background Cells for this row */}
-                        {weekDays.map((day, dayIndex) => (
-                            <Box
-                                key={`${period.id}-${day.format('D')}`}
-                                sx={{
-                                    gridRow: periodIndex + 2,
-                                    gridColumn: dayIndex + 2,
-                                    borderTop: '1px solid',
-                                    borderLeft: '1px solid',
-                                    borderColor: 'divider',
-                                }}
-                            />
-                        ))}
-                    </React.Fragment>
-                ))}
-
-                {/* Event Blocks */}
-                {eventsToRender.map(event => (
-                    <Paper
-                        key={event.id}
-                        elevation={0}
-                        onClick={() => onLessonClick(event.classId)}
+            {/* Time Labels & Background Grid Cells */}
+            {sortedPeriods.map((period, periodIndex) => (
+                <React.Fragment key={period.id}>
+                    {/* Time Label */}
+                    <TimeLabelCell
                         sx={{
-                            gridColumn: event.gridColumn,
-                            gridRowStart: event.gridRowStart,
-                            gridRowEnd: `span ${event.length}`,
-                            m: '2px',
-                            p: 1,
-                            bgcolor: 'primary.light',
-                            color: 'primary.contrastText',
-                            cursor: 'pointer',
-                            overflow: 'hidden',
-                            zIndex: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            '&:hover': {
-                                bgcolor: 'primary.main',
-                                boxShadow: 3,
-                            },
+                            gridRow: periodIndex + 2,
+                            gridColumn: 1,
                         }}
                     >
-                        <Typography variant="caption" noWrap>{event.timeString}</Typography>
-                        <Typography variant="body2" fontWeight="bold" noWrap>{event.courseName}</Typography>
-                    </Paper>
-                ))}
-            </Box>
-        </Paper>
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{position: 'relative', top: '-0.5em'}}
+                        >
+                            {period.start}
+                        </Typography>
+                    </TimeLabelCell>
+                    {/* Background Cells for this row */}
+                    {weekDays.map((day, dayIndex) => (
+                        <BackgroundCell
+                            key={`${period.id}-${day.format('D')}`}
+                            sx={{
+                                gridRow: periodIndex + 2,
+                                gridColumn: dayIndex + 2,
+                            }}
+                        />
+                    ))}
+                </React.Fragment>
+            ))}
+
+            {/* Event Blocks */}
+            {eventsToRender.map(event => (
+                <EventPaper
+                    key={event.id}
+                    elevation={0}
+                    onClick={() => onLessonClick(event.classId)}
+                    sx={{
+                        gridColumn: event.gridColumn,
+                        gridRowStart: event.gridRowStart,
+                        gridRowEnd: `span ${event.length}`,
+                    }}
+                >
+                    <Typography variant="caption" noWrap>{event.timeString}</Typography>
+                    <Typography variant="body2" fontWeight="bold" noWrap>{event.courseName}</Typography>
+                </EventPaper>
+            ))}
+        </GridContainer>
     );
 };
-
 export default WeekView;
