@@ -9,11 +9,11 @@ import {
 } from '@mui/material';
 import dayjs from 'dayjs';
 
-import {useTimetableData} from '../hooks/useTimetableData';
-import {useCalendarControls} from '../hooks/useCalendarControls';
-import TimetableHeader from '../components/TimetableHeader';
-import WeekView from '../components/WeekView';
-import MonthView from '../components/MonthView';
+import {useTimetableData} from '../hooks/timetable/useTimetableData.ts';
+import {useCalendarControls} from '../hooks/timetable/useCalendarControls.ts';
+import TimetableHeader from '../components/timetable/TimetableHeader.tsx';
+import WeekView from '../components/timetable/WeekView.tsx';
+import MonthView from '../components/timetable/MonthView.tsx';
 import ClassDetailsModal from '../components/ClassDetailsModal';
 import ClassListModal from '../components/ClassListModal';
 import {generateScheduleForTimetable} from '../services/apiService';

@@ -2,7 +2,7 @@ import React from 'react';
 import {Typography, Box} from '@mui/material';
 import {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
-import type {TimetablePeriod, TimetableDay} from '../interfaces/apiDataTypes';
+import type {TimetablePeriod, TimetableDay} from '../../interfaces/apiDataTypes.ts';
 
 import {
     GridContainer,
@@ -13,7 +13,7 @@ import {
     EventStack,
     EventChip,
     TopLeftCell
-} from './WeekView.styles';
+} from './WeekView.styles.ts';
 
 interface GridCellContent {
     classId: number;

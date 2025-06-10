@@ -1,7 +1,7 @@
 import {useState, useEffect, useMemo} from 'react';
 import dayjs from 'dayjs';
-import {fetchTimetableStructureById, fetchClassesForTimetable} from '../services/apiService';
-import type {TimetableStructure, Class as ApiClass} from '../interfaces/apiDataTypes';
+import {fetchTimetableStructureById, fetchClassesForTimetable} from '../../services/apiService.ts';
+import type {TimetableStructure, Class as ApiClass} from '../../interfaces/apiDataTypes.ts';
 
 interface GridCellContent {
     classId: number;

@@ -15,8 +15,8 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import dayjs from 'dayjs';
-import type {TimetableStructure} from '../interfaces/apiDataTypes';
-import type {useCalendarControls} from '../hooks/useCalendarControls';
+import type {TimetableStructure} from '../../interfaces/apiDataTypes.ts';
+import type {useCalendarControls} from '../../hooks/timetable/useCalendarControls.ts';
 
 interface TimetableHeaderProps {
     structure: TimetableStructure;

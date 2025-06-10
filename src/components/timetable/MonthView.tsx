@@ -7,7 +7,7 @@ import {
     DayCell,
     DayNumber,
     ChipContainer
-} from './MonthView.styles';
+} from './MonthView.styles.ts';
 
 interface GridCellContent {
     classId: number;
