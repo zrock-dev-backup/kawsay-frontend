@@ -7,6 +7,9 @@ import type {
     CreateClassRequest,
     GradeIngestionDto,
     StudentCohortDto,
+    BulkAdvanceRequest,
+    BulkRetakeRequest,
+    BulkActionResponse,
 } from '../interfaces/apiDataTypes';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/kawsay`;
@@ -145,4 +148,24 @@ export const getModuleCohorts = async (timetableId: string | number): Promise<St
     console.log(`Fetching cohorts for timetable ID ${timetableId}`);
     const response = await fetch(`${API_BASE_URL}/module-processing/${timetableId}/cohorts`);
     return handleResponse<StudentCohortDto>(response);
+};
+
+export const bulkAdvanceStudents = async (payload: BulkAdvanceRequest): Promise<BulkActionResponse> => {
+    console.log(`Requesting bulk advancement for ${payload.studentIds.length} students.`);
+    const response = await fetch(`${API_BASE_URL}/module-processing/bulk-advance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    return handleResponse<BulkActionResponse>(response);
+};
+
+export const bulkEnrollRetakes = async (payload: BulkRetakeRequest): Promise<BulkActionResponse> => {
+    console.log(`Requesting bulk retake enrollment for ${payload.studentIds.length} students.`);
+    const response = await fetch(`${API_BASE_URL}/module-processing/bulk-retake-enroll`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    return handleResponse<BulkActionResponse>(response);
 };

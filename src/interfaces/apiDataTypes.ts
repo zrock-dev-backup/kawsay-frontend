@@ -92,3 +92,18 @@ export interface StudentCohortDto {
     advancingStudents: StudentDto[];
     retakeStudents: StudentDto[];
 }
+
+export interface BulkAdvanceRequest {
+    timetableId: number;
+    studentIds: number[];
+}
+
+export interface BulkRetakeRequest {
+    timetableId: number;
+    studentIds: number[];
+}
+
+export interface BulkActionResponse {
+    message: string;
+    processedCount: number;
+}

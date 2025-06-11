@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { ingestGrades, getModuleCohorts } from '../../services/apiService';
-import type { StudentCohortDto, GradeIngestionDto } from '../../interfaces/apiDataTypes';
+import {useState, useCallback} from 'react';
+import {useParams} from 'react-router-dom';
+import {ingestGrades, getModuleCohorts} from '../../services/apiService';
+import type {StudentCohortDto, GradeIngestionDto} from '../../interfaces/apiDataTypes';
 
 // A simple utility to parse CSV data from the textarea
 const parseCsvData = (csvText: string): GradeIngestionDto[] => {
@@ -21,19 +21,33 @@ const parseCsvData = (csvText: string): GradeIngestionDto[] => {
 };
 
 export function useEndofModule() {
-    const { timetableId } = useParams<{ timetableId: string }>();
+    const {timetableId} = useParams<{ timetableId: string }>();
 
-    // State for the grade ingestion form
+    // grade ingestion
     const [csvData, setCsvData] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [ingestionError, setIngestionError] = useState<string | null>(null);
     const [ingestionSuccess, setIngestionSuccess] = useState<string | null>(null);
 
-    // State for the cohort display
+    // Cohort display
     const [cohorts, setCohorts] = useState<StudentCohortDto | null>(null);
     const [isLoadingCohorts, setIsLoadingCohorts] = useState(false);
 
-    // Callback for handling the grade ingestion submission
+    // Bulk actions
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [processingStatus, setProcessingStatus] = useState<{
+        type: 'success' | 'error';
+        message: string;
+    } | null>(null);
+
+    // Dialog
+    const [dialogConfig, setDialogConfig] = useState<{
+        open: boolean;
+        title: string;
+        description: string;
+        onConfirm: () => void;
+    } | null>(null);
+
     const handleIngestGrades = useCallback(async () => {
         if (!timetableId) {
             setIngestionError('Timetable ID is missing from the URL.');
@@ -55,7 +69,6 @@ export function useEndofModule() {
             setIngestionSuccess(result.message);
             setCsvData(''); // Clear the form on success
 
-            // After successful ingestion, automatically fetch the cohorts
             setIsLoadingCohorts(true);
             const cohortData = await getModuleCohorts(timetableId);
             setCohorts(cohortData);
@@ -69,9 +82,57 @@ export function useEndofModule() {
         }
     }, [csvData, timetableId]);
 
-    // Return all the state and callbacks needed by the UI
+    const closeDialog = () => setDialogConfig(null);
+
+    const handleBulkAdvance = useCallback(() => {
+        if (!cohorts?.advancingStudents || cohorts.advancingStudents.length === 0) return;
+
+        setDialogConfig({
+            open: true,
+            title: 'Confirm Bulk Advancement',
+            description: `Are you sure you want to advance ${cohorts.advancingStudents.length} students to their next courses? This action cannot be easily undone.`,
+            onConfirm: async () => {
+                setIsProcessing(true);
+                setProcessingStatus(null);
+                try {
+                    const studentIds = cohorts.advancingStudents.map(s => s.id);
+                    await bulkAdvanceStudents({timetableId: Number(timetableId), studentIds});
+                    setProcessingStatus({ type: 'success', message: response.message });
+                } catch (err) {
+                    setProcessingStatus({ type: 'error', message: err instanceof Error ? err.message : 'An unknown error occurred.' });
+                } finally {
+                    setIsProcessing(false);
+                    closeDialog();
+                }
+            }
+        });
+    }, [cohorts, timetableId]);
+
+    const handleBulkRetake = useCallback(() => {
+        if (!cohorts?.retakeStudents || cohorts.retakeStudents.length === 0) return;
+
+        setDialogConfig({
+            open: true,
+            title: 'Confirm Retake Enrollment',
+            description: `Are you sure you want to process the retake enrollment for ${cohorts.retakeStudents.length} students?`,
+            onConfirm: async () => {
+                setIsProcessing(true);
+                setProcessingError(null);
+                try {
+                    const studentIds = cohorts.retakeStudents.map(s => s.id);
+                    await bulkEnrollRetakes({timetableId: Number(timetableId), studentIds});
+                } catch (err) {
+                    setProcessingError(err instanceof Error ? err.message : 'An unknown error occurred.');
+                } finally {
+                    setIsProcessing(false);
+                    closeDialog();
+                }
+            }
+        });
+    }, [cohorts, timetableId]);
+
     return {
-        // Properties for GradeIngestionForm
+        // GradeIngestionForm
         csvData,
         onCsvDataChange: setCsvData,
         handleIngestGrades,
@@ -79,8 +140,16 @@ export function useEndofModule() {
         ingestionError,
         ingestionSuccess,
 
-        // Properties for CohortDisplay
+        // CohortDisplay
         cohorts,
         isLoadingCohorts,
+        handleBulkAdvance,
+        handleBulkRetake,
+        processingStatus,
+
+        // ConfirmationDialog
+        dialogConfig,
+        isProcessing,
+        closeDialog,
     };
 }
