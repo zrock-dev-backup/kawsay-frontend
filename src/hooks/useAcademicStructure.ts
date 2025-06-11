@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
-import type {CohortDetailDto, StudentGroupDetailDto, SectionDetailDto} from '../interfaces/academicStructureDtos';
+import type {CohortDetailDto, SectionDetailDto, StudentGroupDetailDto} from '../interfaces/academicStructureDtos';
 import {
     createCohort,
     createSection,

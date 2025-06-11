@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {SubmitHandler, useForm} from 'react-hook-form';
 import {yupResolver} from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -12,15 +12,19 @@ const periodPreferenceSchema = yup.object().shape({
 
 const schema = yup.object().shape({
     courseId: yup.number().min(1, 'Course is required').required('Course is required'),
-    teacherId: yup.number().min(1, 'Teacher is required').required('Teacher is required'),
+    teacherId: yup.number().min(1, 'A teacher is required').required('A teacher is required'),
     length: yup.number().required('Length is required').positive('Length must be positive').integer(),
     frequency: yup.number().required('Frequency is required').positive('Frequency must be positive').integer(),
     classType: yup.string<ClassType>().oneOf(['Masterclass', 'Lab']).required('Class Type is required'),
-    studentGroupId: yup.number().when('classType', ([classType], sch) => {
-        return classType === 'Masterclass' ? sch.min(1, 'Student Group is required for a Masterclass') : sch.notRequired();
+    studentGroupId: yup.number().when('classType', {
+        is: 'Masterclass',
+        then: (schema) => schema.min(1, 'A Student Group must be selected for a Masterclass.'),
+        otherwise: (schema) => schema.notRequired(),
     }),
-    sectionId: yup.number().when('classType', ([classType], sch) => {
-        return classType === 'Lab' ? sch.min(1, 'Section is required for a Lab') : sch.notRequired();
+    sectionId: yup.number().when('classType', {
+        is: 'Lab',
+        then: (schema) => schema.min(1, 'A Section must be selected for a Lab.'),
+        otherwise: (schema) => schema.notRequired(),
     }),
     periodPreferences: yup.array().of(periodPreferenceSchema)
         .min(1, 'At least one Period preference is required')
@@ -33,6 +37,7 @@ export function useClassCreationForm(timetableId: string | undefined) {
         register,
         handleSubmit,
         watch,
+        setValue,
         formState: {errors},
         reset,
     } = useForm<CreateClassRequest>({
@@ -49,6 +54,17 @@ export function useClassCreationForm(timetableId: string | undefined) {
         },
         mode: 'onBlur',
     });
+
+    const classType = watch('classType');
+
+    useEffect(() => {
+        if (classType === 'Masterclass') {
+            setValue('sectionId', -1);
+        } else if (classType === 'Lab') {
+            setValue('studentGroupId', -1);
+        }
+    }, [classType, setValue]);
+
 
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);

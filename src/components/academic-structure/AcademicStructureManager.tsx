@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { Alert, Box, CircularProgress, Typography, Grid } from '@mui/material';
-import { useParams } from 'react-router-dom';
-import { useAcademicStructure } from '../../hooks/useAcademicStructure';
+import React, {useState} from 'react';
+import {Alert, Box, CircularProgress, Grid, Typography} from '@mui/material';
+import {useParams} from 'react-router-dom';
+import {useAcademicStructure} from '../../hooks/useAcademicStructure';
 import CohortList from './CohortList';
 import CreateCohortForm from './CreateCohortForm';
 import CohortDetailView from './CohortDetailView';
 
 const AcademicStructureManager: React.FC = () => {
-    const { id: timetableId } = useParams<{ id: string }>();
-    const { cohorts, loading, error, addCohort, addStudentGroup, addSection } = useAcademicStructure(timetableId);
-    
+    const {id: timetableId} = useParams<{ id: string }>();
+    const {cohorts, loading, error, addCohort, addStudentGroup, addSection} = useAcademicStructure(timetableId);
+
     // State for the Master-Detail view
     const [selectedCohortId, setSelectedCohortId] = useState<number | null>(null);
-    
+
     const [isSubmittingCohort, setIsSubmittingCohort] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
 
@@ -36,7 +36,7 @@ const AcademicStructureManager: React.FC = () => {
     const handleAddSection = (cohortId: number, groupId: number, sectionName: string) => addSection(cohortId, groupId, sectionName);
 
     if (loading) {
-        return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>;
+        return <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}><CircularProgress/></Box>;
     }
 
     if (error) {
@@ -44,13 +44,13 @@ const AcademicStructureManager: React.FC = () => {
     }
 
     return (
-        <Grid container spacing={2} sx={{ p: 2, height: '100%' }}>
+        <Grid container spacing={2} sx={{p: 2, height: '100%'}}>
             {/* Master Pane */}
             <Grid item xs={12} md={4}>
                 <Typography variant="h6" gutterBottom>Cohorts</Typography>
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{mb: 2}}>
                     <CreateCohortForm onSubmit={handleCreateCohort} isSubmitting={isSubmittingCohort}/>
-                    {formError && <Alert severity="error" sx={{ mt: 1 }}>{formError}</Alert>}
+                    {formError && <Alert severity="error" sx={{mt: 1}}>{formError}</Alert>}
                 </Box>
                 <CohortList
                     cohorts={cohorts}

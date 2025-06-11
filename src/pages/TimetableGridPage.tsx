@@ -85,7 +85,7 @@ const TimetableGridPage: React.FC = () => {
             </Paper>
 
             {activeTab === 0 && (
-                <Box sx={{ pt: 2 }}>
+                <Box sx={{pt: 2}}>
                     <TimetableHeader
                         calendarControls={calendarControls}
                         isGenerating={isGenerating}

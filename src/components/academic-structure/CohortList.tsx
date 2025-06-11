@@ -1,6 +1,6 @@
 import React from 'react';
-import { List, ListItemButton, ListItemText, Typography, Paper } from '@mui/material';
-import type { CohortDetailDto } from '../../interfaces/academicStructureDtos';
+import {List, ListItemButton, ListItemText, Paper, Typography} from '@mui/material';
+import type {CohortDetailDto} from '../../interfaces/academicStructureDtos';
 
 interface CohortListProps {
     cohorts: CohortDetailDto[];
@@ -8,10 +8,10 @@ interface CohortListProps {
     onSelectCohort: (id: number) => void;
 }
 
-const CohortList: React.FC<CohortListProps> = ({ cohorts, selectedCohortId, onSelectCohort }) => {
+const CohortList: React.FC<CohortListProps> = ({cohorts, selectedCohortId, onSelectCohort}) => {
     if (cohorts.length === 0) {
         return (
-            <Typography sx={{ p: 2, color: 'text.secondary' }}>
+            <Typography sx={{p: 2, color: 'text.secondary'}}>
                 No cohorts created yet.
             </Typography>
         );

@@ -1,15 +1,13 @@
 import React from 'react';
 import {useParams} from 'react-router-dom';
-import {Container, Skeleton, Typography} from '@mui/material';
+import {Alert, Box, Container, Skeleton, Typography} from '@mui/material';
 import {useClassCreationForm} from '../hooks/lecture/useClassCreationForm';
-import {useClassFormData} from '../hooks/lecture/useClassFormData'; // Fetches courses, teachers, timetable
-import {useAcademicStructure} from '../hooks/useAcademicStructure'; // Fetches cohorts
+import {useClassFormData} from '../hooks/lecture/useClassFormData';
+import {useAcademicStructure} from '../hooks/useAcademicStructure';
 import ClassCreationForm from '../components/lecture/ClassCreationForm';
 
 const ClassCreationPage: React.FC = () => {
     const {timetableId} = useParams<{ timetableId: string }>();
-
-    // Centralize data fetching here in the page component
     const {
         timetableStructure,
         courses,
@@ -19,10 +17,9 @@ const ClassCreationPage: React.FC = () => {
         fetchError: fetchErrorFormData
     } = useClassFormData(timetableId);
     const {cohorts, loading: loadingCohorts, error: errorCohorts} = useAcademicStructure(timetableId);
-
     const formState = useClassCreationForm(timetableId);
     const isLoading = loadingFormData || loadingCohorts;
-    const fetchError = fetchErrorFormData || errorCohorts;
+    const fetchError = [fetchErrorFormData, errorCohorts].filter(Boolean).join('; ');
 
     if (isLoading) {
         return (
@@ -30,36 +27,40 @@ const ClassCreationPage: React.FC = () => {
                 <Typography variant="h4" gutterBottom>
                     <Skeleton variant="text" width="70%"/>
                 </Typography>
-                <Skeleton variant="rectangular" height={56} sx={{mt: 2}}/>
-                <Skeleton variant="rectangular" height={56} sx={{mt: 2}}/>
-                <Skeleton variant="rectangular" height={300} sx={{mt: 3}}/>
-                <Skeleton variant="rectangular" height={56} sx={{mt: 3}}/>
+                <Box sx={{mt: 2}}>
+                    <Skeleton variant="rectangular" height={56}/>
+                    <Skeleton variant="rectangular" height={56} sx={{mt: 2}}/>
+                    <Skeleton variant="rectangular" height={56} sx={{mt: 2}}/>
+                    <Skeleton variant="rectangular" height={300} sx={{mt: 3}}/>
+                    <Skeleton variant="rectangular" height={56} sx={{mt: 3}}/>
+                </Box>
             </Container>
         );
     }
 
-    if (fetchError && !timetableStructure) {
+    if (!timetableStructure) {
         return (
             <Container maxWidth="md">
-                <Typography variant="h4" gutterBottom color="error">
-                    Error Loading Page Data
-                </Typography>
-                <Typography sx={{mt: 2}}>
-                    Could not load essential data for timetable ID: {timetableId}. Details: {fetchError}
-                </Typography>
+                <Alert severity="error" sx={{mt: 2}}>
+                    <Typography variant="h6">Failed to Load Timetable</Typography>
+                    Could not load essential data for timetable ID: {timetableId}.
+                    {fetchError && <Typography variant="body2" sx={{mt: 1}}>Details: {fetchError}</Typography>}
+                </Alert>
             </Container>
         );
     }
 
-    return <ClassCreationForm
-        {...formState}
-        timetableStructure={timetableStructure}
-        courses={courses}
-        teachers={teachers}
-        cohorts={cohorts}
-        sortedPeriods={sortedPeriods}
-        fetchError={fetchError}
-    />;
+    return (
+        <ClassCreationForm
+            {...formState}
+            timetableStructure={timetableStructure}
+            courses={courses}
+            teachers={teachers}
+            cohorts={cohorts}
+            sortedPeriods={sortedPeriods}
+            fetchError={fetchError}
+        />
+    );
 };
 
 export default ClassCreationPage;
