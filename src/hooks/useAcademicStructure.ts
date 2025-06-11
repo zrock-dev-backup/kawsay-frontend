@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { CohortDetailDto } from '../interfaces/academicStructureDtos';
+import { fetchCohortsForTimetable, createCohort } from '../services/academicStructureApi';
 
 export function useAcademicStructure(timetableId: string | undefined) {
     const [cohorts, setCohorts] = useState<CohortDetailDto[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // TODO: update to use GET /timetables/{id}/cohorts
-    const fetchCohortsForTimetable = useCallback(async () => {
+    const loadCohorts = useCallback(async () => {
         if (!timetableId) {
             setError("No timetable ID provided to fetch cohorts.");
             setLoading(false);
@@ -17,22 +17,40 @@ export function useAcademicStructure(timetableId: string | undefined) {
         setLoading(true);
         setError(null);
         try {
-            console.warn("`fetchCohortsForTimetable` was called, but no backend endpoint exists to fetch all cohorts for a timetable. The hook will manage state, but cannot pre-populate.");
-            setCohorts([]); // Start with empty state
+            const fetchedCohorts = await fetchCohortsForTimetable(timetableId);
+            setCohorts(fetchedCohorts);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch cohorts.";
-            setError(errorMessage);
+            // handle timetable with no cohorts
+            if (errorMessage.includes("404") || errorMessage.toLowerCase().includes("not found")) {
+                console.warn(`No cohorts found for timetable ${timetableId}. This may be expected.`);
+                setCohorts([]);
+            } else {
+                setError(errorMessage);
+            }
         } finally {
             setLoading(false);
         }
     }, [timetableId]);
 
     useEffect(() => {
-        setLoading(false);
-    }, [timetableId]);
+        loadCohorts();
+    }, [loadCohorts]);
 
-    const addCohort = (newCohort: CohortDetailDto) => {
-        setCohorts(prevCohorts => [...prevCohorts, newCohort]);
+    const addCohort = async (cohortName: string): Promise<CohortDetailDto | null> => {
+        if (!timetableId) {
+            setError("Cannot create cohort without a timetable ID.");
+            return null;
+        }
+        try {
+            const newCohort = await createCohort({ name: cohortName, timetableId: Number(timetableId) });
+            setCohorts(prevCohorts => [...prevCohorts, newCohort]);
+            return newCohort;
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to create cohort.";
+            setError(errorMessage);
+            return null;
+        }
     };
     
     return {
@@ -40,6 +58,6 @@ export function useAcademicStructure(timetableId: string | undefined) {
         loading,
         error,
         addCohort,
-        fetchCohorts: fetchCohortsForTimetable,
+        reloadCohorts: loadCohorts,
     };
 }

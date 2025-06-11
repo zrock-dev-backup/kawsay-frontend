@@ -11,6 +11,13 @@ import type {
 
 const ACADEMIC_STRUCTURE_URL = `${API_BASE_URL}/academic-structure`;
 
+const TIMETABLE_API_URL = `${API_BASE_URL}/timetable`;
+
+export const fetchCohortsForTimetable = async (timetableId: string): Promise<CohortDetailDto[]> => {
+    const response = await fetch(`${TIMETABLE_API_URL}/${timetableId}/cohorts`);
+    return handleResponse<CohortDetailDto[]>(response);
+};
+
 export const createCohort = async (data: CreateCohortRequest): Promise<CohortDetailDto> => {
     const response = await fetch(`${ACADEMIC_STRUCTURE_URL}/cohorts`, {
         method: 'POST',
