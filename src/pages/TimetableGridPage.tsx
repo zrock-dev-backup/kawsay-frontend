@@ -62,14 +62,12 @@ const TimetableGridPage: React.FC = () => {
 
     return (
         <Container maxWidth="xl">
-            <TimetableHeader
-                structure={structure}
-                calendarControls={calendarControls}
-                isGenerating={isGenerating}
-                onGenerate={handleGenerateClick}
-                onAddClass={() => navigate(`/table/${id}/create-class`)}
-                onViewClasses={() => setIsClassListModalOpen(true)}
-            />
+            <Box sx={{my: 2}}>
+                <Typography variant="h4" component="h1">{structure.name}</Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                    {dayjs(structure.startDate).format('MMMM D, YYYY')} - {dayjs(structure.endDate).format('MMMM D, YYYY')}
+                </Typography>
+            </Box>
 
             {generateStatus && (
                 <Alert severity={generateStatus.type} sx={{mb: 2}} onClose={() => setGenerateStatus(null)}>
@@ -78,31 +76,40 @@ const TimetableGridPage: React.FC = () => {
             )}
 
             <Paper elevation={2}>
-                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                <Box sx={{borderBottom: 5, borderColor: 'divider'}}>
                     <Tabs value={activeTab} onChange={handleTabChange} aria-label="timetable view tabs">
                         <Tab label="Timetable Grid"/>
                         <Tab label="Academic Structure"/>
                     </Tabs>
                 </Box>
-
             </Paper>
 
             {activeTab === 0 && (
-                calendarControls.view === 'week' ? (
-                    <WeekView
-                        displayDate={calendarControls.displayDate}
-                        scheduleMap={scheduleMap}
-                        sortedPeriods={sortedPeriods}
-                        onLessonClick={handleLessonClick}
-                        activeDays={structure.days}
+                <Box sx={{ pt: 2 }}>
+                    <TimetableHeader
+                        calendarControls={calendarControls}
+                        isGenerating={isGenerating}
+                        onGenerate={handleGenerateClick}
+                        onAddClass={() => navigate(`/table/${id}/create-class`)}
+                        onViewClasses={() => setIsClassListModalOpen(true)}
+                        structure={structure}
                     />
-                ) : (
-                    <MonthView
-                        displayDate={calendarControls.displayDate}
-                        scheduleMap={scheduleMap}
-                        onLessonClick={handleLessonClick}
-                    />
-                )
+                    {calendarControls.view === 'week' ? (
+                        <WeekView
+                            displayDate={calendarControls.displayDate}
+                            scheduleMap={scheduleMap}
+                            sortedPeriods={sortedPeriods}
+                            onLessonClick={handleLessonClick}
+                            activeDays={structure.days}
+                        />
+                    ) : (
+                        <MonthView
+                            displayDate={calendarControls.displayDate}
+                            scheduleMap={scheduleMap}
+                            onLessonClick={handleLessonClick}
+                        />
+                    )}
+                </Box>
             )}
             {activeTab === 1 && (
                 <AcademicStructureManager/>

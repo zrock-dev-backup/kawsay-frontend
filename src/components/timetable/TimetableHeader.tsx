@@ -1,20 +1,10 @@
 import React from 'react';
-import {
-    Box,
-    Button,
-    CircularProgress,
-    IconButton,
-    Stack,
-    ToggleButton,
-    ToggleButtonGroup,
-    Typography,
-} from '@mui/material';
+import {Button, CircularProgress, IconButton, Stack, ToggleButton, ToggleButtonGroup, Typography,} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import dayjs from 'dayjs';
 import type {TimetableStructure} from '../../interfaces/apiDataTypes.ts';
 import type {useCalendarControls} from '../../hooks/timetable/useCalendarControls.ts';
 
@@ -28,7 +18,6 @@ interface TimetableHeaderProps {
 }
 
 const TimetableHeader: React.FC<TimetableHeaderProps> = ({
-                                                             structure,
                                                              calendarControls,
                                                              isGenerating,
                                                              onGenerate,
@@ -39,13 +28,6 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
 
     return (
         <>
-            <Box sx={{my: 2}}>
-                <Typography variant="h4" component="h1">{structure.name}</Typography>
-                <Typography variant="subtitle1" color="text.secondary">
-                    {dayjs(structure.startDate).format('MMMM D, YYYY')} - {dayjs(structure.endDate).format('MMMM D, YYYY')}
-                </Typography>
-            </Box>
-
             <Stack direction="row" justifyContent="space-between" alignItems="center"
                    sx={{mb: 2, flexWrap: 'wrap', gap: 2}}>
                 <Stack direction="row" spacing={1} alignItems="center">
