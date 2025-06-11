@@ -1,16 +1,15 @@
-import { API_BASE_URL, handleResponse } from './api.helpers';
+import {API_BASE_URL, handleResponse} from './api.helpers';
 import type {
-    CreateCohortRequest,
-    CohortDetailDto,
-    CreateStudentGroupRequest,
-    StudentGroupDetailDto,
-    CreateSectionRequest,
-    SectionDetailDto,
     AssignStudentToSectionRequest,
+    CohortDetailDto,
+    CreateCohortRequest,
+    CreateSectionRequest,
+    CreateStudentGroupRequest,
+    SectionDetailDto,
+    StudentGroupDetailDto,
 } from '../interfaces/academicStructureDtos';
 
 const ACADEMIC_STRUCTURE_URL = `${API_BASE_URL}/academic-structure`;
-
 const TIMETABLE_API_URL = `${API_BASE_URL}/timetable`;
 
 export const fetchCohortsForTimetable = async (timetableId: string): Promise<CohortDetailDto[]> => {
@@ -21,7 +20,7 @@ export const fetchCohortsForTimetable = async (timetableId: string): Promise<Coh
 export const createCohort = async (data: CreateCohortRequest): Promise<CohortDetailDto> => {
     const response = await fetch(`${ACADEMIC_STRUCTURE_URL}/cohorts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: JSON.stringify(data),
     });
     return handleResponse<CohortDetailDto>(response);
@@ -35,7 +34,7 @@ export const getCohortDetails = async (cohortId: number): Promise<CohortDetailDt
 export const createStudentGroup = async (data: CreateStudentGroupRequest): Promise<StudentGroupDetailDto> => {
     const response = await fetch(`${ACADEMIC_STRUCTURE_URL}/groups`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: JSON.stringify(data),
     });
     return handleResponse<StudentGroupDetailDto>(response);
@@ -44,7 +43,7 @@ export const createStudentGroup = async (data: CreateStudentGroupRequest): Promi
 export const createSection = async (data: CreateSectionRequest): Promise<SectionDetailDto> => {
     const response = await fetch(`${ACADEMIC_STRUCTURE_URL}/sections`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: JSON.stringify(data),
     });
     return handleResponse<SectionDetailDto>(response);
@@ -53,7 +52,7 @@ export const createSection = async (data: CreateSectionRequest): Promise<Section
 export const assignStudentToSection = async (data: AssignStudentToSectionRequest): Promise<void> => {
     const response = await fetch(`${ACADEMIC_STRUCTURE_URL}/sections/students`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data),
     });
     await handleResponse<void>(response); // Expecting 204 No Content

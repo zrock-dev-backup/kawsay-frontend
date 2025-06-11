@@ -1,32 +1,42 @@
 import React from 'react';
-import { List, ListItem, ListItemText, Typography, Divider, Paper } from '@mui/material';
-import type { CohortDetailDto } from '../../interfaces/academicStructureDtos';
+import {Accordion, AccordionDetails, AccordionSummary, Box, Typography} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import type {CohortDetailDto} from '../../interfaces/academicStructureDtos';
+import StudentGroupManager from './StudentGroupManager';
 
 interface CohortListProps {
     cohorts: CohortDetailDto[];
+    onAddGroup: (cohortId: number, groupName: string) => Promise<void>;
 }
 
-const CohortList: React.FC<CohortListProps> = ({ cohorts }) => {
+const CohortList: React.FC<CohortListProps> = ({cohorts, onAddGroup}) => {
     if (cohorts.length === 0) {
-        return <Typography sx={{ p: 2, color: 'text.secondary' }}>No cohorts have been created for this timetable yet.</Typography>;
+        return <Typography sx={{p: 2, color: 'text.secondary'}}>No cohorts have been created for this timetable
+            yet.</Typography>;
     }
 
     return (
-        <Paper variant="outlined">
-            <List disablePadding>
-                {cohorts.map((cohort, index) => (
-                    <React.Fragment key={cohort.id}>
-                        <ListItem>
-                            <ListItemText
-                                primary={cohort.name}
-                                secondary={`ID: ${cohort.id} | Groups: ${cohort.studentGroups.length}`}
-                            />
-                        </ListItem>
-                        {index < cohorts.length - 1 && <Divider />}
-                    </React.Fragment>
-                ))}
-            </List>
-        </Paper>
+        <Box>
+            {cohorts.map((cohort) => (
+                <Accordion key={cohort.id} TransitionProps={{unmountOnExit: true}}>
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon/>}
+                        aria-controls={`panel-${cohort.id}-content`}
+                        id={`panel-${cohort.id}-header`}
+                    >
+                        <Typography sx={{width: '50%', flexShrink: 0}}>
+                            {cohort.name}
+                        </Typography>
+                        <Typography sx={{color: 'text.secondary'}}>
+                            {`ID: ${cohort.id} | Groups: ${cohort.studentGroups.length}`}
+                        </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{p: 0}}>
+                        <StudentGroupManager cohort={cohort} onAddGroup={onAddGroup}/>
+                    </AccordionDetails>
+                </Accordion>
+            ))}
+        </Box>
     );
 };
 

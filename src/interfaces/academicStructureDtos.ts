@@ -1,6 +1,4 @@
-import type {
-    StudentDto,
-} from './apiDataTypes.ts';
+import type {StudentDto,} from './apiDataTypes.ts';
 
 export interface CreateCohortRequest {
     name: string;
@@ -39,4 +37,9 @@ export interface CohortDetailDto {
     name: string;
     timetableId: number;
     studentGroups: StudentGroupDetailDto[];
+}
+
+export interface CreateStudentGroupRequest {
+    name: string;
+    cohortId: number;
 }

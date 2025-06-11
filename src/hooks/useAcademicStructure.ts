@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { CohortDetailDto } from '../interfaces/academicStructureDtos';
-import { fetchCohortsForTimetable, createCohort } from '../services/academicStructureApi';
+import { fetchCohortsForTimetable, createCohort,  createStudentGroup} from '../services/academicStructureApi';
 
 export function useAcademicStructure(timetableId: string | undefined) {
     const [cohorts, setCohorts] = useState<CohortDetailDto[]>([]);
@@ -52,6 +52,29 @@ export function useAcademicStructure(timetableId: string | undefined) {
             return null;
         }
     };
+
+    const addStudentGroup = async (cohortId: number, groupName: string): Promise<StudentGroupDetailDto | null> => {
+        if (!timetableId) {
+            setError("Cannot create group without a timetable ID.");
+            return null;
+        }
+        try {
+            const newGroup = await createStudentGroup({ name: groupName, cohortId });
+            setCohorts(prevCohorts =>
+                prevCohorts.map(cohort =>
+                    cohort.id === cohortId
+                        ? { ...cohort, studentGroups: [...cohort.studentGroups, newGroup] }
+                        : cohort
+                )
+            );
+            console.log(newGroup);
+            return newGroup;
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to create student group.";
+            setError(errorMessage);
+            return null;
+        }
+    };
     
     return {
         cohorts,
@@ -59,5 +82,6 @@ export function useAcademicStructure(timetableId: string | undefined) {
         error,
         addCohort,
         reloadCohorts: loadCohorts,
+        addStudentGroup,
     };
 }
