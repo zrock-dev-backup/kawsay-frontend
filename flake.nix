@@ -37,7 +37,7 @@
             version = "0.1.0";
             src = ./.;
             nodejs = pkgs.nodejs_24;
-            npmDepsHash = "sha256-4dBGWK/ZxvCEDeodrJPeBAt3iwV+hKxAnA8LsCtuimc=";
+            npmDepsHash = "sha256-XuriWmf4eIEkCZBhbIjJsJm9rHjOJ6qzVEJKdMwk2oo=";
 
             buildPhase = ''
               runHook preBuild
@@ -56,7 +56,7 @@
         defaultUrls = {
           development = "http://localhost:5167";
           staging = "http://kawsay-test.eastus.cloudapp.azure.com:5167";
-          production = "https://kawsay.example.com";
+          production = "http://kawsay-test.eastus.cloudapp.azure.com:5167";
         };
 
       in
@@ -77,13 +77,13 @@
           default = self.packages.${system}.development;
 
           dockerImageStaging = pkgs.dockerTools.buildImage {
-            name = "kawsay-frontend";
-            tag = "staging";
+            name = "1kawsay/frontend-kawsay";
+            tag = "latest";
 
             copyToRoot = pkgs.buildEnv {
               name = "image-root";
-              paths = [ 
-                pkgs.nginx 
+              paths = [
+                pkgs.nginx
                 pkgs.fakeNss
                 (pkgs.runCommand "setup-dirs" {} ''
                   mkdir -p $out/var/log/nginx
@@ -140,6 +140,12 @@
               };
             };
           };
+        };
+
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            nodejs_24
+          ];
         };
       }
     );
