@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, TextField, Button, CircularProgress, Alert } from '@mui/material';
+import {Alert, Box, Button, CircularProgress, TextField, Typography} from '@mui/material';
 
 interface GradeIngestionFormProps {
     csvData: string;
@@ -10,21 +10,21 @@ interface GradeIngestionFormProps {
 }
 
 const GradeIngestionForm: React.FC<GradeIngestionFormProps> = ({
-    csvData,
-    onCsvDataChange,
-    onSubmit,
-    isSubmitting,
-    submitError,
-}) => {
+                                                                   csvData,
+                                                                   onCsvDataChange,
+                                                                   onSubmit,
+                                                                   isSubmitting,
+                                                                   submitError,
+                                                               }) => {
     return (
         <Box component="form" noValidate autoComplete="off">
             <Typography variant="body1" gutterBottom>
                 Paste grade data here in CSV format (studentId,courseId,gradeValue).
             </Typography>
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
-                Example:<br />
-                1,101,85.5<br />
-                1,102,92.0<br />
+            <Typography variant="caption" color="text.secondary" display="block" sx={{mb: 2}}>
+                Example:<br/>
+                1,101,85.5<br/>
+                1,102,92.0<br/>
                 2,101,68.0
             </Typography>
 
@@ -41,7 +41,7 @@ const GradeIngestionForm: React.FC<GradeIngestionFormProps> = ({
             />
 
             {submitError && (
-                <Alert severity="error" sx={{ mt: 2 }}>
+                <Alert severity="error" sx={{mt: 2}}>
                     {submitError}
                 </Alert>
             )}
@@ -51,9 +51,9 @@ const GradeIngestionForm: React.FC<GradeIngestionFormProps> = ({
                 color="primary"
                 onClick={onSubmit}
                 disabled={isSubmitting || !csvData.trim()}
-                sx={{ mt: 2 }}
+                sx={{mt: 2}}
             >
-                {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Ingest Grades'}
+                {isSubmitting ? <CircularProgress size={24} color="inherit"/> : 'Ingest Grades'}
             </Button>
         </Box>
     );

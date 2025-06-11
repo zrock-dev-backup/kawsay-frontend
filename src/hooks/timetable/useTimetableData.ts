@@ -1,7 +1,7 @@
-import {useState, useEffect, useMemo} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import dayjs from 'dayjs';
-import {fetchTimetableStructureById, fetchClassesForTimetable} from '../../services/apiService.ts';
-import type {TimetableStructure, Class as ApiClass} from '../../interfaces/apiDataTypes.ts';
+import {fetchClassesForTimetable, fetchTimetableStructureById} from '../../services/apiService.ts';
+import type {Class as ApiClass, TimetableStructure} from '../../interfaces/apiDataTypes.ts';
 
 interface GridCellContent {
     classId: number;
@@ -12,6 +12,7 @@ interface GridCellContent {
 }
 
 type ProcessedScheduleMap = Map<string, GridCellContent[]>;
+
 export function useTimetableData(timetableId: string | undefined) {
     const [structure, setStructure] = useState<TimetableStructure | null>(null);
     const [classes, setClasses] = useState<ApiClass[]>([]);

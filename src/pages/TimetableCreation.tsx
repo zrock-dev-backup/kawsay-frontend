@@ -1,38 +1,40 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
-    Container,
-    Typography,
-    TextField,
-    Button,
-    Box,
-    Stack,
-    IconButton,
-    Paper,
     Alert,
-    CircularProgress,
-    FormControlLabel,
+    Box,
+    Button,
     Checkbox,
+    CircularProgress,
+    Container,
+    FormControlLabel,
     FormGroup,
     FormLabel,
+    IconButton,
+    Paper,
+    Stack,
+    TextField,
+    Typography,
 } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
-import type { DateRange } from '@mui/x-date-pickers-pro';
+import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
+import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
+import {TimePicker} from '@mui/x-date-pickers/TimePicker';
+import {DateRangePicker} from '@mui/x-date-pickers-pro/DateRangePicker';
+import type {DateRange} from '@mui/x-date-pickers-pro';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs, {Dayjs} from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import type { CreateTimetableRequest, TimetableStructure } from '../interfaces/apiDataTypes';
-import { createTimetable } from '../services/apiService';
+import type {CreateTimetableRequest, TimetableStructure} from '../interfaces/apiDataTypes';
+import {createTimetable} from '../services/apiService';
 
 dayjs.extend(customParseFormat);
+
 interface TimeRangeUI {
     id: number;
     start: Dayjs | null;
     end: Dayjs | null;
 }
+
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const TimetableCreationPage: React.FC = () => {
@@ -81,7 +83,7 @@ const TimetableCreationPage: React.FC = () => {
     ) => {
         setTimeRanges((prevRanges) =>
             prevRanges.map((range) =>
-                range.id === id ? { ...range, [type]: newValue } : range
+                range.id === id ? {...range, [type]: newValue} : range
             )
         );
         setSubmitStatus(null);
@@ -91,17 +93,23 @@ const TimetableCreationPage: React.FC = () => {
         setSubmitStatus(null);
 
         if (!timetableName || !dateRange[0] || !dateRange[1] || selectedDays.length === 0 || timeRanges.length === 0) {
-            setSubmitStatus({ type: 'error', message: 'Please fill all required fields: Name, Date Range, Days, and at least one Time Period.' });
+            setSubmitStatus({
+                type: 'error',
+                message: 'Please fill all required fields: Name, Date Range, Days, and at least one Time Period.'
+            });
             return;
         }
         if (dateRange[1].isBefore(dateRange[0])) {
-            setSubmitStatus({ type: 'error', message: 'End date cannot be before the start date.'});
+            setSubmitStatus({type: 'error', message: 'End date cannot be before the start date.'});
             return;
         }
 
         const invalidRange = timeRanges.find(r => !r.start || !r.end || r.end.isBefore(r.start));
         if (invalidRange) {
-            setSubmitStatus({ type: 'error', message: `Invalid time range found. End time must be after start time, and both must be set.` });
+            setSubmitStatus({
+                type: 'error',
+                message: `Invalid time range found. End time must be after start time, and both must be set.`
+            });
             return;
         }
 
@@ -121,7 +129,10 @@ const TimetableCreationPage: React.FC = () => {
             console.log('Submitting timetable creation:', apiPayload);
             const result: TimetableStructure = await createTimetable(apiPayload);
             console.log('Timetable creation successful:', result);
-            setSubmitStatus({ type: 'success', message: `Timetable "${result.name}" created successfully! (ID: ${result.id})` });
+            setSubmitStatus({
+                type: 'success',
+                message: `Timetable "${result.name}" created successfully! (ID: ${result.id})`
+            });
             // Reset form
             setTimetableName('');
             setDateRange([null, null]);
@@ -130,7 +141,10 @@ const TimetableCreationPage: React.FC = () => {
             setNextId(1);
         } catch (err) {
             console.error('Error creating timetable:', err);
-            setSubmitStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to create timetable.' });
+            setSubmitStatus({
+                type: 'error',
+                message: err instanceof Error ? err.message : 'Failed to create timetable.'
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -143,11 +157,11 @@ const TimetableCreationPage: React.FC = () => {
                     Create New Timetable
                 </Typography>
                 {submitStatus && (
-                    <Alert severity={submitStatus.type} sx={{ mt: 2, mb: 2 }}>
+                    <Alert severity={submitStatus.type} sx={{mt: 2, mb: 2}}>
                         {submitStatus.message}
                     </Alert>
                 )}
-                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+                <Box component="form" onSubmit={handleSubmit} noValidate sx={{mt: 1}}>
                     <TextField
                         margin="normal"
                         required
@@ -165,12 +179,12 @@ const TimetableCreationPage: React.FC = () => {
                         label="Timetable Duration *"
                         value={dateRange}
                         onChange={(newValue) => setDateRange(newValue)}
-                        sx={{ mt: 2, mb: 3 }}
+                        sx={{mt: 2, mb: 3}}
                         disabled={isSubmitting}
                     />
 
-                    <FormLabel component="legend" sx={{ mb: 1 }}>Select Days *</FormLabel>
-                    <FormGroup row sx={{ mb: 3 }}>
+                    <FormLabel component="legend" sx={{mb: 1}}>Select Days *</FormLabel>
+                    <FormGroup row sx={{mb: 3}}>
                         {daysOfWeek.map(dayName => (
                             <FormControlLabel
                                 key={dayName}
@@ -189,12 +203,12 @@ const TimetableCreationPage: React.FC = () => {
                     <Typography variant="h6" gutterBottom>
                         Time Periods *
                     </Typography>
-                    <Stack spacing={2} sx={{ mb: 2 }}>
+                    <Stack spacing={2} sx={{mb: 2}}>
                         {timeRanges.map((range) => (
                             <Paper
                                 key={range.id}
                                 elevation={2}
-                                sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}
+                                sx={{p: 2, display: 'flex', alignItems: 'center', gap: 2}}
                             >
                                 <TimePicker
                                     label="Start Time"
@@ -204,10 +218,10 @@ const TimetableCreationPage: React.FC = () => {
                                     }
                                     ampm={false}
                                     disabled={isSubmitting}
-                                    sx={{ flexGrow: 1 }}
-                                    slotProps={{ textField: { required: true } }}
+                                    sx={{flexGrow: 1}}
+                                    slotProps={{textField: {required: true}}}
                                 />
-                                <Typography sx={{ mx: 1 }}>to</Typography>
+                                <Typography sx={{mx: 1}}>to</Typography>
                                 <TimePicker
                                     label="End Time"
                                     value={range.end}
@@ -215,10 +229,10 @@ const TimetableCreationPage: React.FC = () => {
                                         handleTimeChange(range.id, 'end', newValue)
                                     }
                                     ampm={false}
-                                    sx={{ flexGrow: 1 }}
+                                    sx={{flexGrow: 1}}
                                     minTime={range.start ?? undefined}
                                     disabled={isSubmitting || !range.start}
-                                    slotProps={{ textField: { required: true } }}
+                                    slotProps={{textField: {required: true}}}
                                 />
                                 <IconButton
                                     aria-label="delete time range"
@@ -226,7 +240,7 @@ const TimetableCreationPage: React.FC = () => {
                                     color="error"
                                     disabled={isSubmitting}
                                 >
-                                    <DeleteIcon />
+                                    <DeleteIcon/>
                                 </IconButton>
                             </Paper>
                         ))}
@@ -236,9 +250,9 @@ const TimetableCreationPage: React.FC = () => {
                     </Stack>
                     <Button
                         variant="outlined"
-                        startIcon={<AddCircleOutlineIcon />}
+                        startIcon={<AddCircleOutlineIcon/>}
                         onClick={handleAddRange}
-                        sx={{ mb: 3 }}
+                        sx={{mb: 3}}
                         disabled={isSubmitting}
                     >
                         Add Time Period
@@ -248,11 +262,11 @@ const TimetableCreationPage: React.FC = () => {
                         type="submit"
                         fullWidth
                         variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
+                        sx={{mt: 3, mb: 2}}
                         // Disable if name is empty, no days selected, no time ranges, or submitting
                         disabled={!timetableName || selectedDays.length === 0 || timeRanges.length === 0 || isSubmitting}
                     >
-                        {isSubmitting ? <CircularProgress size={24} /> : 'Create Timetable'}
+                        {isSubmitting ? <CircularProgress size={24}/> : 'Create Timetable'}
                     </Button>
                 </Box>
             </Container>

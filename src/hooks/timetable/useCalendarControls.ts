@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
+import {useCallback, useState} from 'react';
+import dayjs, {Dayjs} from 'dayjs';
 
 export function useCalendarControls(initialDate?: Dayjs) {
     const [view, setView] = useState<'week' | 'month'>('week');

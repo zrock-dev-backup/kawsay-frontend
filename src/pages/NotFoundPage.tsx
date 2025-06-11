@@ -1,7 +1,8 @@
 import React from 'react';
-import { Typography, Container, Box } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import {Box, Container, Typography} from '@mui/material';
+import {Link as RouterLink} from 'react-router-dom';
 import Link from '@mui/material/Link';
+
 const NotFoundPage: React.FC = () => {
     return (
         <Container>

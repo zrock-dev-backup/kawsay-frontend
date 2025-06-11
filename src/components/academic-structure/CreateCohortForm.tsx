@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Box, TextField, Button, CircularProgress, Stack } from '@mui/material';
+import React, {useState} from 'react';
+import {Box, Button, CircularProgress, Stack, TextField} from '@mui/material';
 
 interface CreateCohortFormProps {
     onSubmit: (name: string) => Promise<void>;
     isSubmitting: boolean;
 }
 
-const CreateCohortForm: React.FC<CreateCohortFormProps> = ({ onSubmit, isSubmitting }) => {
+const CreateCohortForm: React.FC<CreateCohortFormProps> = ({onSubmit, isSubmitting}) => {
     const [name, setName] = useState('');
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -33,9 +33,9 @@ const CreateCohortForm: React.FC<CreateCohortFormProps> = ({ onSubmit, isSubmitt
                     type="submit"
                     variant="contained"
                     disabled={isSubmitting || !name.trim()}
-                    sx={{ minWidth: 120, height: 40 }}
+                    sx={{minWidth: 120, height: 40}}
                 >
-                    {isSubmitting ? <CircularProgress size={24} /> : 'Add Cohort'}
+                    {isSubmitting ? <CircularProgress size={24}/> : 'Add Cohort'}
                 </Button>
             </Stack>
         </Box>

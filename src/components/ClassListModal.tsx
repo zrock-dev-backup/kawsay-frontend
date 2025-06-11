@@ -1,18 +1,18 @@
 import React from 'react';
 import {
-    Modal,
+    Alert,
     Box,
-    Typography,
+    Divider,
+    IconButton,
     List,
     ListItem,
     ListItemButton,
     ListItemText,
-    IconButton,
-    Divider,
-    Alert,
+    Modal,
+    Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import type { Class as ApiClass } from '../interfaces/apiDataTypes';
+import type {Class as ApiClass} from '../interfaces/apiDataTypes';
 
 interface ClassListModalProps {
     open: boolean;
@@ -27,7 +27,7 @@ const modalStyle = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: { xs: '95%', sm: 600, md: 700 },
+    width: {xs: '95%', sm: 600, md: 700},
     bgcolor: 'background.paper',
     border: '2px solid #000',
     boxShadow: 24,
@@ -43,12 +43,12 @@ const listContainerStyle = {
 };
 
 const ClassListModal: React.FC<ClassListModalProps> = ({
-    open,
-    onClose,
-    classes,
-    onClassSelect,
-    timetableName,
-}) => {
+                                                           open,
+                                                           onClose,
+                                                           classes,
+                                                           onClassSelect,
+                                                           timetableName,
+                                                       }) => {
     const handleClassClick = (classId: number) => {
         onClassSelect(classId);
     };
@@ -61,15 +61,16 @@ const ClassListModal: React.FC<ClassListModalProps> = ({
             aria-describedby="class-list-modal-description"
         >
             <Box sx={modalStyle}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexShrink: 0 }}>
+                <Box
+                    sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexShrink: 0}}>
                     <Typography id="class-list-modal-title" variant="h6" component="h2">
                         Classes List {timetableName ? `for ${timetableName}` : ''}
                     </Typography>
                     <IconButton onClick={onClose} aria-label="close">
-                        <CloseIcon />
+                        <CloseIcon/>
                     </IconButton>
                 </Box>
-                <Divider sx={{ mb: 2, flexShrink: 0 }} />
+                <Divider sx={{mb: 2, flexShrink: 0}}/>
 
                 {classes.length === 0 ? (
                     <Alert severity="info" sx={{flexShrink: 0}}>No classes found for this timetable.</Alert>
@@ -97,11 +98,12 @@ const ClassListModal: React.FC<ClassListModalProps> = ({
                                                         color="text.secondary"
                                                         display="block"
                                                     >
-                                                        Length: {cls.length} period{cls.length !== 1 ? 's' : ''} | Frequency: {cls.frequency}
+                                                        Length: {cls.length} period{cls.length !== 1 ? 's' : ''} |
+                                                        Frequency: {cls.frequency}
                                                     </Typography>
                                                 </>
                                             }
-                                            secondaryTypographyProps={{ component: 'div' }}
+                                            secondaryTypographyProps={{component: 'div'}}
                                         />
                                     </ListItemButton>
                                 </ListItem>

@@ -1,15 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import {Typography, ToggleButton, Box} from '@mui/material';
+import React, {useMemo, useState} from 'react';
+import {Box, ToggleButton, Typography} from '@mui/material';
 import dayjs from 'dayjs';
-import type { TimetableDay, TimetablePeriod } from '../../interfaces/apiDataTypes.ts';
+import type {TimetableDay, TimetablePeriod} from '../../interfaces/apiDataTypes.ts';
 import {
-    SlotPickerContainer,
     FilterContainer,
-    StyledToggleButtonGroup,
     Grid,
     HeaderCell,
-    TimeLabelCell,
     SlotButton,
+    SlotPickerContainer,
+    StyledToggleButtonGroup,
+    TimeLabelCell,
 } from './SlotPicker.styles.ts';
 
 type TimeBlock = 'all' | 'morning' | 'afternoon' | 'evening';
@@ -22,7 +22,7 @@ interface SlotPickerProps {
     length: number;
 }
 
-const SlotPicker: React.FC<SlotPickerProps> = ({ days, periods, value, onChange, length }) => {
+const SlotPicker: React.FC<SlotPickerProps> = ({days, periods, value, onChange, length}) => {
     const [activeFilter, setActiveFilter] = useState<TimeBlock>('all');
 
     const handleFilterChange = (event: React.MouseEvent<HTMLElement>, newFilter: TimeBlock | null) => {
@@ -48,7 +48,7 @@ const SlotPicker: React.FC<SlotPickerProps> = ({ days, periods, value, onChange,
         if (isSelected) {
             newValue = value.filter(slot => !(slot.dayId === dayId && slot.startPeriodId === periodId));
         } else {
-            newValue = [...value, { dayId, startPeriodId: periodId }];
+            newValue = [...value, {dayId, startPeriodId: periodId}];
         }
         onChange(newValue);
     };
@@ -71,9 +71,9 @@ const SlotPicker: React.FC<SlotPickerProps> = ({ days, periods, value, onChange,
                 </StyledToggleButtonGroup>
             </FilterContainer>
 
-            <Grid sx={{ gridTemplateColumns: `60px repeat(${days.length}, 1fr)` }}>
+            <Grid sx={{gridTemplateColumns: `60px repeat(${days.length}, 1fr)`}}>
                 {/* Top-left empty cell */}
-                <Box />
+                <Box/>
                 {/* Day Headers */}
                 {days.map(day => (
                     <HeaderCell key={day.id}>{day.name.substring(0, 3)}</HeaderCell>
@@ -106,7 +106,7 @@ const SlotPicker: React.FC<SlotPickerProps> = ({ days, periods, value, onChange,
                 })}
             </Grid>
             {filteredPeriods.length === 0 && (
-                <Typography align="center" color="text.secondary" sx={{ mt: 2 }}>
+                <Typography align="center" color="text.secondary" sx={{mt: 2}}>
                     No periods available in this time block.
                 </Typography>
             )}

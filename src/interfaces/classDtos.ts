@@ -1,9 +1,4 @@
-import type {
-    Course,
-    Teacher,
-    ClassOccurrence,
-    CreatePeriodPreferenceRequest,
-} from './apiDataTypes.ts';
+import type {ClassOccurrence, Course, CreatePeriodPreferenceRequest, Teacher,} from './apiDataTypes.ts';
 
 export type ClassType = "Masterclass" | "Lab";
 

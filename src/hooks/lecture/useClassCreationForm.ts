@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
+import {useState} from 'react';
+import {SubmitHandler, useForm} from 'react-hook-form';
+import {yupResolver} from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import type { CreateClassRequest, ClassType } from '../../interfaces/classDtos';
-import { createClass } from '../../services/apiService';
+import type {ClassType, CreateClassRequest} from '../../interfaces/classDtos';
+import {createClass} from '../../services/apiService';
 
 const periodPreferenceSchema = yup.object().shape({
     dayId: yup.number().required(),
@@ -33,7 +33,7 @@ export function useClassCreationForm(timetableId: string | undefined) {
         register,
         handleSubmit,
         watch,
-        formState: { errors },
+        formState: {errors},
         reset,
     } = useForm<CreateClassRequest>({
         resolver: yupResolver(schema),
@@ -55,7 +55,7 @@ export function useClassCreationForm(timetableId: string | undefined) {
 
     const onSubmit: SubmitHandler<CreateClassRequest> = async (data) => {
         if (!timetableId) {
-            setSubmitStatus({ type: 'error', message: 'Timetable ID is missing.' });
+            setSubmitStatus({type: 'error', message: 'Timetable ID is missing.'});
             return;
         }
         setSubmitStatus(null);
@@ -77,7 +77,7 @@ export function useClassCreationForm(timetableId: string | undefined) {
             reset();
         } catch (err) {
             const apiErrorMessage = err instanceof Error ? err.message : 'Failed to create class.';
-            setSubmitStatus({ type: 'error', message: `Submission Error: ${apiErrorMessage}` });
+            setSubmitStatus({type: 'error', message: `Submission Error: ${apiErrorMessage}`});
         } finally {
             setIsSubmitting(false);
         }

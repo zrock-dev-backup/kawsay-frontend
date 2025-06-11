@@ -1,11 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import dayjs from 'dayjs';
-import {
-    fetchCourses,
-    fetchTeachers,
-    fetchTimetableStructureById,
-} from '../../services/apiService.ts';
-import type { Course, Teacher, TimetableStructure } from '../../interfaces/apiDataTypes.ts';
+import {fetchCourses, fetchTeachers, fetchTimetableStructureById,} from '../../services/apiService.ts';
+import type {Course, Teacher, TimetableStructure} from '../../interfaces/apiDataTypes.ts';
 
 export function useClassFormData(timetableId: string | undefined) {
     const [timetableStructure, setTimetableStructure] = useState<TimetableStructure | null>(null);
@@ -17,7 +13,7 @@ export function useClassFormData(timetableId: string | undefined) {
     const [loadingTeachers, setLoadingTeachers] = useState<boolean>(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
-    const fetchData = useCallback(async <T,>(
+    const fetchData = useCallback(async <T, >(
         fetchFn: () => Promise<T>,
         setData: React.Dispatch<React.SetStateAction<T>>,
         setLoading: React.Dispatch<React.SetStateAction<boolean>>,

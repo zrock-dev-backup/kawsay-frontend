@@ -1,4 +1,4 @@
-import { Box, ButtonBase, ToggleButtonGroup, styled } from '@mui/material';
+import {Box, ButtonBase, styled, ToggleButtonGroup} from '@mui/material';
 
 export const SlotPickerContainer = styled(Box)({
     border: '1px solid',
@@ -14,7 +14,7 @@ export const FilterContainer = styled(Box)({
     justifyContent: 'center',
 });
 
-export const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
+export const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({theme}) => ({
     backgroundColor: theme.palette.background.default,
 }));
 
@@ -24,7 +24,7 @@ export const Grid = styled(Box)({
     // gridTemplateColumns will be set dynamically
 });
 
-const CellBase = styled(Box)(({ theme }) => ({
+const CellBase = styled(Box)(({theme}) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -33,13 +33,13 @@ const CellBase = styled(Box)(({ theme }) => ({
     textAlign: 'center',
 }));
 
-export const HeaderCell = styled(CellBase)(({ theme }) => ({
+export const HeaderCell = styled(CellBase)(({theme}) => ({
     fontWeight: 'bold',
     backgroundColor: theme.palette.grey[100],
     borderRadius: '2px',
 }));
 
-export const TimeLabelCell = styled(CellBase)(({ theme }) => ({
+export const TimeLabelCell = styled(CellBase)(({theme}) => ({
     fontWeight: 'bold',
     fontSize: '0.8rem',
     color: theme.palette.text.secondary,
@@ -49,7 +49,7 @@ export const TimeLabelCell = styled(CellBase)(({ theme }) => ({
 
 export const SlotButton = styled(ButtonBase, {
     shouldForwardProp: (prop) => prop !== 'isSelected',
-})<{ isSelected: boolean }>(({ theme, isSelected }) => ({
+})<{ isSelected: boolean }>(({theme, isSelected}) => ({
     width: '100%',
     height: '100%',
     borderRadius: '2px',

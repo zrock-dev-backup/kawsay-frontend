@@ -1,7 +1,7 @@
-import {useState, useCallback} from 'react';
+import {useCallback, useState} from 'react';
 import {useParams} from 'react-router-dom';
-import {ingestGrades, getModuleCohorts, bulkAdvanceStudents, bulkEnrollRetakes} from '../../services/apiService';
-import type {StudentCohortDto, GradeIngestionDto} from '../../interfaces/apiDataTypes';
+import {bulkAdvanceStudents, bulkEnrollRetakes, getModuleCohorts, ingestGrades} from '../../services/apiService';
+import type {GradeIngestionDto, StudentCohortDto} from '../../interfaces/apiDataTypes';
 
 // A simple utility to parse CSV data from the textarea
 const parseCsvData = (csvText: string): GradeIngestionDto[] => {
@@ -73,7 +73,7 @@ export function useEndofModule() {
             setIsLoadingCohorts(true);
             const cohortData = await getModuleCohorts(timetableId);
             setCohorts(cohortData);
-            
+
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
@@ -99,10 +99,13 @@ export function useEndofModule() {
                 try {
                     const studentIds = cohorts.advancingStudents.map(s => s.id);
                     const response = await bulkAdvanceStudents({timetableId: Number(timetableId), studentIds});
-                    setProcessingStatus({ type: 'success', message: response.message });
+                    setProcessingStatus({type: 'success', message: response.message});
                     // Optional: Refresh cohorts to show updated student standings if the API returns them
                 } catch (err) {
-                    setProcessingStatus({ type: 'error', message: err instanceof Error ? err.message : 'An unknown error occurred.' });
+                    setProcessingStatus({
+                        type: 'error',
+                        message: err instanceof Error ? err.message : 'An unknown error occurred.'
+                    });
                 } finally {
                     setIsProcessing(false);
                     closeDialog();
@@ -124,9 +127,12 @@ export function useEndofModule() {
                 try {
                     const studentIds = cohorts.retakeStudents.map(s => s.id);
                     const response = await bulkEnrollRetakes({timetableId: Number(timetableId), studentIds});
-                    setProcessingStatus({ type: 'success', message: response.message });
+                    setProcessingStatus({type: 'success', message: response.message});
                 } catch (err) {
-                    setProcessingStatus({ type: 'error', message: err instanceof Error ? err.message : 'An unknown error occurred during retake enrollment.' });
+                    setProcessingStatus({
+                        type: 'error',
+                        message: err instanceof Error ? err.message : 'An unknown error occurred during retake enrollment.'
+                    });
                 } finally {
                     setIsProcessing(false);
                     closeDialog();

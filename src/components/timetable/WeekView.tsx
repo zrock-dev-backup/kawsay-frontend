@@ -1,17 +1,16 @@
 import React from 'react';
-import {Typography, Box} from '@mui/material';
-import {Dayjs} from 'dayjs';
-import dayjs from 'dayjs';
-import type {TimetablePeriod, TimetableDay} from '../../interfaces/apiDataTypes.ts';
+import {Box, Typography} from '@mui/material';
+import dayjs, {Dayjs} from 'dayjs';
+import type {TimetableDay, TimetablePeriod} from '../../interfaces/apiDataTypes.ts';
 
 import {
-    GridContainer,
-    DayHeaderCell,
-    TimeLabelCell,
     BackgroundCell,
-    SingleEventPaper,
-    EventStack,
+    DayHeaderCell,
     EventChip,
+    EventStack,
+    GridContainer,
+    SingleEventPaper,
+    TimeLabelCell,
     TopLeftCell
 } from './WeekView.styles.ts';
 

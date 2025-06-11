@@ -1,12 +1,12 @@
 import React from 'react';
 import {
+    Button,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
-    Button,
-    CircularProgress,
 } from '@mui/material';
 
 interface ConfirmationDialogProps {
@@ -21,15 +21,15 @@ interface ConfirmationDialogProps {
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
-    open,
-    onClose,
-    onConfirm,
-    title,
-    description,
-    confirmText = 'Confirm',
-    cancelText = 'Cancel',
-    isLoading = false,
-}) => {
+                                                                   open,
+                                                                   onClose,
+                                                                   onConfirm,
+                                                                   title,
+                                                                   description,
+                                                                   confirmText = 'Confirm',
+                                                                   cancelText = 'Cancel',
+                                                                   isLoading = false,
+                                                               }) => {
     return (
         <Dialog
             open={open}
@@ -48,7 +48,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                     {cancelText}
                 </Button>
                 <Button onClick={onConfirm} disabled={isLoading} color="primary" variant="contained" autoFocus>
-                    {isLoading ? <CircularProgress size={24} color="inherit" /> : confirmText}
+                    {isLoading ? <CircularProgress size={24} color="inherit"/> : confirmText}
                 </Button>
             </DialogActions>
         </Dialog>

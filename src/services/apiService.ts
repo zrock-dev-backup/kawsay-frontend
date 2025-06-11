@@ -1,20 +1,17 @@
-import { API_BASE_URL, handleResponse } from './api.helpers';
+import {API_BASE_URL, handleResponse} from './api.helpers';
 import type {
+    BulkActionResponse,
+    BulkAdvanceRequest,
+    BulkRetakeRequest,
     Course,
-    Teacher,
-    TimetableStructure,
     CreateTimetableRequest,
     GradeIngestionDto,
     StudentCohortDto,
-    BulkAdvanceRequest,
-    BulkRetakeRequest,
-    BulkActionResponse,
+    Teacher,
+    TimetableStructure,
 } from '../interfaces/apiDataTypes';
 
-import type {
-    Class,
-    CreateClassRequest,
-} from '../interfaces/classDtos';
+import type {Class, CreateClassRequest,} from '../interfaces/classDtos';
 
 
 interface GenerateScheduleResponse {
@@ -94,7 +91,9 @@ export const generateScheduleForTimetable = async (timetableId: string | number)
     return handleResponse<GenerateScheduleResponse>(response);
 };
 
-export const ingestGrades = async (timetableId: string | number, gradeData: GradeIngestionDto[]): Promise<{ message: string }> => {
+export const ingestGrades = async (timetableId: string | number, gradeData: GradeIngestionDto[]): Promise<{
+    message: string
+}> => {
     console.log(`Ingesting ${gradeData.length} grades for timetable ID ${timetableId}`);
     const response = await fetch(`${API_BASE_URL}/module-processing/${timetableId}/ingest-grades`, {
         method: 'POST',
@@ -117,7 +116,7 @@ export const bulkAdvanceStudents = async (payload: BulkAdvanceRequest): Promise<
     console.log(`Requesting bulk advancement for ${payload.studentIds.length} students.`);
     const response = await fetch(`${API_BASE_URL}/module-processing/bulk-advance`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json',},
         body: JSON.stringify(payload),
     });
     return handleResponse<BulkActionResponse>(response);
@@ -127,7 +126,7 @@ export const bulkEnrollRetakes = async (payload: BulkRetakeRequest): Promise<Bul
     console.log(`Requesting bulk retake enrollment for ${payload.studentIds.length} students.`);
     const response = await fetch(`${API_BASE_URL}/module-processing/bulk-retake-enroll`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload),
     });
     return handleResponse<BulkActionResponse>(response);

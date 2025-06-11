@@ -1,13 +1,7 @@
 import React from 'react';
-import {Paper, Chip} from '@mui/material';
+import {Chip, Paper} from '@mui/material';
 import {Dayjs} from 'dayjs';
-import {
-    MonthGridContainer,
-    MonthDayHeader,
-    DayCell,
-    DayNumber,
-    ChipContainer
-} from './MonthView.styles.ts';
+import {ChipContainer, DayCell, DayNumber, MonthDayHeader, MonthGridContainer} from './MonthView.styles.ts';
 
 interface GridCellContent {
     classId: number;

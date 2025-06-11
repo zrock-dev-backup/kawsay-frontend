@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import React, {useEffect, useState} from 'react';
+import {Link as RouterLink, useNavigate} from 'react-router-dom';
 import {
+    Alert,
+    Box,
+    CircularProgress,
     Container,
-    Typography,
+    IconButton,
     List,
     ListItem,
     ListItemText,
-    CircularProgress,
-    Alert,
-    Box,
-    IconButton,
     Stack,
     Tooltip,
+    Typography,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
-import type { TimetableStructure } from '../interfaces/apiDataTypes';
-import { fetchTimetables } from '../services/apiService';
+import type {TimetableStructure} from '../interfaces/apiDataTypes';
+import {fetchTimetables} from '../services/apiService';
 
 const TrackSelectionPage: React.FC = () => {
     const [timetables, setTimetables] = useState<TimetableStructure[]>([]);
@@ -44,14 +44,14 @@ const TrackSelectionPage: React.FC = () => {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <CircularProgress />
+            <Box sx={{display: 'flex', justifyContent: 'center', mt: 4}}>
+                <CircularProgress/>
             </Box>
         );
     }
 
     if (error) {
-        return <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>;
+        return <Alert severity="error" sx={{mt: 2}}>{error}</Alert>;
     }
 
     return (
@@ -60,9 +60,9 @@ const TrackSelectionPage: React.FC = () => {
                 Select a Timetable
             </Typography>
             {timetables.length === 0 ? (
-                <Typography sx={{ mt: 2 }}>No timetables found.</Typography>
+                <Typography sx={{mt: 2}}>No timetables found.</Typography>
             ) : (
-                <List sx={{ width: '100%', bgcolor: 'background.paper', mt: 2 }}>
+                <List sx={{width: '100%', bgcolor: 'background.paper', mt: 2}}>
                     {timetables.map((timetable) => (
                         <ListItem
                             key={timetable.id}
@@ -75,7 +75,7 @@ const TrackSelectionPage: React.FC = () => {
                                             aria-label="view"
                                             onClick={() => navigate(`/table/${timetable.id}`)}
                                         >
-                                            <PlayArrowIcon />
+                                            <PlayArrowIcon/>
                                         </IconButton>
                                     </Tooltip>
                                     <Tooltip title="End-of-Module Processing">
@@ -85,14 +85,14 @@ const TrackSelectionPage: React.FC = () => {
                                             component={RouterLink}
                                             to={`/module-processing/${timetable.id}`}
                                         >
-                                            <EventRepeatIcon />
+                                            <EventRepeatIcon/>
                                         </IconButton>
                                     </Tooltip>
                                 </Stack>
                             }
                         >
-                            <ListItemText 
-                                primary={timetable.name} 
+                            <ListItemText
+                                primary={timetable.name}
                                 secondary={`${timetable.startDate} - ${timetable.endDate}`}
                             />
                         </ListItem>

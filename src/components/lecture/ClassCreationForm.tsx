@@ -1,21 +1,27 @@
 import React from 'react';
 import {
-    Container,
-    Typography,
-    Box,
-    TextField,
-    Button,
-    Stack,
-    CircularProgress,
     Alert,
+    Box,
+    Button,
+    CircularProgress,
+    Container,
     FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     FormHelperText,
+    InputLabel,
+    MenuItem,
+    Select,
+    Stack,
+    TextField,
+    Typography,
 } from '@mui/material';
-import { Controller, UseFormReturn, SubmitHandler } from 'react-hook-form';
-import type { CreateClassRequest, TimetableStructure, Course, Teacher, TimetablePeriod } from '../../interfaces/apiDataTypes.ts';
+import {Controller, SubmitHandler, UseFormReturn} from 'react-hook-form';
+import type {
+    Course,
+    CreateClassRequest,
+    Teacher,
+    TimetablePeriod,
+    TimetableStructure
+} from '../../interfaces/apiDataTypes.ts';
 import SlotPicker from './SlotPicker.tsx';
 
 type CreateClassRequestInternal = Omit<CreateClassRequest, 'timetableId'>;
@@ -61,12 +67,12 @@ const ClassCreationForm: React.FC<ClassCreationFormProps> = ({
             </Typography>
 
             {fetchError && (
-                <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                <Alert severity="warning" sx={{mt: 2, mb: 2}}>
                     Warning: Some data failed to load, functionality may be limited. Details: {fetchError}
                 </Alert>
             )}
             {submitStatus && (
-                <Alert severity={submitStatus.type} sx={{ mt: 2, mb: 2 }}>
+                <Alert severity={submitStatus.type} sx={{mt: 2, mb: 2}}>
                     {submitStatus.message}
                 </Alert>
             )}
@@ -75,9 +81,9 @@ const ClassCreationForm: React.FC<ClassCreationFormProps> = ({
                 component="form"
                 onSubmit={handleSubmit(onSubmit)}
                 noValidate
-                sx={{ mt: 1 }}
+                sx={{mt: 1}}
             >
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Stack direction={{xs: 'column', sm: 'row'}} spacing={2}>
                     <FormControl fullWidth required margin="normal" disabled={isSubmitting} error={!!errors.courseId}>
                         <InputLabel id="course-select-label">Course</InputLabel>
                         <Select
@@ -117,14 +123,14 @@ const ClassCreationForm: React.FC<ClassCreationFormProps> = ({
                     </FormControl>
                 </Stack>
 
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
+                <Stack direction={{xs: 'column', sm: 'row'}} spacing={2} sx={{mt: 2}}>
                     <TextField
                         required
                         fullWidth
                         label="Periods length"
                         type="number"
                         {...register("length")}
-                        InputProps={{ inputProps: { min: 1, step: 1 } }}
+                        InputProps={{inputProps: {min: 1, step: 1}}}
                         disabled={isSubmitting}
                         error={!!errors.length}
                         helperText={errors.length?.message}
@@ -136,14 +142,14 @@ const ClassCreationForm: React.FC<ClassCreationFormProps> = ({
                         label="Frequency (per week)"
                         type="number"
                         {...register("frequency")}
-                        InputProps={{ inputProps: { min: 1, step: 1 } }}
+                        InputProps={{inputProps: {min: 1, step: 1}}}
                         disabled={isSubmitting}
                         error={!!errors.frequency}
                         helperText={errors.frequency?.message}
                     />
                 </Stack>
 
-                <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 1 }}>
+                <Typography variant="h6" gutterBottom sx={{mt: 3, mb: 1}}>
                     Period Preferences *
                 </Typography>
 
@@ -151,7 +157,7 @@ const ClassCreationForm: React.FC<ClassCreationFormProps> = ({
                     <Controller
                         name="periodPreferences"
                         control={control}
-                        render={({ field }) => (
+                        render={({field}) => (
                             <SlotPicker
                                 days={timetableStructure?.days || []}
                                 periods={sortedPeriods}
@@ -170,11 +176,11 @@ const ClassCreationForm: React.FC<ClassCreationFormProps> = ({
                     type="submit"
                     fullWidth
                     variant="contained"
-                    sx={{ mt: 3, mb: 2 }}
+                    sx={{mt: 3, mb: 2}}
                     disabled={isSubmitting}
                     aria-busy={isSubmitting}
                 >
-                    {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Class'}
+                    {isSubmitting ? <CircularProgress size={24} color="inherit"/> : 'Create Class'}
                 </Button>
             </Box>
         </Container>

@@ -1,4 +1,4 @@
-import {Box, Paper, styled, Chip} from '@mui/material';
+import {Box, Chip, Paper, styled} from '@mui/material';
 
 export const GridContainer = styled(Box)(({theme}) => ({
     display: 'grid',

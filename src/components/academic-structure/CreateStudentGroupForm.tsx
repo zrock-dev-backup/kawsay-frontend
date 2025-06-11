@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Box, TextField, Button, CircularProgress, Stack } from '@mui/material';
+import React, {useState} from 'react';
+import {Box, Button, CircularProgress, Stack, TextField} from '@mui/material';
 
 interface CreateStudentGroupFormProps {
     onSubmit: (name: string) => Promise<void>;
     isSubmitting: boolean;
 }
 
-const CreateStudentGroupForm: React.FC<CreateStudentGroupFormProps> = ({ onSubmit, isSubmitting }) => {
+const CreateStudentGroupForm: React.FC<CreateStudentGroupFormProps> = ({onSubmit, isSubmitting}) => {
     const [name, setName] = useState('');
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -17,7 +17,8 @@ const CreateStudentGroupForm: React.FC<CreateStudentGroupFormProps> = ({ onSubmi
     };
 
     return (
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, p: 2, backgroundColor: 'action.hover', borderRadius: 1 }}>
+        <Box component="form" onSubmit={handleSubmit} noValidate
+             sx={{mt: 1, p: 2, backgroundColor: 'action.hover', borderRadius: 1}}>
             <Stack direction="row" spacing={1} alignItems="center">
                 <TextField
                     label="New Group Name"
@@ -34,9 +35,9 @@ const CreateStudentGroupForm: React.FC<CreateStudentGroupFormProps> = ({ onSubmi
                     variant="contained"
                     color="secondary"
                     disabled={isSubmitting || !name.trim()}
-                    sx={{ minWidth: 120, height: 40 }}
+                    sx={{minWidth: 120, height: 40}}
                 >
-                    {isSubmitting ? <CircularProgress size={24} /> : 'Add Group'}
+                    {isSubmitting ? <CircularProgress size={24}/> : 'Add Group'}
                 </Button>
             </Stack>
         </Box>

@@ -1,4 +1,4 @@
-import {Box, Stack, Typography, styled} from '@mui/material';
+import {Box, Stack, styled, Typography} from '@mui/material';
 
 // The main grid container for the month view
 export const MonthGridContainer = styled(Box)(({theme}) => ({
