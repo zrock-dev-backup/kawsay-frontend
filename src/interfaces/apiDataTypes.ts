@@ -52,28 +52,9 @@ export interface PeriodPreference {
     startPeriodId: number;
 }
 
-export interface Class {
-    id: number;
-    timetableId: number;
-    courseDto: Course;
-    teacherDto: Teacher | null;
-    classOccurrences: ClassOccurrence[];
-    length: number;
-    frequency: number;
-}
-
 export interface CreatePeriodPreferenceRequest {
     dayId: number;
     startPeriodId: number;
-}
-
-export interface CreateClassRequest {
-    timetableId: number;
-    courseId: number;
-    teacherId: number;
-    length: number;
-    frequency: number;
-    periodPreferences: CreatePeriodPreferenceRequest[];
 }
 
 export interface GradeIngestionDto {

@@ -1,10 +1,9 @@
+import { API_BASE_URL, handleResponse } from './api.helpers';
 import type {
     Course,
     Teacher,
     TimetableStructure,
     CreateTimetableRequest,
-    Class,
-    CreateClassRequest,
     GradeIngestionDto,
     StudentCohortDto,
     BulkAdvanceRequest,
@@ -12,50 +11,14 @@ import type {
     BulkActionResponse,
 } from '../interfaces/apiDataTypes';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/kawsay`;
-if (!import.meta.env.VITE_API_BASE_URL) {
-    console.error("CRITICAL ERROR: VITE_API_BASE_URL is not defined in .env file.");
-    throw new Error("API Base URL not configured. Define VITE_API_BASE_URL in .env");
-}
+import type {
+    Class,
+    CreateClassRequest,
+} from '../interfaces/classDtos';
+
 
 interface GenerateScheduleResponse {
     message: string;
-}
-
-async function handleResponse<T>(response: Response): Promise<T> {
-    const url = response.url;
-    if (!response.ok) {
-        let errorMessage = `API Error: ${response.status} ${response.statusText}`;
-        try {
-            const errorBody = await response.json();
-            errorMessage = errorBody?.message || errorBody?.error || errorBody?.title || errorMessage;
-        } catch (e) {
-            console.warn(`Failed to parse error response body for ${url}`, e);
-        }
-        console.error("API Error Response:", {
-            status: response.status,
-            statusText: response.statusText,
-            url: url,
-            errorMessage
-        });
-        throw new Error(errorMessage);
-    }
-
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-        const text = await response.text();
-        try {
-            return text ? JSON.parse(text) as T : null as T;
-        } catch (e) {
-            console.warn(`Failed to parse seemingly JSON response for ${url}`, e);
-            return null as T;
-        }
-    } else if (response.status === 204) {
-        return null as T;
-    } else {
-        console.log(`Received non-JSON OK response for ${url}, Status: ${response.status}, Content-Type: ${contentType}`);
-        return null as T;
-    }
 }
 
 export const fetchCourses = async (): Promise<Course[]> => {
