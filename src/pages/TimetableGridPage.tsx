@@ -1,12 +1,6 @@
 import React, {useState} from 'react';
-import {useParams, useNavigate} from 'react-router-dom';
-import {
-    Container,
-    Typography,
-    Box,
-    CircularProgress,
-    Alert,
-} from '@mui/material';
+import {useNavigate, useParams} from 'react-router-dom';
+import {Alert, Box, CircularProgress, Container, Paper, Tab, Tabs, Typography,} from '@mui/material';
 import dayjs from 'dayjs';
 
 import {useTimetableData} from '../hooks/timetable/useTimetableData.ts';
@@ -17,6 +11,7 @@ import MonthView from '../components/timetable/MonthView.tsx';
 import ClassDetailsModal from '../components/ClassDetailsModal';
 import ClassListModal from '../components/ClassListModal';
 import {generateScheduleForTimetable} from '../services/apiService';
+import AcademicStructureManager from "../components/academic-structure/AcademicStructureManager.tsx";
 
 const TimetableGridPage: React.FC = () => {
     const {id} = useParams<{ id: string }>();
@@ -33,6 +28,11 @@ const TimetableGridPage: React.FC = () => {
         type: 'success' | 'error' | 'warning';
         message: string
     } | null>(null);
+    const [activeTab, setActiveTab] = useState(0);
+
+    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+        setActiveTab(newValue);
+    };
 
     const handleLessonClick = (classId: number) => {
         setSelectedClassId(classId);
@@ -77,22 +77,36 @@ const TimetableGridPage: React.FC = () => {
                 </Alert>
             )}
 
-            {calendarControls.view === 'week' ? (
-                <WeekView
-                    displayDate={calendarControls.displayDate}
-                    scheduleMap={scheduleMap}
-                    sortedPeriods={sortedPeriods}
-                    onLessonClick={handleLessonClick}
-                    activeDays={structure.days}
-                />
-            ) : (
-                <MonthView
-                    displayDate={calendarControls.displayDate}
-                    scheduleMap={scheduleMap}
-                    onLessonClick={handleLessonClick}
-                />
-            )}
+            <Paper elevation={2}>
+                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                    <Tabs value={activeTab} onChange={handleTabChange} aria-label="timetable view tabs">
+                        <Tab label="Timetable Grid"/>
+                        <Tab label="Academic Structure"/>
+                    </Tabs>
+                </Box>
 
+            </Paper>
+
+            {activeTab === 0 && (
+                calendarControls.view === 'week' ? (
+                    <WeekView
+                        displayDate={calendarControls.displayDate}
+                        scheduleMap={scheduleMap}
+                        sortedPeriods={sortedPeriods}
+                        onLessonClick={handleLessonClick}
+                        activeDays={structure.days}
+                    />
+                ) : (
+                    <MonthView
+                        displayDate={calendarControls.displayDate}
+                        scheduleMap={scheduleMap}
+                        onLessonClick={handleLessonClick}
+                    />
+                )
+            )}
+            {activeTab === 1 && (
+                <AcademicStructureManager/>
+            )}
             <ClassDetailsModal
                 classId={selectedClassId}
                 open={isModalOpen}
