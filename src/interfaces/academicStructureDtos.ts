@@ -38,8 +38,3 @@ export interface CohortDetailDto {
     timetableId: number;
     studentGroups: StudentGroupDetailDto[];
 }
-
-export interface CreateStudentGroupRequest {
-    name: string;
-    cohortId: number;
-}

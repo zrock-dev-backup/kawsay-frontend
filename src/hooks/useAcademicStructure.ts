@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { CohortDetailDto } from '../interfaces/academicStructureDtos';
-import { fetchCohortsForTimetable, createCohort,  createStudentGroup} from '../services/academicStructureApi';
+import {useCallback, useEffect, useState} from 'react';
+import type {CohortDetailDto, StudentGroupDetailDto, SectionDetailDto} from '../interfaces/academicStructureDtos';
+import {
+    createCohort,
+    createSection,
+    createStudentGroup,
+    fetchCohortsForTimetable
+} from '../services/academicStructureApi';
 
 export function useAcademicStructure(timetableId: string | undefined) {
     const [cohorts, setCohorts] = useState<CohortDetailDto[]>([]);
@@ -13,7 +18,7 @@ export function useAcademicStructure(timetableId: string | undefined) {
             setLoading(false);
             return;
         }
-        
+
         setLoading(true);
         setError(null);
         try {
@@ -21,7 +26,7 @@ export function useAcademicStructure(timetableId: string | undefined) {
             setCohorts(fetchedCohorts);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch cohorts.";
-            // handle timetable with no cohorts
+
             if (errorMessage.includes("404") || errorMessage.toLowerCase().includes("not found")) {
                 console.warn(`No cohorts found for timetable ${timetableId}. This may be expected.`);
                 setCohorts([]);
@@ -43,7 +48,7 @@ export function useAcademicStructure(timetableId: string | undefined) {
             return null;
         }
         try {
-            const newCohort = await createCohort({ name: cohortName, timetableId: Number(timetableId) });
+            const newCohort = await createCohort({name: cohortName, timetableId: Number(timetableId)});
             setCohorts(prevCohorts => [...prevCohorts, newCohort]);
             return newCohort;
         } catch (err) {
@@ -59,11 +64,11 @@ export function useAcademicStructure(timetableId: string | undefined) {
             return null;
         }
         try {
-            const newGroup = await createStudentGroup({ name: groupName, cohortId });
+            const newGroup = await createStudentGroup({name: groupName, cohortId});
             setCohorts(prevCohorts =>
                 prevCohorts.map(cohort =>
                     cohort.id === cohortId
-                        ? { ...cohort, studentGroups: [...cohort.studentGroups, newGroup] }
+                        ? {...cohort, studentGroups: [...cohort.studentGroups, newGroup]}
                         : cohort
                 )
             );
@@ -75,7 +80,36 @@ export function useAcademicStructure(timetableId: string | undefined) {
             return null;
         }
     };
-    
+
+    const addSection = async (cohortId: number, studentGroupId: number, sectionName: string): Promise<SectionDetailDto | null> => {
+        if (!timetableId) {
+            setError("Cannot create section without a timetable ID.");
+            return null;
+        }
+        try {
+            const newSection = await createSection({name: sectionName, studentGroupId});
+            setCohorts(prevCohorts =>
+                prevCohorts.map(cohort => {
+                    if (cohort.id !== cohortId) return cohort;
+
+                    return {
+                        ...cohort,
+                        studentGroups: cohort.studentGroups.map(group =>
+                            group.id === studentGroupId
+                                ? {...group, sections: [...group.sections, newSection]}
+                                : group
+                        ),
+                    };
+                })
+            );
+            return newSection;
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to create section.";
+            setError(errorMessage);
+            return null;
+        }
+    };
+
     return {
         cohorts,
         loading,
@@ -83,5 +117,6 @@ export function useAcademicStructure(timetableId: string | undefined) {
         addCohort,
         reloadCohorts: loadCohorts,
         addStudentGroup,
+        addSection,
     };
 }
