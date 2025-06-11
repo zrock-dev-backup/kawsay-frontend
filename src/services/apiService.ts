@@ -154,7 +154,7 @@ export const bulkAdvanceStudents = async (payload: BulkAdvanceRequest): Promise<
     console.log(`Requesting bulk advancement for ${payload.studentIds.length} students.`);
     const response = await fetch(`${API_BASE_URL}/module-processing/bulk-advance`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', },
         body: JSON.stringify(payload),
     });
     return handleResponse<BulkActionResponse>(response);

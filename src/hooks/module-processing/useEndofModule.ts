@@ -1,6 +1,6 @@
 import {useState, useCallback} from 'react';
 import {useParams} from 'react-router-dom';
-import {ingestGrades, getModuleCohorts} from '../../services/apiService';
+import {ingestGrades, getModuleCohorts, bulkAdvanceStudents, bulkEnrollRetakes} from '../../services/apiService';
 import type {StudentCohortDto, GradeIngestionDto} from '../../interfaces/apiDataTypes';
 
 // A simple utility to parse CSV data from the textarea
@@ -63,41 +63,44 @@ export function useEndofModule() {
         setIsSubmitting(true);
         setIngestionError(null);
         setIngestionSuccess(null);
+        setProcessingStatus(null);
 
         try {
             const result = await ingestGrades(timetableId, parsedData);
             setIngestionSuccess(result.message);
-            setCsvData(''); // Clear the form on success
+            setCsvData('');
 
             setIsLoadingCohorts(true);
             const cohortData = await getModuleCohorts(timetableId);
             setCohorts(cohortData);
-            setIsLoadingCohorts(false);
+            
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
             setIngestionError(errorMessage);
         } finally {
             setIsSubmitting(false);
+            setIsLoadingCohorts(false);
         }
     }, [csvData, timetableId]);
 
     const closeDialog = () => setDialogConfig(null);
 
     const handleBulkAdvance = useCallback(() => {
-        if (!cohorts?.advancingStudents || cohorts.advancingStudents.length === 0) return;
+        if (!cohorts?.advancingStudents || cohorts.advancingStudents.length === 0 || !timetableId) return;
 
         setDialogConfig({
             open: true,
             title: 'Confirm Bulk Advancement',
-            description: `Are you sure you want to advance ${cohorts.advancingStudents.length} students to their next courses? This action cannot be easily undone.`,
+            description: `Are you sure you want to advance ${cohorts.advancingStudents.length} students to 'Good Standing'? This action cannot be easily undone.`,
             onConfirm: async () => {
                 setIsProcessing(true);
                 setProcessingStatus(null);
                 try {
                     const studentIds = cohorts.advancingStudents.map(s => s.id);
-                    await bulkAdvanceStudents({timetableId: Number(timetableId), studentIds});
+                    const response = await bulkAdvanceStudents({timetableId: Number(timetableId), studentIds});
                     setProcessingStatus({ type: 'success', message: response.message });
+                    // Optional: Refresh cohorts to show updated student standings if the API returns them
                 } catch (err) {
                     setProcessingStatus({ type: 'error', message: err instanceof Error ? err.message : 'An unknown error occurred.' });
                 } finally {
@@ -109,7 +112,7 @@ export function useEndofModule() {
     }, [cohorts, timetableId]);
 
     const handleBulkRetake = useCallback(() => {
-        if (!cohorts?.retakeStudents || cohorts.retakeStudents.length === 0) return;
+        if (!cohorts?.retakeStudents || cohorts.retakeStudents.length === 0 || !timetableId) return;
 
         setDialogConfig({
             open: true,
@@ -117,12 +120,13 @@ export function useEndofModule() {
             description: `Are you sure you want to process the retake enrollment for ${cohorts.retakeStudents.length} students?`,
             onConfirm: async () => {
                 setIsProcessing(true);
-                setProcessingError(null);
+                setProcessingStatus(null);
                 try {
                     const studentIds = cohorts.retakeStudents.map(s => s.id);
-                    await bulkEnrollRetakes({timetableId: Number(timetableId), studentIds});
+                    const response = await bulkEnrollRetakes({timetableId: Number(timetableId), studentIds});
+                    setProcessingStatus({ type: 'success', message: response.message });
                 } catch (err) {
-                    setProcessingError(err instanceof Error ? err.message : 'An unknown error occurred.');
+                    setProcessingStatus({ type: 'error', message: err instanceof Error ? err.message : 'An unknown error occurred during retake enrollment.' });
                 } finally {
                     setIsProcessing(false);
                     closeDialog();
