@@ -7,14 +7,14 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { useClassCreationWizard } from "../hooks/lecture/useClassCreationWizard";
-import { ClassCreationWizard } from "../components/class-creation/ClassCreationWizard";
-import ClassList from "../components/class-creation/ClassList";
-import { ClassTypeSelectionModal } from "../components/class-creation/ClassTypeSelectionModal";
-import type { ClassType } from "../interfaces/classDtos";
-import { useTimetableData } from "../hooks/timetable/useTimetableData";
-import { deleteClass } from "../services/apiClassService";
-import ConfirmationDialog from "../components/common/ConfirmationDialog";
+import { useClassCreationWizard } from "../hooks/lecture/useClassCreationWizard.ts";
+import { ClassCreationWizard } from "../components/class-creation/ClassCreationWizard.tsx";
+import ClassList from "../components/class-creation/ClassList.tsx";
+import { ClassTypeSelectionModal } from "../components/class-creation/ClassTypeSelectionModal.tsx";
+import type { ClassType } from "../interfaces/classDtos.ts";
+import { useTimetableStore } from "../stores/useTimetableStore.ts";
+import { deleteClass } from "../services/apiClassService.ts";
+import ConfirmationDialog from "../components/common/ConfirmationDialog.tsx";
 
 interface Props {
   timetableId: string;
@@ -26,7 +26,8 @@ const ClassManagementTab: React.FC<Props> = ({ timetableId }) => {
     loading: isLoadingList,
     error: listError,
     refreshData,
-  } = useTimetableData(timetableId);
+  } = useTimetableStore();
+
   const wizard = useClassCreationWizard(timetableId);
 
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
@@ -38,9 +39,9 @@ const ClassManagementTab: React.FC<Props> = ({ timetableId }) => {
     (id: number | null) => {
       setSelectedClassId(id);
       if (id === null) {
-        setIsTypeModalOpen(true); // Open modal to choose type for new class
+        setIsTypeModalOpen(true);
       } else {
-        wizard.initializeForMode(id, "Masterclass"); // Type will be overwritten by fetch
+        wizard.initializeForMode(id, "Masterclass");
       }
     },
     [wizard],
@@ -48,6 +49,7 @@ const ClassManagementTab: React.FC<Props> = ({ timetableId }) => {
 
   const handleNewClassTypeSelect = (type: ClassType) => {
     setIsTypeModalOpen(false);
+
     wizard.initializeForMode(null, type);
   };
 
@@ -62,7 +64,7 @@ const ClassManagementTab: React.FC<Props> = ({ timetableId }) => {
       await deleteClass(classToDelete);
       refreshData();
       if (selectedClassId === classToDelete) {
-        handleSelectClass(null); // Deselect if the deleted class was being edited
+        handleSelectClass(null);
       }
     } catch (err) {
       console.error("Failed to delete class", err);
@@ -73,10 +75,23 @@ const ClassManagementTab: React.FC<Props> = ({ timetableId }) => {
   };
 
   useEffect(() => {
-    if (wizard.state.submitStatus?.type === "success") {
-      refreshData();
-    }
-  }, [wizard.state.submitStatus, refreshData]);
+    const handleSuccess = async () => {
+      if (wizard.state.submitStatus?.type === "success") {
+        await refreshData();
+
+        const isCreating = wizard.state.form.id === null;
+        if (isCreating) {
+          handleSelectClass(null);
+        }
+      }
+    };
+    handleSuccess();
+  }, [
+    wizard.state.submitStatus,
+    refreshData,
+    wizard.state.form.id,
+    handleSelectClass,
+  ]);
 
   return (
     <>
@@ -97,7 +112,7 @@ const ClassManagementTab: React.FC<Props> = ({ timetableId }) => {
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 8 }}>
-          <Paper sx={{ p: 2, height: "100%" }}>
+          <Paper sx={{ p: 2, minHeight: "65vh" }}>
             {wizard.state.submitStatus && (
               <Alert severity={wizard.state.submitStatus.type} sx={{ mb: 2 }}>
                 {wizard.state.submitStatus.message}
