@@ -20,28 +20,30 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        config =
-          if builtins.pathExists (self + "/config.json") then
-            builtins.fromJSON (builtins.readFile (self + "/config.json"))
-          else
-            { };
-
         pkgs = import nixpkgs {
           inherit system;
         };
 
         frontendBuilder =
-          { environment, apiUrl }:
+          { environment, apiUrl, academicStructureFlag, endOfModuleFlag }:
           pkgs.buildNpmPackage {
             pname = "kawsay-${environment}";
             version = "0.1.0";
             src = ./.;
             nodejs = pkgs.nodejs_24;
-            npmDepsHash = "sha256-XuriWmf4eIEkCZBhbIjJsJm9rHjOJ6qzVEJKdMwk2oo=";
+            npmDepsHash = "sha256-WG3a/vv0nHdgb5Lcen8x4/Bnq2PWszUoTggKhHx81cA=";
 
             buildPhase = ''
               runHook preBuild
+              # Set environment variables for the build process
               export VITE_API_BASE_URL=${apiUrl}
+              export VITE_FEATURE_ACADEMIC_STRUCTURE_ENABLED=${academicStructureFlag}
+              export VITE_FEATURE_END_OF_MODULE_ENABLED=${endOfModuleFlag}
+
+              echo "Building for ${environment} with API_URL=${apiUrl}"
+              echo "VITE_FEATURE_ACADEMIC_STRUCTURE_ENABLED=${academicStructureFlag}"
+              echo "VITE_FEATURE_END_OF_MODULE_ENABLED=${endOfModuleFlag}"
+
               npm run build
               runHook postBuild
             '';
@@ -62,21 +64,30 @@
       in
       {
         packages = {
-          staging = frontendBuilder {
-            environment = "staging";
-            apiUrl = defaultUrls.staging;
-          };
           production = frontendBuilder {
             environment = "production";
             apiUrl = defaultUrls.production;
+            academicStructureFlag = "false";
+            endOfModuleFlag = "false";
           };
+
+          staging = frontendBuilder {
+            environment = "staging";
+            apiUrl = defaultUrls.staging;
+            academicStructureFlag = "true";
+            endOfModuleFlag = "true";
+          };
+
           development = frontendBuilder {
             environment = "development";
             apiUrl = defaultUrls.development;
+            academicStructureFlag = "true";
+            endOfModuleFlag = "true";
           };
+
           default = self.packages.${system}.development;
 
-          dockerImageStaging = pkgs.dockerTools.buildImage {
+          dockerBuild = pkgs.dockerTools.buildImage {
             name = "1kawsay/frontend-kawsay";
             tag = "latest";
 
@@ -126,7 +137,7 @@
                   server {
                     listen 80;
                     server_name localhost;
-                    root ${self.packages.${system}.staging};
+                    root ${self.packages.${system}.production};
                     index index.html;
 
                     location / {
@@ -146,6 +157,28 @@
           buildInputs = with pkgs; [
             nodejs_24
           ];
+          VITE_FEATURE_ACADEMIC_STRUCTURE_ENABLED = "true";
+          VITE_FEATURE_END_OF_MODULE_ENABLED = "true";
+        };
+
+        apps = {
+          dev = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "kawsay-frontend-dev-runner";
+              runtimeInputs = with pkgs; [ nodejs_24 ];
+              text = ''
+                # Ensure local node_modules are available
+                if [ ! -d "node_modules" ]; then
+                  echo "node_modules not found, running npm install..."
+                  npm install
+                fi
+                echo "Starting Vite dev server..."
+                npm run dev
+              '';
+            };
+          };
+
+          default = self.apps.${system}.dev;
         };
       }
     );
