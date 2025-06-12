@@ -11,7 +11,7 @@ import {
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import type { useCalendarControls } from "../../hooks/timetable/useCalendarControls.ts";
+import { useCalendarControls } from "../../hooks/timetable/useCalendarControls.ts";
 
 interface TimetableHeaderProps {
   calendarControls: ReturnType<typeof useCalendarControls>;
@@ -41,31 +41,37 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
       sx={{ mb: 2, flexWrap: "wrap", gap: 2 }}
     >
       <Stack direction="row" spacing={1} alignItems="center">
-        <IconButton onClick={handlePrev} aria-label="previous period">
-          <ChevronLeftIcon />
-        </IconButton>
-        <Button variant="outlined" onClick={handleToday}>
-          Today
-        </Button>
-        <IconButton onClick={handleNext} aria-label="next period">
-          <ChevronRightIcon />
-        </IconButton>
-        <Typography variant="h6">
-          {view === "week"
-            ? displayDate.format("MMM D, YYYY")
-            : displayDate.format("MMMM YYYY")}
-        </Typography>
+        {view && (
+          <>
+            <IconButton onClick={handlePrev} aria-label="previous period">
+              <ChevronLeftIcon />
+            </IconButton>
+            <Button variant="outlined" onClick={handleToday}>
+              Today
+            </Button>
+            <IconButton onClick={handleNext} aria-label="next period">
+              <ChevronRightIcon />
+            </IconButton>
+            <Typography variant="h6">
+              {view === "week"
+                ? displayDate.format("MMM D, YYYY")
+                : displayDate.format("MMMM YYYY")}
+            </Typography>
+          </>
+        )}
       </Stack>
-      <Stack direction="row" spacing={1}>
-        <ToggleButtonGroup
-          value={view}
-          exclusive
-          onChange={handleViewChange}
-          size="small"
-        >
-          <ToggleButton value="week">Week</ToggleButton>
-          <ToggleButton value="month">Month</ToggleButton>
-        </ToggleButtonGroup>
+      <Stack direction="row" spacing={1} alignItems="center">
+        {view && (
+          <ToggleButtonGroup
+            value={view}
+            exclusive
+            onChange={handleViewChange}
+            size="small"
+          >
+            <ToggleButton value="week">Week</ToggleButton>
+            <ToggleButton value="month">Month</ToggleButton>
+          </ToggleButtonGroup>
+        )}
         <Button
           variant="contained"
           startIcon={
