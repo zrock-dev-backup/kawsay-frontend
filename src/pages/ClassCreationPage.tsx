@@ -6,27 +6,31 @@ import {ClassCreationWizard} from '../components/class-creation/ClassCreationWiz
 import type {ClassType} from '../interfaces/classDtos.ts';
 
 const ClassCreationPage: React.FC = () => {
-    const {state, initializeWizard} = useClassCreationWizard();
+    const wizard = useClassCreationWizard();
     const [isModalOpen, setIsModalOpen] = useState(true);
 
     const handleModalContinue = (selectedType: ClassType) => {
-        initializeWizard(selectedType);
+        wizard.initializeWizard(selectedType);
         setIsModalOpen(false);
     };
-
-    if (state.isLoading) {
+    if (wizard.state.isLoading) {
         return <Box sx={{display: 'flex', justifyContent: 'center', mt: 4}}><CircularProgress/></Box>;
     }
-
-    if (state.fetchError) {
-        return <Container><Alert severity="error" sx={{mt: 2}}>{state.fetchError}</Alert></Container>;
+    if (wizard.state.fetchError) {
+        return <Container><Alert severity="error" sx={{mt: 2}}>{wizard.state.fetchError}</Alert></Container>;
     }
 
     return (
         <Container maxWidth="lg">
             <Typography variant="h4" gutterBottom>
-                Create New Class for Timetable: {state.timetableStructure?.name}
+                Class creation
             </Typography>
+
+            {wizard.state.submitStatus && (
+                <Alert severity={wizard.state.submitStatus.type} sx={{my: 2}}>
+                    {wizard.state.submitStatus.message}
+                </Alert>
+            )}
 
             <ClassTypeSelectionModal
                 open={isModalOpen}
@@ -34,8 +38,8 @@ const ClassCreationPage: React.FC = () => {
                 onContinue={handleModalContinue}
             />
 
-            {!isModalOpen && state.selectedClassType && (
-                <ClassCreationWizard/>
+            {!isModalOpen && wizard.state.form.classType && (
+                <ClassCreationWizard wizard={wizard}/>
             )}
         </Container>
     );

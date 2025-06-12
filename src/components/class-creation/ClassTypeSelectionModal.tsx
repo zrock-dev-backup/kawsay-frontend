@@ -19,7 +19,7 @@ interface Props {
     onContinue: (selectedType: ClassType) => void;
 }
 
-export const ClassTypeSelectionModal: React.FC<Props> = ({ open, onClose, onContinue }) => {
+export const ClassTypeSelectionModal: React.FC<Props> = ({open, onClose, onContinue}) => {
     const [value, setValue] = useState<ClassType>('Masterclass');
 
     const handleContinue = () => {
@@ -30,7 +30,7 @@ export const ClassTypeSelectionModal: React.FC<Props> = ({ open, onClose, onCont
         <Dialog open={open} onClose={onClose} disableEscapeKeyDown>
             <DialogTitle>Select Class Type</DialogTitle>
             <DialogContent>
-                <FormControl component="fieldset" sx={{ mt: 1 }}>
+                <FormControl component="fieldset" sx={{mt: 1}}>
                     <FormLabel component="legend">What type of class do you want to create?</FormLabel>
                     <RadioGroup
                         aria-label="class-type"
@@ -38,8 +38,8 @@ export const ClassTypeSelectionModal: React.FC<Props> = ({ open, onClose, onCont
                         value={value}
                         onChange={(e) => setValue(e.target.value as ClassType)}
                     >
-                        <FormControlLabel value="Masterclass" control={<Radio />} label="Masterclass" />
-                        <FormControlLabel value="Lab" control={<Radio />} label="Lab" />
+                        <FormControlLabel value="Masterclass" control={<Radio/>} label="Masterclass"/>
+                        <FormControlLabel value="Lab" control={<Radio/>} label="Lab"/>
                     </RadioGroup>
                 </FormControl>
             </DialogContent>

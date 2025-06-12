@@ -1,4 +1,5 @@
 import type {ClassOccurrence, Course, CreatePeriodPreferenceRequest, Teacher,} from './apiDataTypes.ts';
+import type {Dayjs} from 'dayjs';
 
 export type ClassType = "Masterclass" | "Lab";
 
@@ -11,6 +12,8 @@ export interface Class {
     length: number;
     frequency: number;
     classType: ClassType;
+    startDate: Dayjs | null;
+    endDate: Dayjs | null;
 }
 
 export interface CreateClassRequest {
@@ -20,8 +23,7 @@ export interface CreateClassRequest {
     length: number;
     frequency: number;
     periodPreferences: CreatePeriodPreferenceRequest[];
-
     classType: ClassType;
-    studentGroupId?: number;
-    sectionId?: number;
+    startDate: Dayjs | null;
+    endDate: Dayjs | null;
 }
