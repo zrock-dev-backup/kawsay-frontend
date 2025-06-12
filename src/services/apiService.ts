@@ -11,7 +11,7 @@ import type {
     TimetableStructure,
 } from '../interfaces/apiDataTypes';
 
-import type {Class, CreateClassRequest,} from '../interfaces/classDtos';
+import type {Class,} from '../interfaces/classDtos';
 
 
 interface GenerateScheduleResponse {
