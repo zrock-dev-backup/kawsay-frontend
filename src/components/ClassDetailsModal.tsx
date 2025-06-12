@@ -107,29 +107,29 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({
         )}
         {!loading && !error && classData && (
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{xs:12}}>
               <Typography variant="body1">
                 <strong>Course:</strong> {classData.courseName} (
                 {classData.courseCode})
               </Typography>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{xs:12}}>
               <Typography variant="body1">
                 <strong>Teacher:</strong>{" "}
                 {classData.teacherName || "Not Assigned"}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{xs:6}}>
               <Typography variant="body1">
                 <strong>Type:</strong> {classData.classType}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{xs:6}}>
               <Typography variant="body1">
                 <strong>Frequency:</strong> {classData.frequency} per week
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{xs:6}}>
               <Typography variant="body1">
                 <strong>Length:</strong> {classData.length} period(s)
               </Typography>
