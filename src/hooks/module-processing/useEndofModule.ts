@@ -1,165 +1,195 @@
-import {useCallback, useState} from 'react';
-import {useParams} from 'react-router-dom';
-import {bulkAdvanceStudents, bulkEnrollRetakes, getModuleCohorts, ingestGrades} from '../../services/apiService';
-import type {GradeIngestionDto, StudentCohortDto} from '../../interfaces/apiDataTypes';
+import { useCallback, useState } from "react";
+import { useParams } from "react-router-dom";
+import {
+  bulkAdvanceStudents,
+  bulkEnrollRetakes,
+  getModuleCohorts,
+  ingestGrades,
+} from "../../services/apiService";
+import type {
+  GradeIngestionDto,
+  StudentCohortDto,
+} from "../../interfaces/apiDataTypes";
 
 // A simple utility to parse CSV data from the textarea
 const parseCsvData = (csvText: string): GradeIngestionDto[] => {
-    return csvText
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line)
-        .map(line => {
-            const [studentId, courseId, gradeValue] = line.split(',');
-            return {
-                studentId: parseInt(studentId, 10),
-                courseId: parseInt(courseId, 10),
-                gradeValue: parseFloat(gradeValue),
-            };
-        })
-        .filter(dto => !isNaN(dto.studentId) && !isNaN(dto.courseId) && !isNaN(dto.gradeValue));
+  return csvText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line)
+    .map((line) => {
+      const [studentId, courseId, gradeValue] = line.split(",");
+      return {
+        studentId: parseInt(studentId, 10),
+        courseId: parseInt(courseId, 10),
+        gradeValue: parseFloat(gradeValue),
+      };
+    })
+    .filter(
+      (dto) =>
+        !isNaN(dto.studentId) && !isNaN(dto.courseId) && !isNaN(dto.gradeValue),
+    );
 };
 
 export function useEndofModule() {
-    const {timetableId} = useParams<{ timetableId: string }>();
+  const { timetableId } = useParams<{ timetableId: string }>();
 
-    // grade ingestion
-    const [csvData, setCsvData] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [ingestionError, setIngestionError] = useState<string | null>(null);
-    const [ingestionSuccess, setIngestionSuccess] = useState<string | null>(null);
+  // grade ingestion
+  const [csvData, setCsvData] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ingestionError, setIngestionError] = useState<string | null>(null);
+  const [ingestionSuccess, setIngestionSuccess] = useState<string | null>(null);
 
-    // Cohort display
-    const [cohorts, setCohorts] = useState<StudentCohortDto | null>(null);
-    const [isLoadingCohorts, setIsLoadingCohorts] = useState(false);
+  // Cohort display
+  const [cohorts, setCohorts] = useState<StudentCohortDto | null>(null);
+  const [isLoadingCohorts, setIsLoadingCohorts] = useState(false);
 
-    // Bulk actions
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [processingStatus, setProcessingStatus] = useState<{
-        type: 'success' | 'error';
-        message: string;
-    } | null>(null);
+  // Bulk actions
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
-    // Dialog
-    const [dialogConfig, setDialogConfig] = useState<{
-        open: boolean;
-        title: string;
-        description: string;
-        onConfirm: () => void;
-    } | null>(null);
+  // Dialog
+  const [dialogConfig, setDialogConfig] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  } | null>(null);
 
-    const handleIngestGrades = useCallback(async () => {
-        if (!timetableId) {
-            setIngestionError('Timetable ID is missing from the URL.');
-            return;
-        }
+  const handleIngestGrades = useCallback(async () => {
+    if (!timetableId) {
+      setIngestionError("Timetable ID is missing from the URL.");
+      return;
+    }
 
-        const parsedData = parseCsvData(csvData);
-        if (parsedData.length === 0) {
-            setIngestionError('No valid grade data could be parsed from the input.');
-            return;
-        }
+    const parsedData = parseCsvData(csvData);
+    if (parsedData.length === 0) {
+      setIngestionError("No valid grade data could be parsed from the input.");
+      return;
+    }
 
-        setIsSubmitting(true);
-        setIngestionError(null);
-        setIngestionSuccess(null);
+    setIsSubmitting(true);
+    setIngestionError(null);
+    setIngestionSuccess(null);
+    setProcessingStatus(null);
+
+    try {
+      const result = await ingestGrades(timetableId, parsedData);
+      setIngestionSuccess(result.message);
+      setCsvData("");
+
+      setIsLoadingCohorts(true);
+      const cohortData = await getModuleCohorts(timetableId);
+      setCohorts(cohortData);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred.";
+      setIngestionError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+      setIsLoadingCohorts(false);
+    }
+  }, [csvData, timetableId]);
+
+  const closeDialog = () => setDialogConfig(null);
+
+  const handleBulkAdvance = useCallback(() => {
+    if (
+      !cohorts?.advancingStudents ||
+      cohorts.advancingStudents.length === 0 ||
+      !timetableId
+    )
+      return;
+
+    setDialogConfig({
+      open: true,
+      title: "Confirm Bulk Advancement",
+      description: `Are you sure you want to advance ${cohorts.advancingStudents.length} students to 'Good Standing'? This action cannot be easily undone.`,
+      onConfirm: async () => {
+        setIsProcessing(true);
         setProcessingStatus(null);
-
         try {
-            const result = await ingestGrades(timetableId, parsedData);
-            setIngestionSuccess(result.message);
-            setCsvData('');
-
-            setIsLoadingCohorts(true);
-            const cohortData = await getModuleCohorts(timetableId);
-            setCohorts(cohortData);
-
-
+          const studentIds = cohorts.advancingStudents.map((s) => s.id);
+          const response = await bulkAdvanceStudents({
+            timetableId: Number(timetableId),
+            studentIds,
+          });
+          setProcessingStatus({ type: "success", message: response.message });
+          // Optional: Refresh cohorts to show updated student standings if the API returns them
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-            setIngestionError(errorMessage);
+          setProcessingStatus({
+            type: "error",
+            message:
+              err instanceof Error ? err.message : "An unknown error occurred.",
+          });
         } finally {
-            setIsSubmitting(false);
-            setIsLoadingCohorts(false);
+          setIsProcessing(false);
+          closeDialog();
         }
-    }, [csvData, timetableId]);
+      },
+    });
+  }, [cohorts, timetableId]);
 
-    const closeDialog = () => setDialogConfig(null);
+  const handleBulkRetake = useCallback(() => {
+    if (
+      !cohorts?.retakeStudents ||
+      cohorts.retakeStudents.length === 0 ||
+      !timetableId
+    )
+      return;
 
-    const handleBulkAdvance = useCallback(() => {
-        if (!cohorts?.advancingStudents || cohorts.advancingStudents.length === 0 || !timetableId) return;
+    setDialogConfig({
+      open: true,
+      title: "Confirm Retake Enrollment",
+      description: `Are you sure you want to process the retake enrollment for ${cohorts.retakeStudents.length} students?`,
+      onConfirm: async () => {
+        setIsProcessing(true);
+        setProcessingStatus(null);
+        try {
+          const studentIds = cohorts.retakeStudents.map((s) => s.id);
+          const response = await bulkEnrollRetakes({
+            timetableId: Number(timetableId),
+            studentIds,
+          });
+          setProcessingStatus({ type: "success", message: response.message });
+        } catch (err) {
+          setProcessingStatus({
+            type: "error",
+            message:
+              err instanceof Error
+                ? err.message
+                : "An unknown error occurred during retake enrollment.",
+          });
+        } finally {
+          setIsProcessing(false);
+          closeDialog();
+        }
+      },
+    });
+  }, [cohorts, timetableId]);
 
-        setDialogConfig({
-            open: true,
-            title: 'Confirm Bulk Advancement',
-            description: `Are you sure you want to advance ${cohorts.advancingStudents.length} students to 'Good Standing'? This action cannot be easily undone.`,
-            onConfirm: async () => {
-                setIsProcessing(true);
-                setProcessingStatus(null);
-                try {
-                    const studentIds = cohorts.advancingStudents.map(s => s.id);
-                    const response = await bulkAdvanceStudents({timetableId: Number(timetableId), studentIds});
-                    setProcessingStatus({type: 'success', message: response.message});
-                    // Optional: Refresh cohorts to show updated student standings if the API returns them
-                } catch (err) {
-                    setProcessingStatus({
-                        type: 'error',
-                        message: err instanceof Error ? err.message : 'An unknown error occurred.'
-                    });
-                } finally {
-                    setIsProcessing(false);
-                    closeDialog();
-                }
-            }
-        });
-    }, [cohorts, timetableId]);
+  return {
+    // GradeIngestionForm
+    csvData,
+    onCsvDataChange: setCsvData,
+    handleIngestGrades,
+    isSubmitting,
+    ingestionError,
+    ingestionSuccess,
 
-    const handleBulkRetake = useCallback(() => {
-        if (!cohorts?.retakeStudents || cohorts.retakeStudents.length === 0 || !timetableId) return;
+    // CohortDisplay
+    cohorts,
+    isLoadingCohorts,
+    handleBulkAdvance,
+    handleBulkRetake,
+    processingStatus,
 
-        setDialogConfig({
-            open: true,
-            title: 'Confirm Retake Enrollment',
-            description: `Are you sure you want to process the retake enrollment for ${cohorts.retakeStudents.length} students?`,
-            onConfirm: async () => {
-                setIsProcessing(true);
-                setProcessingStatus(null);
-                try {
-                    const studentIds = cohorts.retakeStudents.map(s => s.id);
-                    const response = await bulkEnrollRetakes({timetableId: Number(timetableId), studentIds});
-                    setProcessingStatus({type: 'success', message: response.message});
-                } catch (err) {
-                    setProcessingStatus({
-                        type: 'error',
-                        message: err instanceof Error ? err.message : 'An unknown error occurred during retake enrollment.'
-                    });
-                } finally {
-                    setIsProcessing(false);
-                    closeDialog();
-                }
-            }
-        });
-    }, [cohorts, timetableId]);
-
-    return {
-        // GradeIngestionForm
-        csvData,
-        onCsvDataChange: setCsvData,
-        handleIngestGrades,
-        isSubmitting,
-        ingestionError,
-        ingestionSuccess,
-
-        // CohortDisplay
-        cohorts,
-        isLoadingCohorts,
-        handleBulkAdvance,
-        handleBulkRetake,
-        processingStatus,
-
-        // ConfirmationDialog
-        dialogConfig,
-        isProcessing,
-        closeDialog,
-    };
+    // ConfirmationDialog
+    dialogConfig,
+    isProcessing,
+    closeDialog,
+  };
 }

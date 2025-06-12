@@ -1,6 +1,6 @@
-import type {ClassType} from './classDtos.ts';
+import type { ClassType } from "./classDtos.ts";
 
 export interface ClassTypeConfigurationDto {
-    classType: ClassType;
-    defaultLength: number;
+  classType: ClassType;
+  defaultLength: number;
 }
