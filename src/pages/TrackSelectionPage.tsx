@@ -18,6 +18,10 @@ import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import type { TimetableStructure } from "../interfaces/apiDataTypes";
 import { fetchTimetables } from "../services/apiService";
 
+// --- FEATURE FLAG ---
+const isEndOfModuleEnabled =
+  import.meta.env.VITE_FEATURE_END_OF_MODULE_ENABLED === "true";
+
 const TrackSelectionPage: React.FC = () => {
   const [timetables, setTimetables] = useState<TimetableStructure[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,16 +86,18 @@ const TrackSelectionPage: React.FC = () => {
                       <PlayArrowIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="End-of-Module Processing">
-                    <IconButton
-                      edge="end"
-                      aria-label="process"
-                      component={RouterLink}
-                      to={`/module-processing/${timetable.id}`}
-                    >
-                      <EventRepeatIcon />
-                    </IconButton>
-                  </Tooltip>
+                  {isEndOfModuleEnabled && (
+                    <Tooltip title="End-of-Module Processing">
+                      <IconButton
+                        edge="end"
+                        aria-label="process"
+                        component={RouterLink}
+                        to={`/module-processing/${timetable.id}`}
+                      >
+                        <EventRepeatIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </Stack>
               }
             >

@@ -21,6 +21,10 @@ import { useTimetableStore } from "../stores/useTimetableStore.ts";
 import ClassDetailsModal from "../components/ClassDetailsModal.tsx";
 import type { Class } from "../interfaces/classDtos.ts";
 
+// --- FEATURE FLAG ---
+const isAcademicStructureEnabled =
+  import.meta.env.VITE_FEATURE_ACADEMIC_STRUCTURE_ENABLED === "true";
+
 const useDetailsModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [classId, setClassId] = useState<number | null>(null);
@@ -155,7 +159,7 @@ const TimetableGridPage: React.FC = () => {
             >
               <Tab label="Timetable Grid" />
               <Tab label="Class Management" />
-              <Tab label="Academic Structure" />
+              {isAcademicStructureEnabled && <Tab label="Academic Structure" />}
             </Tabs>
           </Box>
         </Paper>
@@ -178,7 +182,9 @@ const TimetableGridPage: React.FC = () => {
               />
             ))}
           {activeTab === 1 && <ClassManagementTab timetableId={id!} />}
-          {activeTab === 2 && <AcademicStructureManager />}
+          {activeTab === 2 && isAcademicStructureEnabled && (
+            <AcademicStructureManager />
+          )}
         </Box>
       </Container>
 
