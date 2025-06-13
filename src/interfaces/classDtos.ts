@@ -41,6 +41,7 @@ export interface ClassFormState {
 }
 
 export interface AvailableClassDto extends Class {
+  capacity: number;
   isEligible: boolean;
   ineligibilityReason: string | null;
   isRetake: boolean;

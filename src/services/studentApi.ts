@@ -7,8 +7,8 @@ import type { AvailableClassDto } from "../interfaces/classDtos.ts";
 
 const STUDENT_URL = `${API_BASE_URL}/Students`;
 
-export const fetchStudents = async (): Promise<StudentDto[]> => {
-  const response = await fetch(STUDENT_URL);
+export const fetchStudents = async (timetableId: number): Promise<StudentDto[]> => {
+  const response = await fetch(`${STUDENT_URL}?timetableId=${timetableId}`);
   return handleResponse<StudentDto[]>(response);
 };
 

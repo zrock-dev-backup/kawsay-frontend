@@ -1,4 +1,3 @@
-// src/hooks/enrollment/useStudentEnrollment.ts
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { StudentDto } from "../../interfaces/apiDataTypes.ts";
 import type { AvailableClassDto } from "../../interfaces/classDtos.ts";
@@ -9,7 +8,6 @@ import {
 import { enrollStudent } from "../../services/enrollmentApi.ts";
 
 export interface CartItem extends AvailableClassDto {
-  // May add more properties later, e.g., validation status
 }
 
 export function useStudentEnrollment(timetableId: number) {
@@ -33,7 +31,7 @@ export function useStudentEnrollment(timetableId: number) {
   useEffect(() => {
     const loadStudents = async () => {
       try {
-        const studentData = await fetchStudents();
+        const studentData = await fetchStudents(timetableId);
         setStudents(studentData);
       } catch (err) {
         setError(
@@ -95,7 +93,30 @@ export function useStudentEnrollment(timetableId: number) {
     });
   }, [availableClasses]);
 
-  const handleSubmitEnrollments = async () => {
+  const enrollSingleClass = async (classToEnroll: AvailableClassDto) => {
+    if (!selectedStudent) return;
+
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      await enrollStudent({ studentId: selectedStudent.id, classId: classToEnroll.id, force: false });
+      setSubmitStatus({ type: 'success', message: `Successfully enrolled in ${classToEnroll.courseCode}.` });
+      // Refresh everything after a successful enrollment
+      const [studentData, classData] = await Promise.all([
+        fetchStudents(timetableId),
+        fetchAvailableClassesForStudent(selectedStudent.id, timetableId)
+      ]);
+      setStudents(studentData);
+      setAvailableClasses(classData);
+    } catch(err) {
+      setSubmitStatus({ type: 'error', message: err instanceof Error ? err.message : 'An error occurred.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitCart = async () => {
     if (!selectedStudent || cart.length === 0) return;
 
     setIsSubmitting(true);
@@ -150,7 +171,8 @@ export function useStudentEnrollment(timetableId: number) {
       handleSelectStudent,
       addToCart,
       removeFromCart,
-      handleSubmitEnrollments,
+      enrollSingleClass,
+      handleSubmitCart,
       setSubmitStatus,
     },
   };

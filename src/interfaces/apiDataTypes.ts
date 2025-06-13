@@ -65,6 +65,7 @@ export interface GradeIngestionDto {
 
 export interface StudentDto {
   id: number;
+  currentCourseLoad: number;
   name: string;
   standing:
     | "GoodStanding"

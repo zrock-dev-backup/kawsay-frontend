@@ -1,4 +1,3 @@
-// src/components/enrollment/EnrollmentCart.tsx
 import React from "react";
 import {
   Box,
@@ -26,7 +25,6 @@ const EnrollmentCart: React.FC<Props> = ({
   onSubmit,
   isSubmitting,
 }) => {
-  const isCartValid = cartItems.length >= 3;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -55,16 +53,15 @@ const EnrollmentCart: React.FC<Props> = ({
       <Box sx={{ mt: "auto", p: 1 }}>
         <Typography
           variant="caption"
-          color={!isCartValid ? "error" : "text.secondary"}
           gutterBottom
         >
-          {`Minimum 3 courses required. (${cartItems.length}/3)`}
+          {` Enrolled (${cartItems.length}/3)`}
         </Typography>
         <Button
           variant="contained"
           fullWidth
           onClick={onSubmit}
-          disabled={!isCartValid || isSubmitting}
+          disabled={isSubmitting}
         >
           {isSubmitting ? (
             <CircularProgress size={24} />

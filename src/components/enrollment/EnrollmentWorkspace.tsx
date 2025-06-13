@@ -58,7 +58,7 @@ const EnrollmentWorkspace: React.FC<Props> = ({ hook }) => {
           <EnrollmentCart
             cartItems={state.cart}
             onRemove={actions.removeFromCart}
-            onSubmit={actions.handleSubmitEnrollments}
+            onSubmit={actions.handleSubmitCart}
             isSubmitting={state.isSubmitting}
           />
         </Box>
