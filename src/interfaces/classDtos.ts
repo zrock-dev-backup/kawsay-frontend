@@ -39,3 +39,10 @@ export interface ClassFormState {
   endDate: Dayjs | null;
   periodPreferences: DayPeriodPreferenceDto[];
 }
+
+export interface AvailableClassDto extends Class {
+  isEligible: boolean;
+  ineligibilityReason: string | null;
+  isRetake: boolean;
+  currentEnrollment: number;
+}

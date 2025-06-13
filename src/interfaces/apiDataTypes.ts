@@ -71,7 +71,13 @@ export interface StudentDto {
     | "AcademicProbation"
     | "Suspended"
     | "Withdrawn"
-    | string; // Allow for other string values
+    | string;
+}
+
+export interface StudentEnrollmentDto {
+  id: number; // Class ID
+  courseName: string;
+  courseCode: string;
 }
 
 export interface StudentCohortDto {

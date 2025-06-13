@@ -6,6 +6,7 @@ import TimetableCreation from "./pages/TimetableCreation.tsx";
 import TrackSelectionPage from "./pages/TrackSelectionPage.tsx";
 import TimetableGridPage from "./pages/TimetableGridPage.tsx";
 import EndofModulePage from "./pages/EndofModulePage.tsx";
+import StudentEnrollmentPage from "./pages/StudentEnrollmentPage.tsx";
 
 // --- FEATURE FLAG ---
 const isEndOfModuleEnabled =
@@ -18,6 +19,10 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="creation" element={<TimetableCreation />} />
         <Route path="selection" element={<TrackSelectionPage />} />
+        <Route
+          path="enrollment/:timetableId"
+          element={<StudentEnrollmentPage />}
+        />
         <Route path="*" element={<NotFoundPage />} />
         <Route path={"table/:id"} element={<TimetableGridPage />} />
         {isEndOfModuleEnabled && (
