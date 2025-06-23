@@ -207,7 +207,7 @@ const CourseRequirementForm: React.FC<Props> = ({
               label="Periods Length"
               type="number"
               fullWidth
-              value={formState.length}
+              value={formState.length || ""}
               onChange={(e) =>
                 handleInputChange("length", Number(e.target.value))
               }
@@ -220,7 +220,7 @@ const CourseRequirementForm: React.FC<Props> = ({
               label="Frequency (per week)"
               type="number"
               fullWidth
-              value={formState.frequency}
+              value={formState.frequency || ""}
               onChange={(e) =>
                 handleInputChange("frequency", Number(e.target.value))
               }
