@@ -21,6 +21,7 @@ import { useTimetableStore } from "../stores/useTimetableStore.ts";
 import ClassDetailsModal from "../components/ClassDetailsModal.tsx";
 import type { Class } from "../interfaces/classDtos.ts";
 import CourseRequirementsTab from "./CourseRequirementsTab.tsx";
+import AssistedSchedulingTab from "./AssistedSchedulingTab.tsx";
 
 // --- FEATURE FLAG ---
 const isAcademicStructureEnabled =
@@ -162,6 +163,7 @@ const TimetableGridPage: React.FC = () => {
               <Tab label="Class Management" />
               {isAcademicStructureEnabled && <Tab label="Academic Structure" />}
               <Tab label="Course requirements" />
+              <Tab label="Assisted scheduling" />
             </Tabs>
           </Box>
         </Paper>
@@ -188,6 +190,7 @@ const TimetableGridPage: React.FC = () => {
             <AcademicStructureManager />
           )}
           {activeTab === 3 && <CourseRequirementsTab timetableId={id!} />}
+          {activeTab === 4 && <AssistedSchedulingTab />}
         </Box>
       </Container>
 
