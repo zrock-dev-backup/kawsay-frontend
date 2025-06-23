@@ -1,44 +1,28 @@
 import React, { useEffect } from "react";
-import { Box, Grid, Paper, Typography } from "@mui/material";
+import { Alert, Box, Grid, Typography } from "@mui/material";
 import { useSchedulingStore } from "../stores/useSchedulingStore.ts";
-
-const UnscheduledList = () => (
-  <Paper
-    sx={{
-      p: 2,
-      border: "1px dashed grey",
-      textAlign: "center",
-      height: "100%",
-    }}
-  >
-    <Typography color="text.secondary">UnscheduledList Placeholder</Typography>
-  </Paper>
-);
-
-const SchedulingGrid = () => (
-  <Paper
-    sx={{
-      p: 2,
-      border: "1px dashed grey",
-      textAlign: "center",
-      height: "100%",
-    }}
-  >
-    <Typography color="text.secondary">SchedulingGrid Placeholder</Typography>
-  </Paper>
-);
+import UnscheduledList from "../components/scheduling/UnscheduledList.tsx";
+import SchedulingGrid from "../components/scheduling/SchedulingGrid.tsx";
 
 const AssistedSchedulingTab: React.FC = () => {
-  const resetSchedulingStore = useSchedulingStore((state) => state.reset);
+  const { reset, error } = useSchedulingStore((state) => ({
+    reset: state.reset,
+    error: state.error,
+  }));
 
   useEffect(() => {
     return () => {
-      resetSchedulingStore(); // clean-up session state on component unmount
+      reset();
     };
-  }, [resetSchedulingStore]);
+  }, [reset]);
 
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
       <Grid container spacing={2} sx={{ height: "75vh" }}>
         {/* Master Pane */}
         <Grid size={{ xs: 12, md: 4 }} sx={{ height: "100%" }}>

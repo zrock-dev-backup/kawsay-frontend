@@ -8,7 +8,7 @@ export const GridContainer = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   minWidth: "800px",
   overflow: "hidden",
-  position: "relative", // Add position relative for absolute positioning of events
+  position: "relative",
 }));
 
 const GridCell = styled(Box)(({ theme }) => ({
@@ -48,7 +48,6 @@ export const BackgroundCell = styled(Box)(({ theme }) => ({
   borderLeft: `1px solid ${theme.palette.divider}`,
 }));
 
-// Renamed from EventPaper to SingleEventPaper
 export const SingleEventPaper = styled(Paper)(({ theme }) => ({
   margin: "2px",
   padding: theme.spacing(0.5, 1),
@@ -59,7 +58,7 @@ export const SingleEventPaper = styled(Paper)(({ theme }) => ({
   zIndex: 1,
   display: "flex",
   flexDirection: "column",
-  height: "calc(100% - 4px)", // Fill the cell, accounting for margin
+  height: "calc(100% - 4px)",
   transition: theme.transitions.create(["background-color", "box-shadow"], {
     duration: theme.transitions.duration.short,
   }),
@@ -69,7 +68,6 @@ export const SingleEventPaper = styled(Paper)(({ theme }) => ({
   },
 }));
 
-// New component for stacking multiple event chips
 export const EventStack = styled(Box)(({ theme }) => ({
   zIndex: 1,
   padding: "2px",
@@ -80,7 +78,6 @@ export const EventStack = styled(Box)(({ theme }) => ({
   height: "100%",
 }));
 
-// New component for the individual chips in a stack
 export const EventChip = styled(Chip)(({ theme }) => ({
   width: "calc(100% - 2px)",
   cursor: "pointer",
