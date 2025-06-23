@@ -77,3 +77,16 @@ export const updateRequirement = async (
   requirements[reqIndex] = updatedRequirement;
   return updatedRequirement;
 };
+
+export const deleteRequirement = async (id: number): Promise<void> => {
+  console.log(`[Mock API] Deleting requirement ${id}`);
+  await sleep(500);
+
+  const reqIndex = requirements.findIndex((r) => r.id === id);
+  if (reqIndex === -1) {
+    console.warn(`Requirement with id ${id} not found for deletion.`);
+    return;
+  }
+
+  requirements.splice(reqIndex, 1);
+};

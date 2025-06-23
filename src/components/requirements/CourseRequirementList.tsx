@@ -16,9 +16,14 @@ import type { CourseRequirementDto } from "../../interfaces/courseRequirementDto
 interface Props {
   requirements: CourseRequirementDto[];
   onEdit: (requirement: CourseRequirementDto) => void;
+  onDelete: (requirement: CourseRequirementDto) => void;
 }
 
-const CourseRequirementList: React.FC<Props> = ({ requirements, onEdit }) => {
+const CourseRequirementList: React.FC<Props> = ({
+  requirements,
+  onEdit,
+  onDelete,
+}) => {
   if (requirements.length === 0) {
     return (
       <Typography color="text.secondary" sx={{ p: 2, textAlign: "center" }}>
@@ -40,12 +45,10 @@ const CourseRequirementList: React.FC<Props> = ({ requirements, onEdit }) => {
                     <EditIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Delete (Coming Soon)">
-                  <span>
-                    <IconButton edge="end" disabled>
-                      <DeleteIcon />
-                    </IconButton>
-                  </span>
+                <Tooltip title="Delete Requirement">
+                  <IconButton edge="end" onClick={() => onDelete(req)}>
+                    <DeleteIcon />
+                  </IconButton>
                 </Tooltip>
               </>
             }

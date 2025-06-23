@@ -7,6 +7,7 @@ import {
   createRequirement,
   fetchRequirements,
   updateRequirement,
+  deleteRequirement,
 } from "../services/courseRequirementApi.ts";
 
 interface CourseRequirementState {
@@ -19,6 +20,7 @@ interface CourseRequirementState {
     id: number,
     data: Partial<CreateCourseRequirementRequest>,
   ) => Promise<boolean>;
+  deleteRequirement: (id: number) => Promise<boolean>;
 }
 
 export const useCourseRequirementStore = create<CourseRequirementState>(
@@ -74,6 +76,24 @@ export const useCourseRequirementStore = create<CourseRequirementState>(
         const message =
           err instanceof Error ? err.message : "Failed to update requirement.";
         set({ error: message, isLoading: false });
+        return false; // Failure
+      }
+    },
+
+    deleteRequirement: async (id: number) => {
+      set((state) => ({
+        requirements: state.requirements.filter((req) => req.id !== id),
+      }));
+
+      try {
+        await deleteRequirement(id);
+        return true; // Success
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to delete requirement.";
+        set({ error: message });
+        // re-inserting requirement
+        await get().fetchRequirements(get().requirements[0]?.timetableId); // Simple refresh on error
         return false; // Failure
       }
     },
