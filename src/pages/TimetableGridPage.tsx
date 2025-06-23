@@ -196,9 +196,7 @@ const TimetableGridPage: React.FC = () => {
               />
             ))}
           {activeTab === TabIndex.CLASS_MANAGEMENT && <ClassManagementTab timetableId={id!} />}
-          {activeTab === TabIndex.ACADEMIC_STRUCTURE && (
-            <AcademicStructureManager />
-          )}
+          {activeTab === TabIndex.ACADEMIC_STRUCTURE && <AcademicStructureManager />}
           {activeTab === TabIndex.COURSE_REQUIREMENTS && <CourseRequirementsTab timetableId={id!} />}
           {activeTab === TabIndex.ASSISTED_SCHEDULING && <AssistedSchedulingTab />}
         </Box>

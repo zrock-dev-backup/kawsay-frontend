@@ -58,6 +58,25 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
   return (
     <>
       <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 7 }}>
+          <Paper sx={{ p: 2, height: "100%" }}>
+            <Typography variant="h6" gutterBottom>
+              Current Requirements
+            </Typography>
+            {isLoading && requirements.length === 0 ? (
+                <CircularProgress />
+            ) : error ? (
+                <Alert severity="error">{error}</Alert>
+            ) : (
+                <CourseRequirementList
+                    requirements={requirements}
+                    onEdit={setEditingRequirement}
+                    onDelete={handleDeleteRequest}
+                    onViewDetails={setViewingRequirement}
+                />
+            )}
+          </Paper>
+        </Grid>
         <Grid size={{ xs: 12, md: 5 }}>
           <Paper sx={{ p: 2, height: "100%" }}>
             <CourseRequirementForm
@@ -65,25 +84,6 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
               requirementToEdit={editingRequirement}
               onCancelEdit={handleCancelEdit}
             />
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 7 }}>
-          <Paper sx={{ p: 2, height: "100%" }}>
-            <Typography variant="h6" gutterBottom>
-              Current Requirements
-            </Typography>
-            {isLoading && requirements.length === 0 ? (
-              <CircularProgress />
-            ) : error ? (
-              <Alert severity="error">{error}</Alert>
-            ) : (
-              <CourseRequirementList
-                requirements={requirements}
-                onEdit={setEditingRequirement}
-                onDelete={handleDeleteRequest}
-                onViewDetails={setViewingRequirement}
-              />
-            )}
           </Paper>
         </Grid>
       </Grid>
