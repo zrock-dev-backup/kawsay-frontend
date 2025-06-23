@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useTimetableStore } from "../../stores/useTimetableStore";
 import { useSchedulingStore } from "../../stores/useSchedulingStore";
+import type { CourseRequirementDto } from "../../interfaces/courseRequirementDtos";
+import { useCourseRequirementStore } from "../../stores/useCourseRequirementStore.ts";
 
 export interface GridCellViewModel {
   key: string;
@@ -19,12 +21,18 @@ export interface GridCellViewModel {
   placementId?: number;
 
   onClick?: () => void;
+  onViewDetails?: () => void;
 }
 
-export function useGridViewModel() {
+export function useGridViewModel({
+  onViewDetails,
+}: {
+  onViewDetails: (req: CourseRequirementDto) => void;
+}) {
   const { structure } = useTimetableStore();
   const { validSlots, stagedPlacements, stagePlacement, unstagePlacement } =
     useSchedulingStore();
+  const { requirements } = useCourseRequirementStore();
 
   const dayIdToColIndex = useMemo(
     () => new Map(structure?.days.map((day, i) => [day.id, i + 2])),
@@ -53,6 +61,10 @@ export function useGridViewModel() {
         placedSlots.add(`${col}_${startRow + i}`);
       }
 
+      const sourceRequirement = requirements.find(
+        (r) => r.id === placement.courseRequirementId,
+      );
+
       cells.push({
         key: `placement-${placement.id}`,
         type: "STAGED_PLACEMENT",
@@ -63,6 +75,9 @@ export function useGridViewModel() {
         courseName: placement.courseName,
         placementId: placement.id,
         onClick: () => unstagePlacement(placement.id),
+        onViewDetails: sourceRequirement
+          ? () => onViewDetails(sourceRequirement)
+          : undefined,
       });
     });
 
@@ -92,6 +107,7 @@ export function useGridViewModel() {
     periodIdToRowIndex,
     stagePlacement,
     unstagePlacement,
+    onViewDetails,
   ]);
 
   return {

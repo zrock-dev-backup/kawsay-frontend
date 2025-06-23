@@ -7,11 +7,19 @@ import {
   Typography,
   Box,
   CircularProgress,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { useCourseRequirementStore } from "../../stores/useCourseRequirementStore.ts";
 import { useSchedulingStore } from "../../stores/useSchedulingStore.ts";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { CourseRequirementDto } from "../../interfaces/courseRequirementDtos.ts";
 
-const UnscheduledList: React.FC = () => {
+interface Props {
+  onViewDetails: (req: CourseRequirementDto) => void;
+}
+
+const UnscheduledList: React.FC<Props> = ({ onViewDetails }) => {
   const { requirements } = useCourseRequirementStore();
   const {
     stagedPlacements,
@@ -57,6 +65,18 @@ const UnscheduledList: React.FC = () => {
             {isLoading && selectedRequirementId === req.id && (
               <CircularProgress size={20} />
             )}
+            <Tooltip title="View Details">
+              <IconButton
+                edge="end"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetails(req);
+                }}
+              >
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </ListItemButton>
         ))}
       </List>

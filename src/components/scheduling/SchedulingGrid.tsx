@@ -1,7 +1,8 @@
 import React from "react";
-import { Box, Paper, Tooltip, Typography } from "@mui/material";
+import { Box, Paper, Tooltip, Typography, IconButton } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   BackgroundCell,
   DayHeaderCell,
@@ -17,6 +18,7 @@ import {
   SlotOverlay,
   StagedPlacementItem,
 } from "./SchedulingGrid.styles.ts";
+import { CourseRequirementDto } from "../../interfaces/courseRequirementDtos.ts";
 
 const renderCell = (cell: GridCellViewModel) => {
   const style = {
@@ -35,9 +37,31 @@ const renderCell = (cell: GridCellViewModel) => {
           elevation={2}
           onClick={cell.onClick}
         >
-          <Typography variant="caption" fontWeight="bold">
-            {cell.courseCode}
-          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="caption" fontWeight="bold">
+              {cell.courseCode}
+            </Typography>
+            {cell.onViewDetails && (
+              <Tooltip title="View Details">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    cell.onViewDetails!();
+                  }}
+                  sx={{ color: "white", p: 0.2 }}
+                >
+                  <InfoOutlinedIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
           <Typography variant="caption" display="block" noWrap>
             {cell.courseName}
           </Typography>
@@ -63,8 +87,14 @@ const renderCell = (cell: GridCellViewModel) => {
   }
 };
 
-const SchedulingGrid: React.FC = () => {
-  const { gridCells, structure, sortedPeriods } = useGridViewModel();
+interface Props {
+  onViewDetails: (req: CourseRequirementDto) => void;
+}
+
+const SchedulingGrid: React.FC<Props> = ({ onViewDetails }) => {
+  const { gridCells, structure, sortedPeriods } = useGridViewModel({
+    onViewDetails,
+  });
 
   if (!structure)
     return <Typography>Timetable structure not loaded.</Typography>;
