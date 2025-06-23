@@ -1,13 +1,19 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
-import type { StudentDto } from "../../interfaces/apiDataTypes.ts";
+import { useState, useCallback, useEffect } from "react";
+import type { StudentDto } from "../../interfaces/studentDtos.ts";
 import type { AvailableClassDto } from "../../interfaces/classDtos.ts";
 import {
   fetchStudents,
   fetchAvailableClassesForStudent,
+  fetchProposedEnrollmentsForStudent,
 } from "../../services/studentApi.ts";
 import { enrollStudent } from "../../services/enrollmentApi.ts";
 
-export interface CartItem extends AvailableClassDto {
+export interface CartItem {
+  id: number; // classId
+  courseCode: string;
+  courseName: string;
+  teacherName: string | null;
+  isProposal: boolean;
 }
 
 export function useStudentEnrollment(timetableId: number) {
@@ -42,35 +48,57 @@ export function useStudentEnrollment(timetableId: number) {
       }
     };
     loadStudents();
-  }, []);
+  }, [timetableId]);
 
   useEffect(() => {
-    if (selectedStudent) {
-      const loadClasses = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-          const classData = await fetchAvailableClassesForStudent(
-            selectedStudent.id,
-            timetableId,
-          );
-          setAvailableClasses(classData);
-        } catch (err) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Failed to load classes for student.",
-          );
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadClasses();
-      setCart([]); // Clear cart when student changes
-    } else {
+    if (!selectedStudent) {
       setAvailableClasses([]);
       setCart([]);
+      return;
     }
+
+    const loadStudentData = async () => {
+      setIsLoading(true);
+      setError(null);
+      setCart([]);
+
+      const [classesResult, proposalsResult] = await Promise.allSettled([
+        fetchAvailableClassesForStudent(selectedStudent.id, timetableId),
+        fetchProposedEnrollmentsForStudent(selectedStudent.id),
+      ]);
+
+      if (classesResult.status === "fulfilled") {
+        setAvailableClasses(classesResult.value);
+      } else {
+        console.error(
+          "Failed to load available classes:",
+          classesResult.reason,
+        );
+        setError("Failed to load available classes for the student.");
+      }
+
+      if (proposalsResult.status === "fulfilled") {
+        const proposedCartItems: CartItem[] = proposalsResult.value.map(
+          (p) => ({
+            id: p.classId,
+            courseCode: p.courseCode,
+            courseName: p.courseName,
+            teacherName: p.teacherName,
+            isProposal: true,
+          }),
+        );
+        setCart(proposedCartItems);
+      } else {
+        console.error(
+          "Failed to load proposed enrollments:",
+          proposalsResult.reason,
+        );
+      }
+
+      setIsLoading(false);
+    };
+
+    loadStudentData();
   }, [selectedStudent, timetableId]);
 
   const handleSelectStudent = useCallback((student: StudentDto | null) => {
@@ -78,43 +106,19 @@ export function useStudentEnrollment(timetableId: number) {
   }, []);
 
   const addToCart = useCallback((classToAdd: AvailableClassDto) => {
-    setCart((prev) => [...prev, classToAdd]);
+    const newCartItem: CartItem = {
+      id: classToAdd.id,
+      courseCode: classToAdd.courseCode,
+      courseName: classToAdd.courseName,
+      teacherName: classToAdd.teacherName,
+      isProposal: false,
+    };
+    setCart((prev) => [...prev, newCartItem]);
   }, []);
 
   const removeFromCart = useCallback((classId: number) => {
     setCart((prev) => prev.filter((item) => item.id !== classId));
   }, []);
-
-  const sortedAvailableClasses = useMemo(() => {
-    return [...availableClasses].sort((a, b) => {
-      if (a.isRetake && !b.isRetake) return -1;
-      if (!a.isRetake && b.isRetake) return 1;
-      return a.courseName.localeCompare(b.courseName);
-    });
-  }, [availableClasses]);
-
-  const enrollSingleClass = async (classToEnroll: AvailableClassDto) => {
-    if (!selectedStudent) return;
-
-    setIsSubmitting(true);
-    setSubmitStatus(null);
-
-    try {
-      await enrollStudent({ studentId: selectedStudent.id, classId: classToEnroll.id, force: false });
-      setSubmitStatus({ type: 'success', message: `Successfully enrolled in ${classToEnroll.courseCode}.` });
-      // Refresh everything after a successful enrollment
-      const [studentData, classData] = await Promise.all([
-        fetchStudents(timetableId),
-        fetchAvailableClassesForStudent(selectedStudent.id, timetableId)
-      ]);
-      setStudents(studentData);
-      setAvailableClasses(classData);
-    } catch(err) {
-      setSubmitStatus({ type: 'error', message: err instanceof Error ? err.message : 'An error occurred.' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleSubmitCart = async () => {
     if (!selectedStudent || cart.length === 0) return;
@@ -137,11 +141,11 @@ export function useStudentEnrollment(timetableId: number) {
         message: `Successfully enrolled ${selectedStudent.name} in ${cart.length} classes.`,
       });
       setCart([]);
-      // Optionally re-fetch available classes to update their status
-      const classData = await fetchAvailableClassesForStudent(
-        selectedStudent.id,
-        timetableId,
-      );
+      const [studentData, classData] = await Promise.all([
+        fetchStudents(timetableId),
+        fetchAvailableClassesForStudent(selectedStudent.id, timetableId),
+      ]);
+      setStudents(studentData);
       setAvailableClasses(classData);
     } catch (err) {
       setSubmitStatus({
@@ -160,7 +164,7 @@ export function useStudentEnrollment(timetableId: number) {
     state: {
       students,
       selectedStudent,
-      availableClasses: sortedAvailableClasses,
+      availableClasses,
       cart,
       isLoading,
       isSubmitting,
@@ -171,7 +175,6 @@ export function useStudentEnrollment(timetableId: number) {
       handleSelectStudent,
       addToCart,
       removeFromCart,
-      enrollSingleClass,
       handleSubmitCart,
       setSubmitStatus,
     },

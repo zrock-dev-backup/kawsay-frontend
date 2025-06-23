@@ -63,27 +63,9 @@ export interface GradeIngestionDto {
   gradeValue: number;
 }
 
-export interface StudentDto {
-  id: number;
-  currentCourseLoad: number;
-  name: string;
-  standing:
-    | "GoodStanding"
-    | "AcademicProbation"
-    | "Suspended"
-    | "Withdrawn"
-    | string;
-}
-
-export interface StudentEnrollmentDto {
-  id: number; // Class ID
-  courseName: string;
-  courseCode: string;
-}
-
 export interface StudentCohortDto {
-  advancingStudents: StudentDto[];
-  retakeStudents: StudentDto[];
+  advancingStudents: { id: number; name: string }[];
+  retakeStudents: { id: number; name: string }[];
 }
 
 export interface BulkAdvanceRequest {
