@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useCsvImporter } from "../../hooks/useCsvImporter";
 import { ImportResultDisplay } from "./ImportResultDisplay";
+import type { IngestionResult } from "../../hooks/useEndOfModule"; // Assuming result format matches
 
 interface Props {
   open: boolean;
@@ -21,13 +22,20 @@ interface Props {
     endpoint: string;
     entityName: string;
   };
+  onComplete: (result: IngestionResult | null) => void;
 }
 
-export const CsvImportDialog: React.FC<Props> = ({ open, onClose, config }) => {
+export const CsvImportDialog: React.FC<Props> = ({
+  open,
+  onClose,
+  config,
+  onComplete,
+}) => {
   const { state, actions } = useCsvImporter(config);
   const { file, isParsing, isSubmitting, progress, result, error } = state;
 
   const handleClose = () => {
+    onComplete(state.result as IngestionResult | null);
     actions.reset();
     onClose();
   };

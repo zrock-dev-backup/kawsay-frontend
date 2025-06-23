@@ -1,88 +1,80 @@
 import React from "react";
-import { Alert, Box, Container, Paper, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
-import { useEndofModule } from "../hooks/module-processing/useEndofModule";
-import GradeIngestionForm from "../components/module-processing/GradeIngestionForm";
-import CohortDisplay from "../components/module-processing/CohortDisplay";
-import ConfirmationDialog from "../components/common/ConfirmationDialog"; // Import the dialog
+import { Alert, Button, Container, Paper, Typography } from "@mui/material";
+import { useEndOfModule } from "../hooks/useEndOfModule";
+import { CsvImportDialog } from "../components/common/CsvImportDialog";
+import { EomSummaryReport } from "../components/eom/EomSummaryReport";
+import { API_BASE_URL } from "../services/api.helpers";
 
-const EndofModulePage: React.FC = () => {
+export const EndOfModulePage: React.FC = () => {
   const { timetableId } = useParams<{ timetableId: string }>();
-  const {
-    csvData,
-    onCsvDataChange,
-    handleIngestGrades,
-    isSubmitting,
-    ingestionError,
-    ingestionSuccess,
-    cohorts,
-    isLoadingCohorts,
-    handleBulkAdvance,
-    handleBulkRetake,
-    processingStatus,
-    dialogConfig,
-    isProcessing,
-    closeDialog,
-  } = useEndofModule();
+
+  const destinationTimetableId = timetableId
+    ? (parseInt(timetableId, 10) + 1).toString()
+    : "";
+
+  if (!timetableId) {
+    return (
+      <Alert severity="error">Timetable ID is missing from the URL.</Alert>
+    );
+  }
+
+  const { state, actions } = useEndOfModule(timetableId);
+  const importConfig = {
+    endpoint: `${API_BASE_URL}/eom/${timetableId}/ingest-grades`,
+    entityName: "Final Grades",
+  };
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" sx={{ my: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
         End-of-Module Processing
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>
-        Timetable ID: {timetableId || "Not Specified"}
+        Processing Module: {timetableId} → Preparing for Module:{" "}
+        {destinationTimetableId}
       </Typography>
 
-      {ingestionSuccess && (
+      {state.error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {state.error}
+        </Alert>
+      )}
+      {state.proposalResult && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          {ingestionSuccess}
-        </Alert>
-      )}
-      {processingStatus && (
-        <Alert severity={processingStatus.type} sx={{ mb: 2 }}>
-          {processingStatus.message}
+          {state.proposalResult.message}
         </Alert>
       )}
 
-      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Step 1: Ingest Grades
-        </Typography>
-        <GradeIngestionForm
-          csvData={csvData}
-          onCsvDataChange={onCsvDataChange}
-          onSubmit={handleIngestGrades}
-          isSubmitting={isSubmitting}
-          submitError={ingestionError}
+      <Paper elevation={2} sx={{ p: 3 }}>
+        <Typography variant="h6">Step 1: Ingest Final Grade Data</Typography>
+        <Button
+          variant="contained"
+          onClick={actions.openImportDialog}
+          sx={{ mt: 2 }}
+        >
+          Import Grades CSV
+        </Button>
+      </Paper>
+
+      {state.ingestionResult && (
+        <EomSummaryReport
+          ingestionResult={state.ingestionResult}
+          isPreparingProposals={state.isPreparingProposals}
+          onPrepareEnrollments={() =>
+            actions.prepareEnrollments(destinationTimetableId)
+          }
         />
-      </Paper>
+      )}
 
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Step 2: Review & Process Cohorts
-        </Typography>
-        <Box sx={{ mt: 2 }}>
-          <CohortDisplay
-            cohorts={cohorts}
-            isLoading={isLoadingCohorts}
-            onBulkAdvance={handleBulkAdvance}
-            onBulkRetake={handleBulkRetake}
-            isProcessing={isProcessing}
-          />
-        </Box>
-      </Paper>
-
-      <ConfirmationDialog
-        open={dialogConfig?.open || false}
-        title={dialogConfig?.title || ""}
-        description={dialogConfig?.description || ""}
-        onClose={closeDialog}
-        onConfirm={dialogConfig?.onConfirm || (() => {})}
-        isLoading={isProcessing}
+      <CsvImportDialog
+        open={state.isImportDialogOpen}
+        onClose={actions.closeImportDialog}
+        onComplete={actions.handleIngestionComplete}
+        config={importConfig}
       />
     </Container>
   );
 };
 
-export default EndofModulePage;
+export default EndOfModulePage;
