@@ -11,6 +11,7 @@ import CourseRequirementList from "../components/requirements/CourseRequirementL
 import CourseRequirementForm from "../components/requirements/CourseRequirementForm.tsx";
 import type { CourseRequirementDto } from "../interfaces/courseRequirementDtos.ts";
 import ConfirmationDialog from "../components/common/ConfirmationDialog.tsx";
+import RequirementDetailsModal from "../components/requirements/RequirementDetailsModal.tsx";
 
 interface Props {
   timetableId: string;
@@ -27,6 +28,8 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
   const [editingRequirement, setEditingRequirement] =
     useState<CourseRequirementDto | null>(null);
   const [requirementToDelete, setRequirementToDelete] =
+    useState<CourseRequirementDto | null>(null);
+  const [viewingRequirement, setViewingRequirement] =
     useState<CourseRequirementDto | null>(null);
 
   useEffect(() => {
@@ -78,6 +81,7 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
                 requirements={requirements}
                 onEdit={setEditingRequirement}
                 onDelete={handleDeleteRequest}
+                onViewDetails={setViewingRequirement}
               />
             )}
           </Paper>
@@ -92,6 +96,11 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
         description={`Are you sure you want to delete the requirement for "${requirementToDelete?.courseName}"? This action cannot be undone.`}
         confirmText="Delete"
         isLoading={isLoading}
+      />
+      <RequirementDetailsModal
+        requirement={viewingRequirement}
+        open={!!viewingRequirement}
+        onClose={() => setViewingRequirement(null)}
       />
     </>
   );

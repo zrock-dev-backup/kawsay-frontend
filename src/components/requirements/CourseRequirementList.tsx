@@ -8,6 +8,7 @@ import {
   Tooltip,
   Typography,
   Chip,
+  ListItemButton,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -17,12 +18,14 @@ interface Props {
   requirements: CourseRequirementDto[];
   onEdit: (requirement: CourseRequirementDto) => void;
   onDelete: (requirement: CourseRequirementDto) => void;
+  onViewDetails: (requirement: CourseRequirementDto) => void;
 }
 
 const CourseRequirementList: React.FC<Props> = ({
   requirements,
   onEdit,
   onDelete,
+  onViewDetails,
 }) => {
   if (requirements.length === 0) {
     return (
@@ -52,16 +55,21 @@ const CourseRequirementList: React.FC<Props> = ({
                 </Tooltip>
               </>
             }
+            disablePadding
           >
-            <ListItemText
-              primary={`${req.courseName} (${req.classType})`}
-              secondary={`For: ${req.studentGroupName} | Freq: ${req.frequency}x/week | Length: ${req.length}p`}
-            />
-            <Chip
-              label={req.priority}
-              color={req.priority === "High" ? "error" : "default"}
-              size="small"
-            />
+            <ListItemButton onClick={() => onViewDetails(req)}>
+              <ListItemText
+                primary={`${req.courseName} (${req.classType})`}
+                secondary={`For: ${req.studentGroupName} | Freq: ${req.frequency}x/week`}
+                sx={{ mr: 4 }}
+              />
+              <Chip
+                label={req.priority}
+                color={req.priority === "High" ? "error" : "default"}
+                size="small"
+                sx={{ mr: 8 }}
+              />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>
