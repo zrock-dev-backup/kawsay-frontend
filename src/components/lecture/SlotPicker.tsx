@@ -33,7 +33,7 @@ const SlotPicker: React.FC<SlotPickerProps> = ({
   onChange,
   length,
 }) => {
-  const [activeFilter, setActiveFilter] = useState<TimeBlock>("all");
+  const [activeFilter, setActiveFilter] = useState<TimeBlock>("morning");
 
   const handleFilterChange = (
     event: React.MouseEvent<HTMLElement>,
