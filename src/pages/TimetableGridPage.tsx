@@ -41,6 +41,14 @@ const useDetailsModal = () => {
   return { isOpen, classId, openModal, closeModal };
 };
 
+enum TabIndex {
+  CLASS_MANAGEMENT = 0,
+  ACADEMIC_STRUCTURE = 1,
+  COURSE_REQUIREMENTS = 2,
+  ASSISTED_SCHEDULING = 3,
+  SCHEDULE = 4,
+}
+
 const TimetableGridPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const {
@@ -147,7 +155,7 @@ const TimetableGridPage: React.FC = () => {
         )}
 
         <TimetableHeader
-          calendarControls={activeTab === 0 ? calendarControls : { view: null }}
+          calendarControls={activeTab === TabIndex.SCHEDULE ? calendarControls : { view: null }}
           isGenerating={isGenerating}
           onGenerate={() => generateSchedule(id!)}
         />
@@ -158,18 +166,20 @@ const TimetableGridPage: React.FC = () => {
               value={activeTab}
               onChange={(_, val) => setActiveTab(val)}
               aria-label="timetable view tabs"
+              variant="fullWidth"
             >
-              <Tab label="Timetable Grid" />
+              {/*Class management will be deprecated*/}
               <Tab label="Class Management" />
-              {isAcademicStructureEnabled && <Tab label="Academic Structure" />}
-              <Tab label="Course requirements" />
-              <Tab label="Assisted scheduling" />
+              <Tab label="Academic structure management" />
+              <Tab label="Module requirements" />
+              <Tab label="Scheduling Assistant" />
+              <Tab label="Schedule" />
             </Tabs>
           </Box>
         </Paper>
 
         <Box sx={{ mt: 2 }}>
-          {activeTab === 0 &&
+          {activeTab === TabIndex.SCHEDULE &&
             (calendarControls.view === "week" ? (
               <WeekView
                 displayDate={calendarControls.displayDate}
@@ -185,12 +195,12 @@ const TimetableGridPage: React.FC = () => {
                 onLessonClick={openDetailsModal}
               />
             ))}
-          {activeTab === 1 && <ClassManagementTab timetableId={id!} />}
-          {activeTab === 2 && isAcademicStructureEnabled && (
+          {activeTab === TabIndex.CLASS_MANAGEMENT && <ClassManagementTab timetableId={id!} />}
+          {activeTab === TabIndex.ACADEMIC_STRUCTURE && (
             <AcademicStructureManager />
           )}
-          {activeTab === 3 && <CourseRequirementsTab timetableId={id!} />}
-          {activeTab === 4 && <AssistedSchedulingTab />}
+          {activeTab === TabIndex.COURSE_REQUIREMENTS && <CourseRequirementsTab timetableId={id!} />}
+          {activeTab === TabIndex.ASSISTED_SCHEDULING && <AssistedSchedulingTab />}
         </Box>
       </Container>
 
