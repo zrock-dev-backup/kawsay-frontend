@@ -5,7 +5,7 @@ export const GridContainer = styled(Box)({
   border: "1px solid",
   borderColor: "divider",
   backgroundColor: "background.paper",
-  minWidth: "800px",
+  width: "100%",
   position: "relative",
 });
 
