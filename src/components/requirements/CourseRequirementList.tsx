@@ -65,7 +65,6 @@ const CourseRequirementList: React.FC<Props> = ({
               />
               <Chip
                 label={req.priority}
-                color={req.priority === "High" ? "error" : "default"}
                 size="small"
                 sx={{ mr: 8 }}
               />

@@ -11,7 +11,6 @@ const AcademicStructureManager: React.FC = () => {
   const { cohorts, loading, error, addCohort, addStudentGroup, addSection } =
     useAcademicStructure(timetableId);
 
-  // State for the Master-Detail view
   const [selectedCohortId, setSelectedCohortId] = useState<number | null>(null);
 
   const [isSubmittingCohort, setIsSubmittingCohort] = useState(false);
@@ -62,7 +61,7 @@ const AcademicStructureManager: React.FC = () => {
   return (
     <Grid container spacing={2} sx={{ p: 2, height: "100%" }}>
       {/* Master Pane */}
-      <Grid item xs={12} md={4}>
+      <Grid size={{xs:12, md:4}}>
         <Typography variant="h6" gutterBottom>
           Cohorts
         </Typography>
@@ -84,7 +83,7 @@ const AcademicStructureManager: React.FC = () => {
         />
       </Grid>
       {/* Detail Pane */}
-      <Grid item xs={12} md={8}>
+      <Grid size={{xs:12, md:8}}>
         <CohortDetailView
           selectedCohort={selectedCohort}
           onAddGroup={handleAddGroup}
