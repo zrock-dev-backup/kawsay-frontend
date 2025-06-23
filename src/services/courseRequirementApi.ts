@@ -1,0 +1,57 @@
+import type {
+  CourseRequirementDto,
+  CreateCourseRequirementRequest,
+} from "../interfaces/courseRequirementDtos.ts";
+import dayjs from "dayjs";
+
+// --- MOCKED DATABASE ---
+let requirements: CourseRequirementDto[] = [
+  {
+    id: 1,
+    timetableId: 1,
+    courseId: 1,
+    courseName: "Advanced Software Engineering",
+    studentGroupId: 101,
+    studentGroupName: "Fall 2025 - Group A",
+    classType: "Masterclass",
+    length: 2,
+    frequency: 2,
+    priority: "High",
+    requiredTeacherId: null,
+    startDate: dayjs().add(1, "week").format("YYYY-MM-DD"),
+    endDate: dayjs().add(9, "week").format("YYYY-MM-DD"),
+    schedulingPreferences: [{ dayId: 1, startPeriodId: 2 }],
+  },
+];
+let nextId = 2;
+// --- END MOCKED DATABASE ---
+
+// Simulates network delay
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const fetchRequirements = async (
+  timetableId: number,
+): Promise<CourseRequirementDto[]> => {
+  console.log(
+    `[Mock API] Fetching requirements for timetableId: ${timetableId}`,
+  );
+  await sleep(500);
+  return requirements.filter((r) => r.timetableId === timetableId);
+};
+
+export const createRequirement = async (
+  data: CreateCourseRequirementRequest,
+): Promise<CourseRequirementDto> => {
+  console.log("[Mock API] Creating requirement:", data);
+  await sleep(750);
+
+  const newRequirement: CourseRequirementDto = {
+    ...data,
+    id: nextId++,
+    courseName: `Course ID: ${data.courseId}`,
+    studentGroupName: `Group ID: ${data.studentGroupId}`,
+  };
+
+  requirements.push(newRequirement);
+  return newRequirement;
+};

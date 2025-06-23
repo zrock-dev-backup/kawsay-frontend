@@ -26,7 +26,8 @@ const GradeIngestionForm: React.FC<GradeIngestionFormProps> = ({
   return (
     <Box component="form" noValidate autoComplete="off">
       <Typography variant="body1" gutterBottom>
-        Paste grade data here in CSV format (studentId,courseId,gradeValue).
+        Paste grade data here in CSV format
+        (studentId,courseId,courseName,classType,semester,finalGrade).
       </Typography>
       <Typography
         variant="caption"
@@ -36,11 +37,11 @@ const GradeIngestionForm: React.FC<GradeIngestionFormProps> = ({
       >
         Example:
         <br />
-        1,101,85.5
+        1001,41,Software Architecture 1,Masterclass,5,92
         <br />
-        1,102,92.0
+        1002,41,Software Architecture 1,Masterclass,5,89
         <br />
-        2,101,68.0
+        1005,41,Software Architecture 1,Masterclass,5,96
       </Typography>
 
       <TextField

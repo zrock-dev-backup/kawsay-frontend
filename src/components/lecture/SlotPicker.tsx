@@ -25,6 +25,7 @@ interface SlotPickerProps {
   length: number;
 }
 
+// TODO: highlight the whole length of periods instead of only one
 const SlotPicker: React.FC<SlotPickerProps> = ({
   days,
   periods,
