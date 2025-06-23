@@ -1,7 +1,5 @@
-// src/components/requirements/CourseRequirementList.tsx
 import React from "react";
 import {
-  Box,
   IconButton,
   List,
   ListItem,
@@ -17,9 +15,10 @@ import type { CourseRequirementDto } from "../../interfaces/courseRequirementDto
 
 interface Props {
   requirements: CourseRequirementDto[];
+  onEdit: (requirement: CourseRequirementDto) => void;
 }
 
-const CourseRequirementList: React.FC<Props> = ({ requirements }) => {
+const CourseRequirementList: React.FC<Props> = ({ requirements, onEdit }) => {
   if (requirements.length === 0) {
     return (
       <Typography color="text.secondary" sx={{ p: 2, textAlign: "center" }}>
@@ -36,12 +35,10 @@ const CourseRequirementList: React.FC<Props> = ({ requirements }) => {
             key={req.id}
             secondaryAction={
               <>
-                <Tooltip title="Edit (Coming Soon)">
-                  <span>
-                    <IconButton edge="end" disabled>
-                      <EditIcon />
-                    </IconButton>
-                  </span>
+                <Tooltip title="Edit Requirement">
+                  <IconButton edge="end" onClick={() => onEdit(req)}>
+                    <EditIcon />
+                  </IconButton>
                 </Tooltip>
                 <Tooltip title="Delete (Coming Soon)">
                   <span>

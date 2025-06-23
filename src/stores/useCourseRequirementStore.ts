@@ -6,6 +6,7 @@ import type {
 import {
   createRequirement,
   fetchRequirements,
+  updateRequirement,
 } from "../services/courseRequirementApi.ts";
 
 interface CourseRequirementState {
@@ -14,6 +15,10 @@ interface CourseRequirementState {
   error: string | null;
   fetchRequirements: (timetableId: number) => Promise<void>;
   addRequirement: (data: CreateCourseRequirementRequest) => Promise<boolean>;
+  updateRequirement: (
+    id: number,
+    data: Partial<CreateCourseRequirementRequest>,
+  ) => Promise<boolean>;
 }
 
 export const useCourseRequirementStore = create<CourseRequirementState>(
@@ -46,6 +51,28 @@ export const useCourseRequirementStore = create<CourseRequirementState>(
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to create requirement.";
+        set({ error: message, isLoading: false });
+        return false; // Failure
+      }
+    },
+
+    updateRequirement: async (
+      id: number,
+      data: Partial<CreateCourseRequirementRequest>,
+    ) => {
+      set({ isLoading: true });
+      try {
+        const updatedRequirement = await updateRequirement(id, data);
+        set((state) => ({
+          requirements: state.requirements.map((req) =>
+            req.id === id ? updatedRequirement : req,
+          ),
+          isLoading: false,
+        }));
+        return true; // Success
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to update requirement.";
         set({ error: message, isLoading: false });
         return false; // Failure
       }

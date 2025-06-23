@@ -55,3 +55,25 @@ export const createRequirement = async (
   requirements.push(newRequirement);
   return newRequirement;
 };
+
+export const updateRequirement = async (
+  id: number,
+  data: Partial<CreateCourseRequirementRequest>,
+): Promise<CourseRequirementDto> => {
+  console.log(`[Mock API] Updating requirement ${id} with:`, data);
+  await sleep(600);
+
+  const reqIndex = requirements.findIndex((r) => r.id === id);
+  if (reqIndex === -1) {
+    throw new Error("Requirement not found");
+  }
+
+  // In a real API, course/group names would be re-verified.
+  const updatedRequirement = {
+    ...requirements[reqIndex],
+    ...data,
+  };
+
+  requirements[reqIndex] = updatedRequirement;
+  return updatedRequirement;
+};

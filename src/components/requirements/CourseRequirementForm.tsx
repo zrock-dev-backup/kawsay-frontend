@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Autocomplete,
   Box,
@@ -9,6 +9,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  Stack,
   TextField,
   Typography,
 } from "@mui/material";
@@ -16,13 +17,15 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { useCourseRequirementStore } from "../../stores/useCourseRequirementStore";
-import type { CreateCourseRequirementRequest } from "../../interfaces/courseRequirementDtos";
+import type {
+  CourseRequirementDto,
+  CreateCourseRequirementRequest,
+} from "../../interfaces/courseRequirementDtos";
 import type { ClassType } from "../../interfaces/classDtos";
 import SlotPicker from "../lecture/SlotPicker";
 import { useTimetableStore } from "../../stores/useTimetableStore";
 
 // --- MOCKED DATA FOR FORM ---
-// In a real implementation, this would come from a store or props
 const MOCK_COURSES = [
   { id: 1, name: "Advanced Software Engineering", code: "CSE401" },
   { id: 2, name: "Machine Learning Fundamentals", code: "AI201" },
@@ -37,6 +40,8 @@ const MOCK_STUDENT_GROUPS = [
 
 interface Props {
   timetableId: number;
+  requirementToEdit: CourseRequirementDto | null;
+  onCancelEdit: () => void;
 }
 
 const getInitialState = (
@@ -55,13 +60,32 @@ const getInitialState = (
   schedulingPreferences: [],
 });
 
-const CourseRequirementForm: React.FC<Props> = ({ timetableId }) => {
-  const { addRequirement, isLoading } = useCourseRequirementStore();
+const CourseRequirementForm: React.FC<Props> = ({
+  timetableId,
+  requirementToEdit,
+  onCancelEdit,
+}) => {
+  const { addRequirement, updateRequirement, isLoading } =
+    useCourseRequirementStore();
   const { structure: timetableStructure } = useTimetableStore();
 
   const [formState, setFormState] = useState<CreateCourseRequirementRequest>(
     getInitialState(timetableId),
   );
+
+  const isEditMode = requirementToEdit !== null;
+
+  useEffect(() => {
+    if (isEditMode) {
+      setFormState({
+        ...requirementToEdit,
+        startDate: dayjs(requirementToEdit.startDate),
+        endDate: dayjs(requirementToEdit.endDate),
+      });
+    } else {
+      setFormState(getInitialState(timetableId));
+    }
+  }, [requirementToEdit, isEditMode, timetableId]);
 
   const handleInputChange = (
     field: keyof CreateCourseRequirementRequest,
@@ -92,14 +116,25 @@ const CourseRequirementForm: React.FC<Props> = ({ timetableId }) => {
       endDate: (formState.endDate as Dayjs).format("YYYY-MM-DD"),
     };
 
-    const success = await addRequirement(payload as any);
+    let success = false;
+    if (isEditMode) {
+      success = await updateRequirement(requirementToEdit.id, payload as any);
+    } else {
+      success = await addRequirement(payload as any);
+    }
+
     if (success) {
-      setFormState(getInitialState(timetableId));
+      onCancelEdit();
     }
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Typography variant="h6" gutterBottom>
+        {isEditMode
+          ? `Editing: ${requirementToEdit.courseName}`
+          : "Add New Requirement"}
+      </Typography>
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12 }}>
@@ -241,17 +276,29 @@ const CourseRequirementForm: React.FC<Props> = ({ timetableId }) => {
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              disabled={
-                isLoading || !formState.courseId || !formState.studentGroupId
-              }
-              sx={{ mt: 2 }}
-            >
-              {isLoading ? <CircularProgress size={24} /> : "Add Requirement"}
-            </Button>
+            <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={
+                  isLoading || !formState.courseId || !formState.studentGroupId
+                }
+              >
+                {isLoading ? (
+                  <CircularProgress size={24} />
+                ) : isEditMode ? (
+                  "Save Changes"
+                ) : (
+                  "Add Requirement"
+                )}
+              </Button>
+              {isEditMode && (
+                <Button variant="outlined" onClick={onCancelEdit} fullWidth>
+                  Cancel
+                </Button>
+              )}
+            </Stack>
           </Grid>
         </Grid>
       </Box>
