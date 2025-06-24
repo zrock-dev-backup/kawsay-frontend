@@ -25,9 +25,23 @@ const EnrollmentCart: React.FC<Props> = ({
   onSubmit,
   isSubmitting,
 }) => {
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <Box
+        sx={{
+          p: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          bgcolor: "background.paper",
+          position: "sticky",
+          top: 0,
+          zIndex: 2,
+        }}
+      >
+        <Typography variant="h6" align="center">
+          Enrollment Cart
+        </Typography>
+      </Box>
       <List sx={{ flexGrow: 1, overflowY: "auto" }}>
         {cartItems.map((item) => (
           <ListItem
@@ -44,17 +58,28 @@ const EnrollmentCart: React.FC<Props> = ({
             />
           </ListItem>
         ))}
+        {cartItems.length === 0 && (
+          <Typography
+            color="text.secondary"
+            align="center"
+            sx={{ width: "100%", mt: 2 }}
+          >
+            Cart is empty.
+          </Typography>
+        )}
       </List>
-      {cartItems.length === 0 && (
-        <Typography color="text.secondary" align="center">
-          Cart is empty.
-        </Typography>
-      )}
-      <Box sx={{ mt: "auto", p: 1 }}>
-        <Typography
-          variant="caption"
-          gutterBottom
-        >
+      <Box
+        sx={{
+          p: 1,
+          borderTop: 1,
+          borderColor: "divider",
+          bgcolor: "background.paper",
+          position: "sticky",
+          bottom: 0,
+          zIndex: 1,
+        }}
+      >
+        <Typography variant="caption" gutterBottom>
           {` Enrolled (${cartItems.length}/3)`}
         </Typography>
         <Button

@@ -1,5 +1,11 @@
 import React from "react";
-import {Box, Paper, Typography, Divider, CircularProgress} from "@mui/material";
+import {
+  Box,
+  Paper,
+  Typography,
+  Divider,
+  CircularProgress,
+} from "@mui/material";
 import { useStudentEnrollment } from "../../hooks/enrollment/useStudentEnrollment";
 import AvailableClassesList from "./AvailableClassesList";
 import EnrollmentCart from "./EnrollmentCart";
@@ -52,9 +58,6 @@ const EnrollmentWorkspace: React.FC<Props> = ({ hook }) => {
         </Box>
         <Divider orientation="vertical" flexItem />
         <Box sx={{ flex: 1, overflowY: "auto" }}>
-          <Typography variant="h6" gutterBottom>
-            Enrollment Cart
-          </Typography>
           <EnrollmentCart
             cartItems={state.cart}
             onRemove={actions.removeFromCart}
