@@ -55,40 +55,9 @@
             '';
           };
 
-        defaultUrls = {
-          development = "http://localhost:5167";
-          staging = "http://kawsay-test.eastus.cloudapp.azure.com:5167";
-          production = "http://kawsay-test.eastus.cloudapp.azure.com:5167";
-        };
-
-      in
-      {
-        packages = {
-          production = frontendBuilder {
-            environment = "production";
-            apiUrl = defaultUrls.production;
-            academicStructureFlag = "false";
-            endOfModuleFlag = "false";
-          };
-
-          staging = frontendBuilder {
-            environment = "staging";
-            apiUrl = defaultUrls.staging;
-            academicStructureFlag = "true";
-            endOfModuleFlag = "true";
-          };
-
-          development = frontendBuilder {
-            environment = "development";
-            apiUrl = defaultUrls.development;
-            academicStructureFlag = "true";
-            endOfModuleFlag = "true";
-          };
-
-          default = self.packages.${system}.development;
-
-          dockerBuild = pkgs.dockerTools.buildImage {
-            name = "1kawsay/frontend-kawsay";
+        dockerImageBuilder = { environment, frontendPackage, tag ? "latest" }:
+          pkgs.dockerTools.buildImage {
+            name = "1kawsay/frontend";
             tag = "latest";
 
             copyToRoot = pkgs.buildEnv {
@@ -137,7 +106,7 @@
                   server {
                     listen 80;
                     server_name localhost;
-                    root ${self.packages.${system}.production};
+                    root ${frontendPackage};
                     index index.html;
 
                     location / {
@@ -151,6 +120,53 @@
               };
             };
           };
+
+        defaultUrls = {
+          development = "http://localhost:5167";
+          staging = "http://localhost:5167";
+          production = "http://kawsay-test.eastus.cloudapp.azure.com:5167";
+        };
+
+      in
+      {
+        packages = {
+          production = frontendBuilder {
+            environment = "production";
+            apiUrl = defaultUrls.production;
+            academicStructureFlag = "false";
+            endOfModuleFlag = "false";
+          };
+
+          staging = frontendBuilder {
+            environment = "staging";
+            apiUrl = defaultUrls.staging;
+            academicStructureFlag = "false";
+            endOfModuleFlag = "false";
+          };
+
+          development = frontendBuilder {
+            environment = "development";
+            apiUrl = defaultUrls.development;
+            academicStructureFlag = "true";
+            endOfModuleFlag = "true";
+          };
+
+          default = self.packages.${system}.development;
+
+          dockerImageProduction = dockerImageBuilder {
+            environment = "production";
+            frontendPackage = self.packages.${system}.production;
+          };
+
+          dockerImageStaging = dockerImageBuilder {
+            environment = "staging";
+            frontendPackage = self.packages.${system}.staging;
+          };
+
+          dockerImageDevelopment = dockerImageBuilder {
+            environment = "development";
+            frontendPackage = self.packages.${system}.development;
+          };
         };
 
         devShells.default = pkgs.mkShell {
@@ -159,6 +175,10 @@
           ];
           VITE_FEATURE_ACADEMIC_STRUCTURE_ENABLED = "true";
           VITE_FEATURE_END_OF_MODULE_ENABLED = "true";
+
+          shellHook = ''
+              exec elvish
+          '';
         };
 
         apps = {
