@@ -19,7 +19,7 @@ interface TimetableHeaderProps {
   onGenerate: () => void;
 }
 
-const isTimetableGenerated = true;
+const isTimetableGenerated = false;
 const TimetableHeader: React.FC<TimetableHeaderProps> = ({
   calendarControls,
   isGenerating,
@@ -73,18 +73,22 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
             <ToggleButton value="month">Month</ToggleButton>
           </ToggleButtonGroup>
         )}
-        {isTimetableGenerated &&
-            <Button
-                variant="contained"
-                startIcon={
-                  isGenerating ? <CircularProgress size={20} /> : <AutoAwesomeIcon />
-                }
-                onClick={onGenerate}
-                disabled={true}
-            >
-              {isGenerating ? "Generating..." : "Generate Schedule"}
-            </Button>
-        }
+        {isTimetableGenerated && (
+          <Button
+            variant="contained"
+            startIcon={
+              isGenerating ? (
+                <CircularProgress size={20} />
+              ) : (
+                <AutoAwesomeIcon />
+              )
+            }
+            onClick={onGenerate}
+            disabled={true}
+          >
+            {isGenerating ? "Generating..." : "Generate Schedule"}
+          </Button>
+        )}
       </Stack>
     </Stack>
   );
