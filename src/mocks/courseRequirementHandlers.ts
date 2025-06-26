@@ -1,7 +1,10 @@
 import { delay, http, HttpResponse } from "msw";
 import { API_BASE_URL } from "../services/api.helpers.ts";
-import { db } from "./db.ts"; // Import our centralized database
-import type { CreateCourseRequirementRequest, CourseRequirementDto } from "../interfaces/courseRequirementDtos.ts";
+import { db } from "./db.ts";
+import type {
+  CreateCourseRequirementRequest,
+  CourseRequirementDto,
+} from "../interfaces/courseRequirementDtos.ts";
 
 const REQ_URL = `${API_BASE_URL}/requirements`;
 
@@ -16,7 +19,7 @@ export const courseRequirementHandlers = [
     }
 
     const filtered = db.requirements.filter(
-      (r) => r.timetableId === Number(timetableId)
+      (r) => r.timetableId === Number(timetableId),
     );
     await delay(150);
     return HttpResponse.json(filtered);
@@ -51,7 +54,8 @@ export const courseRequirementHandlers = [
   // PUT /requirements/:id
   http.put(`${REQ_URL}/:id`, async ({ params, request }) => {
     const { id } = params;
-    const data = (await request.json()) as Partial<CreateCourseRequirementRequest>;
+    const data =
+      (await request.json()) as Partial<CreateCourseRequirementRequest>;
     const reqIndex = db.requirements.findIndex((r) => r.id === Number(id));
 
     if (reqIndex === -1) {
@@ -83,7 +87,7 @@ export const courseRequirementHandlers = [
     await delay(200);
     return new HttpResponse(null, { status: 204 });
   }),
-  
+
   http.post(`${REQ_URL}/:id/run-preflight-check`, async ({ params }) => {
     const { id } = params;
     const reqIndex = db.requirements.findIndex((r) => r.id === Number(id));

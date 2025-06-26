@@ -1,4 +1,9 @@
-// src/mocks/db.ts
+import type { Class } from "../interfaces/classDtos.ts";
+import {
+  getMockCourses,
+  getMockTeachers,
+} from "./data/mockCoursesAndTeachers.ts";
+import { getMockClasses } from "./data/mockClasses.ts";
 import type { CourseRequirementDto } from "../interfaces/courseRequirementDtos.ts";
 import type {
   RequirementIssueDto,
@@ -19,7 +24,10 @@ import {
   getMockStudents,
   getMockProposedEnrollments,
 } from "./data/mockStudents.ts";
-import { getMockAvailableClasses } from "./data/mockClasses.ts";
+import { Course, Teacher } from "../interfaces/apiDataTypes.ts";
+import { getMockCohorts } from "./data/mockAcademicStructure.ts";
+import { CohortDetailDto } from "../interfaces/academicStructureDtos.ts";
+import { getMockStudentAudit } from "./data/mockStudentAudit.ts";
 
 class MockDb {
   public timetables: TimetableStructure[];
@@ -27,11 +35,19 @@ class MockDb {
   public requirementIssues: Record<string, RequirementIssueDto[]>;
   public students: StudentDto[];
   public proposedEnrollments: Record<string, ProposedEnrollmentDto[]>;
-  public availableClasses: AvailableClassDto[];
   public studentAudit: StudentAuditDto[];
+  public classes: Class[];
+  public courses: Course[];
+  public teachers: Teacher[];
+  public availableClasses: AvailableClassDto[];
+  public cohorts: CohortDetailDto[];
 
   private nextTimetableId: number;
   private nextRequirementId: number;
+  private nextClassId: number;
+  private nextCohortId: number;
+  private nextGroupId: number;
+  private nextSectionId: number;
 
   constructor() {
     this.timetables = getMockTimetables();
@@ -39,28 +55,27 @@ class MockDb {
     this.requirementIssues = getMockRequirementIssues();
     this.students = getMockStudents();
     this.proposedEnrollments = getMockProposedEnrollments();
-    this.availableClasses = getMockAvailableClasses();
+    this.courses = getMockCourses();
+    this.teachers = getMockTeachers();
+    this.classes = getMockClasses();
+    this.cohorts = getMockCohorts();
+    this.studentAudit = getMockStudentAudit();
+    this.availableClasses = [];
 
     this.nextTimetableId = this.timetables.length + 1;
     this.nextRequirementId = this.requirements.length + 1;
-    this.studentAudit = [
-      {
-        studentId: 1001,
-        studentName: "Jane Doe",
-        studentGroupName: "Group A",
-        status: "Enrolled",
-        lastUpdated: "2023-10-26T10:00:00Z",
-      },
-    ];
+    this.nextClassId = this.classes.length + 1;
+    this.nextCohortId = this.cohorts.length + 1;
+    this.nextGroupId = 1000;
+    this.nextSectionId = 10000;
   }
 
-  public getNextTimetableId(): number {
-    return this.nextTimetableId++;
-  }
-
-  public getNextRequirementId(): number {
-    return this.nextRequirementId++;
-  }
+  public getNextTimetableId = (): number => this.nextTimetableId++;
+  public getNextRequirementId = (): number => this.nextRequirementId++;
+  public getNextClassId = (): number => this.nextClassId++;
+  public getNextCohortId = (): number => this.nextCohortId++;
+  public getNextGroupId = (): number => this.nextGroupId++;
+  public getNextSectionId = (): number => this.nextSectionId++;
 }
 
 export const db = new MockDb();

@@ -19,12 +19,15 @@ export const eomHandlers = [
     });
   }),
 
-  http.post(`${API_BASE_URL}/eom/:timetableId/prepare-enrollments`, async ({ request }) => {
-    const body = (await request.json()) as { destinationTimetableId: string };
-    await delay(1500);
-    return HttpResponse.json({
-      message: `Successfully prepared 23 enrollment proposals for Module ${body.destinationTimetableId}.`,
-      proposalsCreated: 23,
-    });
-  }),
+  http.post(
+    `${API_BASE_URL}/eom/:timetableId/prepare-enrollments`,
+    async ({ request }) => {
+      const body = (await request.json()) as { destinationTimetableId: string };
+      await delay(1500);
+      return HttpResponse.json({
+        message: `Successfully prepared 23 enrollment proposals for Module ${body.destinationTimetableId}.`,
+        proposalsCreated: 23,
+      });
+    },
+  ),
 ];

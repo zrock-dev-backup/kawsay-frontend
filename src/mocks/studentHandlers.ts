@@ -7,17 +7,24 @@ export const studentHandlers = [
     return HttpResponse.json(db.students);
   }),
 
-  http.get(`${API_BASE_URL}/Students/:studentId/proposed-enrollments`, async ({ params }) => {
-    const { studentId } = params;
-    const studentProposals = db.proposedEnrollments[studentId as string] || [];
-    await delay(150);
-    return HttpResponse.json(studentProposals);
-  }),
+  http.get(
+    `${API_BASE_URL}/Students/:studentId/proposed-enrollments`,
+    async ({ params }) => {
+      const { studentId } = params;
+      const studentProposals =
+        db.proposedEnrollments[studentId as string] || [];
+      await delay(150);
+      return HttpResponse.json(studentProposals);
+    },
+  ),
 
-  http.get(`${API_BASE_URL}/Students/:studentId/available-classes`, async () => {
-    await delay(250);
-    return HttpResponse.json(db.availableClasses);
-  }),
+  http.get(
+    `${API_BASE_URL}/Students/:studentId/available-classes`,
+    async () => {
+      await delay(250);
+      return HttpResponse.json(db.availableClasses);
+    },
+  ),
 
   http.post(`${API_BASE_URL}/students/bulk-import`, async ({ request }) => {
     const body = (await request.json()) as { id: number; name: string }[];

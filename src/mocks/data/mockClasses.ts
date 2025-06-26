@@ -1,25 +1,20 @@
-import type { AvailableClassDto } from "../../interfaces/classDtos";
+import type { Class } from "../../interfaces/classDtos";
 
-export const getMockAvailableClasses = (): AvailableClassDto[] => [
+export const getMockClasses = (): Class[] => [
   {
-    id: 101,
-    courseId: 1,
-    teacherId: 1,
-    courseCode: "CSE401",
-    courseName: "Advanced Software Engineering",
-    teacherName: "Dr. Smith",
-    capacity: 30,
-    currentEnrollment: 25,
-    isEligible: true,
-    isRetake: false,
-    ineligibilityReason: null,
+    id: 1,
+    timetableId: 1, // Belongs to the "Draft" timetable
     length: 2,
     frequency: 2,
     classType: "Masterclass",
-    startDate: null,
-    endDate: null,
-    timetableId: 1,
+    startDate: "2025-09-08T00:00:00.000Z",
+    endDate: "2025-11-03T00:00:00.000Z",
+    courseId: 1,
+    courseName: "Advanced Software Engineering",
+    courseCode: "CSE401",
+    teacherId: 1,
+    teacherName: "Dr. Evelyn Reed",
     classOccurrences: [],
-    periodPreferences: [],
+    periodPreferences: [{ dayId: 1, startPeriodId: 2 }],
   },
 ];

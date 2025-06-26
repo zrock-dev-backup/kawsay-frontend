@@ -39,7 +39,7 @@ export const schedulingHandlers = [
         },
         {
           dayId: 3,
-          startPeriodId: 5,
+          startPeriodId: 1,
           satisfaction: {
             score: 75,
             details: [
@@ -52,7 +52,7 @@ export const schedulingHandlers = [
           },
         },
         {
-          dayId: 4,
+          dayId: 1,
           startPeriodId: 1,
           satisfaction: {
             score: 75,
