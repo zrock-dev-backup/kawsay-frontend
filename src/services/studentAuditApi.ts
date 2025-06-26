@@ -1,33 +1,12 @@
-import { API_BASE_URL } from "./api.helpers";
+import { API_BASE_URL, handleResponse } from "./api.helpers";
 import type {
-  AuditApiError,
   BulkEnrollmentRequest,
   StudentAuditDto,
 } from "../interfaces/auditDtos";
 
-export async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    let errorData: AuditApiError;
-
-    try {
-      errorData = await response.json();
-    } catch {
-      // Fallback if response body is not valid JSON
-      errorData = {
-        message: `HTTP ${response.status}: ${response.statusText}`,
-        code: response.status.toString(),
-      };
-    }
-
-    throw new Error(errorData.message);
-  }
-
-  return response.json();
-}
-
-export async function fetchStudentAudit(
+export const fetchStudentAudit = async (
   timetableId: string,
-): Promise<StudentAuditDto[]> {
+): Promise<StudentAuditDto[]> => {
   if (!timetableId) {
     throw new Error("Timetable ID is required");
   }
@@ -36,11 +15,11 @@ export async function fetchStudentAudit(
     `${API_BASE_URL}/timetables/${timetableId}/student-audit`,
   );
   return handleResponse<StudentAuditDto[]>(response);
-}
+};
 
-export async function bulkEnroll(
+export const bulkEnroll = async (
   request: BulkEnrollmentRequest,
-): Promise<void> {
+): Promise<void> => {
   if (!request.timetableId || !request.studentIds.length) {
     throw new Error("Valid timetable ID and student IDs are required");
   }
@@ -55,9 +34,9 @@ export async function bulkEnroll(
   );
 
   return handleResponse<void>(response);
-}
+};
 
-export async function resolveIssues(studentId: number): Promise<void> {
+export const resolveIssues = async (studentId: number): Promise<void> => {
   if (!studentId || studentId <= 0) {
     throw new Error("Valid student ID is required");
   }
@@ -71,4 +50,4 @@ export async function resolveIssues(studentId: number): Promise<void> {
   );
 
   return handleResponse<void>(response);
-}
+};

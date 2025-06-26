@@ -107,9 +107,6 @@ const TimetableLifecycleWizard: React.FC = () => {
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ mt: 4, minHeight: "60vh" }}>
-        {renderStepContent(wizardStep)}
-      </Box>
       <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 2 }}>
         <Button
           color="inherit"
@@ -128,6 +125,9 @@ const TimetableLifecycleWizard: React.FC = () => {
             Next
           </Button>
         )}
+      </Box>
+      <Box sx={{ mt: 4, minHeight: "60vh" }}>
+        {renderStepContent(wizardStep)}
       </Box>
     </Paper>
   );
