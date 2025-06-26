@@ -1,6 +1,15 @@
-// src/components/common/ErrorBoundary.tsx
 import { Component, ErrorInfo, ReactNode } from "react";
-import { Alert, AlertTitle, Box, Button, Typography } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 interface Props {
   children?: ReactNode;
@@ -9,6 +18,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  errorInfo?: ErrorInfo;
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -17,42 +27,93 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // You can also log the error to an error reporting service
+    this.setState({ errorInfo });
     console.error("Uncaught error:", error, errorInfo);
   }
-  
+
   private handleReload = () => {
-      window.location.reload();
-  }
+    window.location.reload();
+  };
 
   public render() {
     if (this.state.hasError) {
       return (
-        <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
-            <Alert 
-                severity="error"
-                action={
-                    <Button color="inherit" size="small" onClick={this.handleReload}>
-                        Reload Page
-                    </Button>
-                }
-                sx={{ maxWidth: '600px' }}
-            >
-                <AlertTitle>Something went wrong.</AlertTitle>
-                <Typography variant="body2">
-                    An unexpected error occurred. Please try reloading the page.
-                </Typography>
+        <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={this.handleReload}>
+                Reload Page
+              </Button>
+            }
+            sx={{ maxWidth: "800px", width: "100%" }}
+          >
+            <AlertTitle>Something went wrong.</AlertTitle>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              An unexpected error occurred. Please try reloading the page.
+            </Typography>
+
+            {/* Error Details Accordion */}
+            <Accordion sx={{ mt: 2 }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="subtitle2">Error Details</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
                 {this.state.error && (
-                    <Typography variant="caption" display="block" sx={{ mt: 2, whiteSpace: 'pre-wrap', opacity: 0.7 }}>
-                        {this.state.error.toString()}
+                  <Box sx={{ mb: 2 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: "bold", mb: 1 }}
+                    >
+                      Error Message:
                     </Typography>
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      sx={{
+                        whiteSpace: "pre-wrap",
+                        backgroundColor: "rgba(0,0,0,0.05)",
+                        p: 1,
+                        borderRadius: 1,
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {this.state.error.toString()}
+                    </Typography>
+                  </Box>
                 )}
-            </Alert>
+
+                {this.state.errorInfo?.componentStack && (
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: "bold", mb: 1 }}
+                    >
+                      Component Stack:
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      sx={{
+                        whiteSpace: "pre-wrap",
+                        backgroundColor: "rgba(0,0,0,0.05)",
+                        p: 1,
+                        borderRadius: 1,
+                        fontFamily: "monospace",
+                        fontSize: "0.7rem",
+                      }}
+                    >
+                      {this.state.errorInfo.componentStack}
+                    </Typography>
+                  </Box>
+                )}
+              </AccordionDetails>
+            </Accordion>
+          </Alert>
         </Box>
       );
     }
