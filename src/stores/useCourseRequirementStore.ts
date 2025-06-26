@@ -8,8 +8,6 @@ import {
   fetchRequirements,
   updateRequirement,
   deleteRequirement,
-} from "../services/courseRequirementApi.ts";
-import {
   fetchRequirementById,
   runPreflightCheck,
 } from "../services/courseRequirementsApi.ts";
