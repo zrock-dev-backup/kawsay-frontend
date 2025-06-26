@@ -3,12 +3,13 @@ import {
   Box,
   Chip,
   Divider,
-  Grid,
   IconButton,
   Modal,
   Typography,
+  Stack,
+  Paper,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import { Close as CloseIcon } from "@mui/icons-material";
 import type { CourseRequirementDto } from "../../interfaces/courseRequirementDtos";
 import dayjs from "dayjs";
 
@@ -18,19 +19,17 @@ interface Props {
   onClose: () => void;
 }
 
-const style = {
-  position: "absolute" as "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: { xs: "95%", sm: 500, md: 600 },
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-  maxHeight: "90vh",
-  overflowY: "auto",
-};
+const DetailItem: React.FC<{ label: string; children: React.ReactNode }> = ({
+  label,
+  children,
+}) => (
+  <Box>
+    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+      {label}
+    </Typography>
+    <Box mt={0.5}>{children}</Box>
+  </Box>
+);
 
 const RequirementDetailsModal: React.FC<Props> = ({
   requirement,
@@ -39,92 +38,124 @@ const RequirementDetailsModal: React.FC<Props> = ({
 }) => {
   if (!requirement) return null;
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority.toLowerCase()) {
+      case "high":
+        return "error";
+      case "medium":
+        return "warning";
+      case "low":
+        return "success";
+      default:
+        return "default";
+    }
+  };
+
   return (
     <Modal
       open={open}
       onClose={onClose}
-      aria-labelledby="requirement-details-modal-title"
+      aria-labelledby="requirement-details-title"
     >
-      <Box sx={style}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
+      <Paper
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "min(95vw, 500px)",
+          maxHeight: "90vh",
+          overflow: "auto",
+          p: 3,
+        }}
+      >
+        {/* Header */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
         >
           <Typography
-            id="requirement-details-modal-title"
+            id="requirement-details-title"
             variant="h6"
-            component="h2"
+            fontWeight="bold"
           >
-            Requirement Details
+            Course Requirement
           </Typography>
-          <IconButton onClick={onClose} aria-label="close">
+          <IconButton onClick={onClose} size="small">
             <CloseIcon />
           </IconButton>
-        </Box>
-        <Divider sx={{ mb: 2 }} />
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="body1">
-              <strong>Course:</strong> {requirement.courseName}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="body1">
-              <strong>For Group:</strong> {requirement.studentGroupName}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <Typography variant="body1">
-              <strong>Type:</strong> {requirement.classType}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <Typography variant="body1">
-              <strong>Priority:</strong>{" "}
-              <Chip label={requirement.priority} size="small" />
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <Typography variant="body1">
-              <strong>Frequency:</strong> {requirement.frequency} per week
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <Typography variant="body1">
-              <strong>Length:</strong> {requirement.length} period(s)
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="body1">
-              <strong>Term:</strong>{" "}
+        </Stack>
+
+        <Divider sx={{ mb: 3 }} />
+
+        {/* Content */}
+        <Stack spacing={2.5}>
+          <DetailItem label="Course">
+            <Typography variant="h6">{requirement.courseName}</Typography>
+          </DetailItem>
+
+          <DetailItem label="Student Group">
+            <Typography>{requirement.studentGroupName}</Typography>
+          </DetailItem>
+
+          <Stack direction="row" spacing={3}>
+            <DetailItem label="Class Type">
+              <Typography>{requirement.classType}</Typography>
+            </DetailItem>
+            <DetailItem label="Priority">
+              <Chip
+                label={requirement.priority}
+                color={getPriorityColor(requirement.priority)}
+                size="small"
+                variant="outlined"
+              />
+            </DetailItem>
+          </Stack>
+
+          <Stack direction="row" spacing={3}>
+            <DetailItem label="Frequency">
+              <Typography>{requirement.frequency} times/week</Typography>
+            </DetailItem>
+            <DetailItem label="Duration">
+              <Typography>
+                {requirement.length} period{requirement.length !== 1 ? "s" : ""}
+              </Typography>
+            </DetailItem>
+          </Stack>
+
+          <DetailItem label="Term Period">
+            <Typography>
               {dayjs(requirement.startDate).format("MMM D, YYYY")} to{" "}
               {dayjs(requirement.endDate).format("MMM D, YYYY")}
             </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="body1" sx={{ mt: 1 }}>
-              <strong>Ideal Preferences:</strong>
-            </Typography>
+          </DetailItem>
+
+          <DetailItem label="Scheduling Preferences">
             {requirement.schedulingPreferences.length > 0 ? (
-              requirement.schedulingPreferences.map((p) => (
-                <Chip
-                  key={`${p.dayId}-${p.startPeriodId}`}
-                  label={`Day ID: ${p.dayId}, Period ID: ${p.startPeriodId}`}
-                  sx={{ mr: 1, mt: 0.5 }}
-                />
-              ))
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {requirement.schedulingPreferences.map((p, index) => (
+                  <Chip
+                    key={`${p.dayId}-${p.startPeriodId}-${index}`}
+                    label={`Day ${p.dayId}, Period ${p.startPeriodId}`}
+                    variant="outlined"
+                    size="small"
+                  />
+                ))}
+              </Stack>
             ) : (
-              <Typography variant="body2" color="text.secondary">
-                None specified.
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                fontStyle="italic"
+              >
+                None specified
               </Typography>
             )}
-          </Grid>
-        </Grid>
-      </Box>
+          </DetailItem>
+        </Stack>
+      </Paper>
     </Modal>
   );
 };
