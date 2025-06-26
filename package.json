@@ -18,6 +18,8 @@
     "@mui/material": "^7.0.2",
     "@mui/x-date-pickers": "^8.0.0",
     "@mui/x-date-pickers-pro": "^8.5.1",
+    "ag-grid-community": "^34.0.0",
+    "ag-grid-react": "^34.0.0",
     "dayjs": "^1.11.13",
     "papaparse": "^5.5.3",
     "react": "^19.0.0",

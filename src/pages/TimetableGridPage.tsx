@@ -15,17 +15,13 @@ import { useCalendarControls } from "../hooks/timetable/useCalendarControls.ts";
 import TimetableHeader from "../components/timetable/TimetableHeader.tsx";
 import WeekView from "../components/timetable/WeekView.tsx";
 import MonthView from "../components/timetable/MonthView.tsx";
-import ClassManagementTab from "./ClassManagementTab.tsx";
 import AcademicStructureManager from "../components/academic-structure/AcademicStructureManager.tsx";
 import { useTimetableStore } from "../stores/useTimetableStore.ts";
 import ClassDetailsModal from "../components/ClassDetailsModal.tsx";
 import type { Class } from "../interfaces/classDtos.ts";
 import CourseRequirementsTab from "./CourseRequirementsTab.tsx";
 import AssistedSchedulingTab from "./AssistedSchedulingTab.tsx";
-
-// --- FEATURE FLAG ---
-const isAcademicStructureEnabled =
-  import.meta.env.VITE_FEATURE_ACADEMIC_STRUCTURE_ENABLED === "true";
+import { StudentAuditTab } from "../components/audit/StudentAuditTab";
 
 const useDetailsModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,10 +38,10 @@ const useDetailsModal = () => {
 };
 
 enum TabIndex {
-  CLASS_MANAGEMENT = 0,
-  ACADEMIC_STRUCTURE = 1,
-  COURSE_REQUIREMENTS = 2,
-  ASSISTED_SCHEDULING = 3,
+  ACADEMIC_STRUCTURE = 0,
+  COURSE_REQUIREMENTS = 1,
+  ASSISTED_SCHEDULING = 2,
+  AUDIT_STUDENTS = 3,
   SCHEDULE = 4,
 }
 
@@ -155,7 +151,9 @@ const TimetableGridPage: React.FC = () => {
         )}
 
         <TimetableHeader
-          calendarControls={activeTab === TabIndex.SCHEDULE ? calendarControls : { view: null }}
+          calendarControls={
+            activeTab === TabIndex.SCHEDULE ? calendarControls : { view: null }
+          }
           isGenerating={isGenerating}
           onGenerate={() => generateSchedule(id!)}
         />
@@ -168,11 +166,10 @@ const TimetableGridPage: React.FC = () => {
               aria-label="timetable view tabs"
               variant="fullWidth"
             >
-              {/*Class management will be deprecated*/}
-              <Tab label="Class Management" />
               <Tab label="Academic structure management" />
               <Tab label="Module requirements" />
               <Tab label="Scheduling Assistant" />
+              <Tab label="Student Enrollment Audit" />
               <Tab label="Schedule" />
             </Tabs>
           </Box>
@@ -195,10 +192,19 @@ const TimetableGridPage: React.FC = () => {
                 onLessonClick={openDetailsModal}
               />
             ))}
-          {activeTab === TabIndex.CLASS_MANAGEMENT && <ClassManagementTab timetableId={id!} />}
-          {activeTab === TabIndex.ACADEMIC_STRUCTURE && <AcademicStructureManager />}
-          {activeTab === TabIndex.COURSE_REQUIREMENTS && <CourseRequirementsTab timetableId={id!} />}
-          {activeTab === TabIndex.ASSISTED_SCHEDULING && <AssistedSchedulingTab />}
+          {activeTab === TabIndex.ACADEMIC_STRUCTURE && (
+            <AcademicStructureManager />
+          )}
+          {activeTab === TabIndex.COURSE_REQUIREMENTS && (
+            <CourseRequirementsTab timetableId={id!} />
+          )}
+          {activeTab === TabIndex.ASSISTED_SCHEDULING && (
+            <AssistedSchedulingTab />
+          )}
+
+          {activeTab === TabIndex.AUDIT_STUDENTS && (
+            <StudentAuditTab timetableId={id!} />
+          )}
         </Box>
       </Container>
 

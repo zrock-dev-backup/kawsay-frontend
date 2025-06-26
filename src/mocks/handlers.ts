@@ -6,6 +6,11 @@ import type {
   StudentDto,
 } from "../interfaces/studentDtos";
 import type { AvailableClassDto } from "../interfaces/classDtos";
+import {
+  RequirementIssueDto,
+  StudentAuditDto,
+} from "../interfaces/auditDtos.ts";
+import { CourseRequirementDto } from "../interfaces/courseRequirementDtos.ts";
 
 const mockStudents: StudentDto[] = [
   {
@@ -155,6 +160,102 @@ const mockAvailableClasses: AvailableClassDto[] = [
   },
 ];
 
+const mockCourseRequirements: CourseRequirementDto[] = [
+  {
+    id: 1,
+    timetableId: 1,
+    courseId: 1,
+    courseName: "Advanced Software Engineering",
+    studentGroupId: 101,
+    studentGroupName: "Fall 2025 - Group A",
+    classType: "Masterclass",
+    length: 2,
+    frequency: 2,
+    priority: "High",
+    requiredTeacherId: null,
+    startDate: "2025-09-01",
+    endDate: "2025-12-15",
+    schedulingPreferences: [],
+    eligibilitySummary: null,
+  },
+  {
+    id: 2,
+    timetableId: 1,
+    courseId: 2,
+    courseName: "Machine Learning Fundamentals",
+    studentGroupId: 101,
+    studentGroupName: "Fall 2025 - Group A",
+    classType: "Masterclass",
+    length: 2,
+    frequency: 1,
+    priority: "Medium",
+    requiredTeacherId: null,
+    startDate: "2025-09-01",
+    endDate: "2025-12-15",
+    schedulingPreferences: [],
+    eligibilitySummary: { eligible: 47, total: 50, issues: 3 },
+  },
+];
+
+const mockRequirementIssues: Record<string, RequirementIssueDto[]> = {
+  "2": [
+    // Issues for Requirement ID 2
+    {
+      studentId: 1002,
+      studentName: "Peter Jones",
+      issueType: "Prerequisite",
+      details: "Missing prerequisite: MATH101 - Calculus I",
+    },
+    {
+      studentId: 1025,
+      studentName: "Emily White",
+      issueType: "AdminHold",
+      details: "Financial hold on account.",
+    },
+    {
+      studentId: 1030,
+      studentName: "David Green",
+      issueType: "CourseLoadLimit",
+      details: "Exceeds maximum course load for academic probation status.",
+    },
+  ],
+};
+
+const mockStudentAudit: StudentAuditDto[] = [
+  {
+    studentId: 1001,
+    studentName: "Jane Doe",
+    studentGroupId: 101,
+    studentGroupName: "Group A",
+    status: "ReadyToEnroll",
+    issueCount: 0,
+  },
+  {
+    studentId: 1002,
+    studentName: "Peter Jones",
+    studentGroupId: 101,
+    studentGroupName: "Group A",
+    status: "ActionRequired",
+    issueCount: 1,
+  },
+  {
+    studentId: 1003,
+    studentName: "John Smith",
+    studentGroupId: 102,
+    studentGroupName: "Group B",
+    status: "Enrolled",
+    issueCount: 0,
+  },
+  {
+    studentId: 1025,
+    studentName: "Emily White",
+    studentGroupId: 101,
+    studentGroupName: "Group A",
+    status: "ActionRequired",
+    issueCount: 1,
+  },
+];
+
 export const handlers = [
   http.get(`${API_BASE_URL}/Students`, () => {
     return HttpResponse.json(mockStudents);
@@ -234,4 +335,43 @@ export const handlers = [
       });
     },
   ),
+
+  http.post(
+    `${API_BASE_URL}/requirements/:id/run-preflight-check`,
+    async ({ params }) => {
+      const { id } = params;
+      const reqIndex = mockCourseRequirements.findIndex(
+        (r) => r.id === Number(id),
+      );
+
+      if (reqIndex !== -1) {
+        // Simulate the check by updating the mock data.
+        mockCourseRequirements[reqIndex].eligibilitySummary = {
+          eligible: 47,
+          total: 50,
+          issues: 3,
+        };
+      }
+
+      await delay(1200); // Simulate check duration
+      return new HttpResponse(null, { status: 202 }); // Accepted
+    },
+  ),
+
+  http.get(`${API_BASE_URL}/requirements/:id/issues`, async ({ params }) => {
+    const { id } = params;
+    const issues = mockRequirementIssues[id as string] || [];
+
+    await delay(400);
+    return HttpResponse.json(issues);
+  }),
+
+  http.get(`${API_BASE_URL}/timetables/:id/student-audit`, async () => {
+    await delay(800);
+    return HttpResponse.json(mockStudentAudit);
+  }),
+
+  http.get(`${API_BASE_URL}/requirements`, () => {
+    return HttpResponse.json(mockCourseRequirements);
+  }),
 ];

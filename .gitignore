@@ -26,3 +26,9 @@ files
 *.out
 dev-server.sh
 .env
+
+## Custom
+build.sh
+config.json
+nginx.conf.template
+result
