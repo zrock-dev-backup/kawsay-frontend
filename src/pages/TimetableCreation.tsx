@@ -27,7 +27,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import type {
   CreateTimetableRequest,
   TimetableStructure,
-} from "../interfaces/apiDataTypes";
+} from "../interfaces/timetableDtos.ts";
 import { createTimetable } from "../services/apiService";
 
 dayjs.extend(customParseFormat);

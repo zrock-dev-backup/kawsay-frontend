@@ -1,10 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Box, ToggleButton, Typography } from "@mui/material";
 import dayjs from "dayjs";
-import type {
-  TimetableDay,
-  TimetablePeriod,
-} from "../../interfaces/apiDataTypes.ts";
 import {
   FilterContainer,
   Grid,
@@ -14,6 +10,10 @@ import {
   StyledToggleButtonGroup,
   TimeLabelCell,
 } from "./SlotPicker.styles.ts";
+import {
+  TimetableDay,
+  TimetablePeriod,
+} from "../../interfaces/timetableDtos.ts";
 
 type TimeBlock = "all" | "morning" | "afternoon" | "evening";
 

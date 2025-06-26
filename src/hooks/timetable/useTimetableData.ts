@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
-// CORRECTED: The service functions now live in their own files
 import {
   fetchClassesForTimetable,
   fetchTimetableStructureById,
 } from "../../services/apiService.ts";
 import type { Class } from "../../interfaces/classDtos.ts";
-import type { TimetableStructure } from "../../interfaces/apiDataTypes.ts";
+import { TimetableStructure } from "../../interfaces/timetableDtos.ts";
 
 interface GridCellContent {
   classId: number;

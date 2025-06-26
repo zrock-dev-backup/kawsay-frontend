@@ -15,8 +15,8 @@ import {
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
-import type { TimetableStructure } from "../interfaces/apiDataTypes";
 import { fetchTimetables } from "../services/apiService";
+import { TimetableStructure } from "../interfaces/timetableDtos.ts";
 
 // --- FEATURE FLAG ---
 const isEndOfModuleEnabled =

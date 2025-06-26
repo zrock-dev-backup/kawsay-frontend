@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import dayjs from "dayjs";
-import type {
-  Course,
-  Teacher,
-  TimetableStructure,
-} from "../../interfaces/apiDataTypes";
+import type { Course, Teacher } from "../../interfaces/apiDataTypes";
+import { TimetableStructure } from "../../interfaces/timetableDtos.ts";
 import type { ClassFormState, ClassType } from "../../interfaces/classDtos";
 import {
   createClass,

@@ -1,10 +1,10 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
-import type {
+import {
   TimetableDay,
   TimetablePeriod,
-} from "../../interfaces/apiDataTypes.ts";
+} from "../../interfaces/timetableDtos.ts";
 
 import {
   BackgroundCell,

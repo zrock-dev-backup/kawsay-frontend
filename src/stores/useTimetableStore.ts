@@ -1,11 +1,11 @@
 import { create } from "zustand";
-import type { TimetableStructure } from "../interfaces/apiDataTypes";
 import type { Class } from "../interfaces/classDtos";
 import {
   fetchClassesForTimetable,
   fetchTimetableStructureById,
   generateScheduleForTimetable,
 } from "../services/apiService";
+import type { TimetableStructure } from "../interfaces/timetableDtos.ts";
 
 interface TimetableState {
   // Data

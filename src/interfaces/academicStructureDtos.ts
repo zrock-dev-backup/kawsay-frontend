@@ -1,4 +1,4 @@
-import type { StudentDto } from "./apiDataTypes.ts";
+import { StudentDto } from "./studentDtos.ts";
 
 export interface CreateCohortRequest {
   name: string;

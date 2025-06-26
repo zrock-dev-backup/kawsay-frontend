@@ -4,14 +4,16 @@ import type {
   BulkAdvanceRequest,
   BulkRetakeRequest,
   Course,
-  CreateTimetableRequest,
   GradeIngestionDto,
   StudentCohortDto,
   Teacher,
-  TimetableStructure,
 } from "../interfaces/apiDataTypes";
 
 import type { Class } from "../interfaces/classDtos";
+import {
+  CreateTimetableRequest,
+  TimetableStructure,
+} from "../interfaces/timetableDtos.ts";
 
 interface GenerateScheduleResponse {
   message: string;
@@ -79,19 +81,6 @@ export const fetchClassById = async (
     `Fetching class by ID ${classId} from ${API_BASE_URL}/class/${classId}`,
   );
   const response = await fetch(`${API_BASE_URL}/class/${classId}`);
-  return handleResponse<Class>(response);
-};
-
-export const createClass = async (data: CreateClassRequest): Promise<Class> => {
-  console.log(`Creating class at ${API_BASE_URL}/class`, data);
-  const response = await fetch(`${API_BASE_URL}/class`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(data),
-  });
   return handleResponse<Class>(response);
 };
 

@@ -1,3 +1,6 @@
+// src/interfaces/apiDataTypes.ts
+// This file is now cleaner, containing more general-purpose DTOs.
+
 export interface Course {
   id: number;
   name: string;
@@ -8,37 +11,6 @@ export interface Teacher {
   id: number;
   name: string;
   type: "Professor" | "Faculty Practitioner";
-}
-
-export interface TimetableDay {
-  id: number;
-  name: string;
-}
-
-export interface TimetablePeriod {
-  id: number;
-  start: string;
-  end: string;
-}
-
-export interface TimetableStructure {
-  id: number;
-  name: string;
-  startDate: string; // Format: "YYYY-MM-DD"
-  endDate: string; // Format: "YYYY-MM-DD"
-  days: TimetableDay[];
-  periods: TimetablePeriod[];
-}
-
-export interface CreateTimetableRequest {
-  name: string;
-  startDate: string; // Format: "YYYY-MM-DD"
-  endDate: string; // Format: "YYYY-MM-DD"
-  days: string[];
-  periods: {
-    start: string;
-    end: string;
-  }[];
 }
 
 export interface ClassOccurrence {
