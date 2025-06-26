@@ -1,6 +1,12 @@
 import type { DayPeriodPreferenceDto } from "./apiDataTypes.ts";
 import type { ClassType } from "./classDtos.ts";
 
+export interface EligibilitySummary {
+  eligible: number;
+  total: number;
+  issues: number;
+}
+
 export interface CourseRequirementDto {
   id: number;
   timetableId: number;
@@ -22,6 +28,7 @@ export interface CourseRequirementDto {
   endDate: string;
 
   schedulingPreferences: DayPeriodPreferenceDto[];
+  eligibilitySummary: EligibilitySummary | null;
 }
 
 export interface CreateCourseRequirementRequest
