@@ -1,10 +1,6 @@
 import { API_BASE_URL, handleResponse } from "./api.helpers";
 import type { Class, ClassFormState } from "../interfaces/classDtos";
 
-interface GenerateScheduleResponse {
-  message: string;
-}
-
 type CreateOrUpdateClassRequest = Omit<ClassFormState, "id">;
 
 export const fetchClassesForTimetable = async (

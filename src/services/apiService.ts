@@ -8,12 +8,11 @@ import type {
   StudentCohortDto,
   Teacher,
 } from "../interfaces/apiDataTypes";
-
-import type { Class } from "../interfaces/classDtos";
-import {
+import type {
   CreateTimetableRequest,
   TimetableStructure,
 } from "../interfaces/timetableDtos.ts";
+import { Class } from "../interfaces/classDtos.ts";
 
 interface GenerateScheduleResponse {
   message: string;
@@ -24,7 +23,6 @@ export const fetchCourses = async (): Promise<Course[]> => {
   const response = await fetch(`${API_BASE_URL}/courses`);
   return handleResponse<Course[]>(response);
 };
-
 export const fetchTeachers = async (): Promise<Teacher[]> => {
   console.log(`Fetching teachers from ${API_BASE_URL}/teachers`);
   const response = await fetch(`${API_BASE_URL}/teachers`);
@@ -32,7 +30,6 @@ export const fetchTeachers = async (): Promise<Teacher[]> => {
 };
 
 export const fetchTimetables = async (): Promise<TimetableStructure[]> => {
-  console.log(`Fetching timetables from ${API_BASE_URL}/timetables`);
   const response = await fetch(`${API_BASE_URL}/timetables`);
   return handleResponse<TimetableStructure[]>(response);
 };
@@ -40,7 +37,6 @@ export const fetchTimetables = async (): Promise<TimetableStructure[]> => {
 export const createTimetable = async (
   data: CreateTimetableRequest,
 ): Promise<TimetableStructure> => {
-  console.log(`Creating timetable at ${API_BASE_URL}/timetable`, data);
   const response = await fetch(`${API_BASE_URL}/timetable`, {
     method: "POST",
     headers: {
@@ -55,10 +51,19 @@ export const createTimetable = async (
 export const fetchTimetableStructureById = async (
   id: string | number,
 ): Promise<TimetableStructure> => {
-  console.log(
-    `Fetching timetable structure by ID ${id} from ${API_BASE_URL}/timetable/${id}`,
-  );
   const response = await fetch(`${API_BASE_URL}/timetable/${id}`);
+  return handleResponse<TimetableStructure>(response);
+};
+
+export const publishTimetable = async (
+  timetableId: string | number,
+): Promise<TimetableStructure> => {
+  const response = await fetch(
+    `${API_BASE_URL}/timetable/${timetableId}/publish`,
+    {
+      method: "POST",
+    },
+  );
   return handleResponse<TimetableStructure>(response);
 };
 
@@ -73,17 +78,6 @@ export const fetchClassesForTimetable = async (
   );
   return handleResponse<Class[]>(response);
 };
-
-export const fetchClassById = async (
-  classId: string | number,
-): Promise<Class> => {
-  console.log(
-    `Fetching class by ID ${classId} from ${API_BASE_URL}/class/${classId}`,
-  );
-  const response = await fetch(`${API_BASE_URL}/class/${classId}`);
-  return handleResponse<Class>(response);
-};
-
 export const generateScheduleForTimetable = async (
   timetableId: string | number,
 ): Promise<GenerateScheduleResponse> => {

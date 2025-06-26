@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import type { Class } from "../interfaces/classDtos";
+import { fetchClassesForTimetable } from "../services/apiClassService";
 import {
-  fetchClassesForTimetable,
   fetchTimetableStructureById,
-  generateScheduleForTimetable,
-} from "../services/apiService";
+  publishTimetable as apiPublishTimetable,
+} from "../services/timetableApi";
+import { generateScheduleForTimetable } from "../services/apiService"; // This could also be moved
 import type { TimetableStructure } from "../interfaces/timetableDtos.ts";
 
 interface TimetableState {
@@ -18,7 +19,9 @@ interface TimetableState {
   activeTab: number;
   wizardStep: number;
   isGenerating: boolean;
+  isPublishing: boolean;
   generateStatus: { type: "success" | "error"; message: string } | null;
+  publishError: string | null;
 
   // Actions
   fetchTimetableData: (timetableId: string) => Promise<void>;
@@ -26,7 +29,9 @@ interface TimetableState {
   setWizardStep: (step: number) => void;
   goToNextWizardStep: () => void;
   generateSchedule: (timetableId: string) => Promise<void>;
+  publishTimetable: (timetableId: string) => Promise<void>;
   clearGenerateStatus: () => void;
+  clearPublishError: () => void; // NEW
   refreshData: () => void;
 }
 
@@ -39,11 +44,13 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   activeTab: 0,
   wizardStep: 0,
   isGenerating: false,
+  isPublishing: false,
   generateStatus: null,
+  publishError: null,
 
   // Actions
   fetchTimetableData: async (timetableId: string) => {
-    set({ loading: true, error: null, wizardStep: 0 }); // Reset wizard on fetch
+    set({ loading: true, error: null, wizardStep: 0 });
     try {
       const [structureData, classesData] = await Promise.all([
         fetchTimetableStructureById(timetableId),
@@ -57,6 +64,23 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
       });
     }
   },
+
+  publishTimetable: async (timetableId: string) => {
+    set({ isPublishing: true, publishError: null }); // Clear previous errors on new attempt
+    try {
+      const updatedStructure = await apiPublishTimetable(timetableId);
+      set({ structure: updatedStructure, isPublishing: false });
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "An unknown error occurred during publishing.";
+      set({ isPublishing: false, publishError: message });
+    }
+  },
+
+  clearPublishError: () => set({ publishError: null }),
+
   setActiveTab: (tabIndex: number) => set({ activeTab: tabIndex }),
   setWizardStep: (step: number) => set({ wizardStep: step }),
   goToNextWizardStep: () =>
