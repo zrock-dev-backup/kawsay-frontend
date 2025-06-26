@@ -16,12 +16,15 @@ interface TimetableState {
 
   // Page UI State
   activeTab: number;
+  wizardStep: number;
   isGenerating: boolean;
   generateStatus: { type: "success" | "error"; message: string } | null;
 
   // Actions
   fetchTimetableData: (timetableId: string) => Promise<void>;
   setActiveTab: (tabIndex: number) => void;
+  setWizardStep: (step: number) => void;
+  goToNextWizardStep: () => void;
   generateSchedule: (timetableId: string) => Promise<void>;
   clearGenerateStatus: () => void;
   refreshData: () => void;
@@ -34,12 +37,13 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   loading: true,
   error: null,
   activeTab: 0,
+  wizardStep: 0,
   isGenerating: false,
   generateStatus: null,
 
   // Actions
   fetchTimetableData: async (timetableId: string) => {
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, wizardStep: 0 }); // Reset wizard on fetch
     try {
       const [structureData, classesData] = await Promise.all([
         fetchTimetableStructureById(timetableId),
@@ -54,6 +58,9 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
     }
   },
   setActiveTab: (tabIndex: number) => set({ activeTab: tabIndex }),
+  setWizardStep: (step: number) => set({ wizardStep: step }),
+  goToNextWizardStep: () =>
+    set((state) => ({ wizardStep: state.wizardStep + 1 })),
   generateSchedule: async (timetableId: string) => {
     set({ isGenerating: true, generateStatus: null });
     try {

@@ -1,6 +1,3 @@
-// src/interfaces/apiDataTypes.ts
-// This file is now cleaner, containing more general-purpose DTOs.
-
 export interface Course {
   id: number;
   name: string;

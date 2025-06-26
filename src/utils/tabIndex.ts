@@ -5,3 +5,11 @@ export enum TabIndex {
   AUDIT_STUDENTS = 3,
   SCHEDULE = 4,
 }
+
+export enum TimetableWizardIndex {
+  ACADEMIC_STRUCTURE = 0,
+  COURSE_REQUIREMENTS = 1,
+  ASSISTED_SCHEDULING = 2,
+  AUDIT_STUDENTS = 3,
+  SCHEDULE = 4,
+}
