@@ -7,7 +7,7 @@ import {
   createStagedPlacement,
   deleteStagedPlacement,
   fetchValidSlots,
-  finalizeSchedule,
+  finalizeSchedule as apiFinalizeSchedule,
 } from "../services/schedulingApi.ts";
 
 interface SchedulingState {
@@ -17,12 +17,14 @@ interface SchedulingState {
   isLoading: boolean;
   isFinalizing: boolean;
   error: string | null;
+  lastFinalizationResult: { message: string; classesCreated: number } | null;
 
   selectRequirement: (id: number | null) => Promise<void>;
   stagePlacement: (dayId: number, startPeriodId: number) => Promise<void>;
   unstagePlacement: (placementId: number) => Promise<void>;
-  finalizeSchedule: (timetableId: number) => Promise<string | null>;
+  finalizeSchedule: (timetableId: number) => Promise<boolean>;
   reset: () => void;
+  clearFinalizationResult: () => void;
 }
 
 export const useSchedulingStore = create<SchedulingState>((set, get) => ({
@@ -32,10 +34,10 @@ export const useSchedulingStore = create<SchedulingState>((set, get) => ({
   isLoading: false,
   isFinalizing: false,
   error: null,
+  lastFinalizationResult: null,
 
   selectRequirement: async (id: number | null) => {
     if (get().selectedRequirementId === id) {
-      // Deselect if clicking the same one
       set({ selectedRequirementId: null, validSlots: [] });
       return;
     }
@@ -102,21 +104,22 @@ export const useSchedulingStore = create<SchedulingState>((set, get) => ({
   },
 
   finalizeSchedule: async (timetableId: number) => {
-    set({ isFinalizing: true, error: null });
+    set({ isFinalizing: true, error: null, lastFinalizationResult: null });
     try {
-      const result = await finalizeSchedule(timetableId);
+      const result = await apiFinalizeSchedule(timetableId);
       set({
         isFinalizing: false,
         stagedPlacements: [],
         validSlots: [],
         selectedRequirementId: null,
+        lastFinalizationResult: result,
       });
-      return result.message;
+      return true;
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Finalization failed.";
       set({ error: message, isFinalizing: false });
-      return null;
+      return false;
     }
   },
 
@@ -128,5 +131,8 @@ export const useSchedulingStore = create<SchedulingState>((set, get) => ({
       isLoading: false,
       isFinalizing: false,
       error: null,
+      lastFinalizationResult: null,
     }),
+
+  clearFinalizationResult: () => set({ lastFinalizationResult: null }),
 }));

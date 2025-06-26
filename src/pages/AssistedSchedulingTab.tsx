@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Grid,
   Typography,
@@ -6,6 +6,11 @@ import {
   Button,
   CircularProgress,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useSchedulingStore } from "../stores/useSchedulingStore.ts";
@@ -16,20 +21,28 @@ import type { CourseRequirementDto } from "../interfaces/courseRequirementDtos.t
 import RequirementDetailsModal from "../components/requirements/RequirementDetailsModal.tsx";
 import ConfirmationDialog from "../components/common/ConfirmationDialog.tsx";
 import { useTimetableStore } from "../stores/useTimetableStore.ts";
+import { useStudentAudit } from "../hooks/useStudentAudit.ts";
 
 const AssistedSchedulingTab: React.FC = () => {
   const { requirements } = useCourseRequirementStore();
-  const { stagedPlacements, isFinalizing, error, reset, finalizeSchedule } =
-    useSchedulingStore();
-  const refreshTimetableData = useTimetableStore((state) => state.refreshData);
-  const timetableId = useTimetableStore((state) => state.structure?.id);
+  const {
+    stagedPlacements,
+    isFinalizing,
+    error,
+    reset,
+    finalizeSchedule,
+    lastFinalizationResult,
+    clearFinalizationResult,
+  } = useSchedulingStore();
+  const { structure, refreshData, setWizardStep } = useTimetableStore();
+  const timetableId = structure?.id;
+  const isWizardMode = structure?.status === "Draft";
+
+  const studentAuditHook = useStudentAudit(timetableId?.toString() ?? "");
 
   const [viewingRequirement, setViewingRequirement] =
     useState<CourseRequirementDto | null>(null);
   const [isConfirmingFinalize, setIsConfirmingFinalize] = useState(false);
-  const [finalizationResult, setFinalizationResult] = useState<string | null>(
-    null,
-  );
 
   useEffect(() => {
     return () => {
@@ -46,19 +59,27 @@ const AssistedSchedulingTab: React.FC = () => {
 
   const handleFinalize = async () => {
     if (!timetableId) return;
-    const result = await finalizeSchedule(timetableId);
-    if (result) {
-      setFinalizationResult(result);
-      refreshTimetableData(); // Refresh the main timetable view with new classes
-    }
     setIsConfirmingFinalize(false);
+
+    const success = await finalizeSchedule(timetableId);
+
+    if (success && isWizardMode) {
+      await studentAuditHook.actions.refetch();
+    } else if (success && !isWizardMode) {
+      refreshData();
+    }
   };
 
-  if (finalizationResult) {
+  const handleProceedToAudit = () => {
+    clearFinalizationResult();
+    setWizardStep(3);
+  };
+
+  if (lastFinalizationResult && !isWizardMode) {
     return (
       <Alert severity="success" sx={{ m: 2 }}>
         <Typography variant="h6">Schedule Finalized!</Typography>
-        {finalizationResult}
+        {lastFinalizationResult.message}
       </Alert>
     );
   }
@@ -89,7 +110,7 @@ const AssistedSchedulingTab: React.FC = () => {
           }
           onClick={() => setIsConfirmingFinalize(true)}
         >
-          Finalize Schedule
+          {isWizardMode ? "Finalize & Proceed" : "Finalize Schedule"}
         </Button>
       </Stack>
 
@@ -123,10 +144,24 @@ const AssistedSchedulingTab: React.FC = () => {
         onClose={() => setIsConfirmingFinalize(false)}
         onConfirm={handleFinalize}
         title="Finalize and Commit Schedule?"
-        description={`You are about to finalize the schedule with ${stagedPlacements.length} classes. This action cannot be undone.`}
+        description={`You are about to finalize the schedule with ${stagedPlacements.length} classes. This will create the classes and generate enrollment proposals for students.`}
         confirmText="Finalize"
         isLoading={isFinalizing}
       />
+      {/* --- Wizard Transition Modal --- */}
+      <Dialog open={!!lastFinalizationResult && isWizardMode}>
+        <DialogTitle>Step Complete: Schedule Built</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {lastFinalizationResult?.message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleProceedToAudit} variant="contained">
+            Proceed to Enrollment Audit
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
