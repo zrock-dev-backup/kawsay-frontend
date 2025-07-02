@@ -1,16 +1,21 @@
 import React from "react";
 import { Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { StudentAuditGrid } from "./StudentAuditGrid";
-import { useStudentAudit } from "../../hooks/useStudentAudit";
+import {
+  UseStudentAuditActions,
+  UseStudentAuditState,
+} from "../../hooks/useStudentAudit";
 import type { AuditStatusFilter } from "../../interfaces/auditDtos";
 
 interface Props {
-  timetableId: string;
+  auditState: UseStudentAuditState;
+  auditActions: UseStudentAuditActions;
 }
 
-export const StudentAuditTab: React.FC<Props> = ({ timetableId }) => {
-  const { state, actions } = useStudentAudit(timetableId);
-
+export const StudentAuditTab: React.FC<Props> = ({
+  auditState: state,
+  auditActions: actions,
+}) => {
   return (
     <Box sx={{ p: 2 }}>
       <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center" }}>

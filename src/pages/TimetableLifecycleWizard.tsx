@@ -37,7 +37,9 @@ const TimetableLifecycleWizard: React.FC = () => {
   const { cohorts } = useAcademicStructure(timetableId);
   const { requirements } = useCourseRequirementStore();
   const { stagedPlacements } = useSchedulingStore();
-  const { state: auditState } = useStudentAudit(timetableId!);
+  const { state: auditState, actions: auditActions } = useStudentAudit(
+    timetableId!,
+  );
   const [isStepComplete, setIsStepComplete] = useState(false);
 
   useEffect(() => {
@@ -59,8 +61,8 @@ const TimetableLifecycleWizard: React.FC = () => {
           auditState.students.length > 0 &&
           auditState.students.every((s) => s.status !== "ReadyToEnroll");
         break;
-      case TimetableWizardIndex.SCHEDULE: // Publish
-        isComplete = true; // Always able to click "publish" if you get here
+      case TimetableWizardIndex.SCHEDULE:
+        isComplete = true; // Always able to click "publish"
         break;
     }
     setIsStepComplete(isComplete);
@@ -83,7 +85,12 @@ const TimetableLifecycleWizard: React.FC = () => {
       case TimetableWizardIndex.ASSISTED_SCHEDULING: // Build Schedule (Completion is handled by the component's internal 'Finalize' action)
         return <AssistedSchedulingTab />;
       case TimetableWizardIndex.AUDIT_STUDENTS: // Audit Enrollments
-        return <StudentAuditTab timetableId={timetableId} />;
+        return (
+          <StudentAuditTab
+            auditState={auditState}
+            auditActions={auditActions}
+          />
+        );
       case TimetableWizardIndex.SCHEDULE: // Publish
         return <Step5_Publish />;
       default:

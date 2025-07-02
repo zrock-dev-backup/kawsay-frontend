@@ -10,7 +10,7 @@ import {
   resolveIssues,
 } from "../services/studentAuditApi";
 
-interface UseStudentAuditState {
+export interface UseStudentAuditState {
   students: StudentAuditDto[];
   allStudents: StudentAuditDto[];
   isLoading: boolean;
@@ -21,7 +21,7 @@ interface UseStudentAuditState {
   lastFetch: Date | null;
 }
 
-interface UseStudentAuditActions {
+export interface UseStudentAuditActions {
   setFilter: (filter: AuditStatusFilter) => void;
   confirmBulkEnrollment: (studentIds: number[]) => Promise<void>;
   resolveStudentIssues: (studentId: number) => Promise<void>;
