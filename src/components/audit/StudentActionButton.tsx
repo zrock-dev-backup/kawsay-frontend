@@ -13,6 +13,8 @@ export const StudentActionButton: React.FC<Props> = React.memo(
   ({ student, isLoading, onAction }) => {
     const config = AUDIT_STATUS_CONFIG[student.status];
 
+    if (!config.actionLabel) return null;
+
     return (
       <Button
         variant="text"

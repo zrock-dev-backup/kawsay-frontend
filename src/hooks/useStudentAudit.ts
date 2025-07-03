@@ -1,13 +1,17 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
-  StudentAuditDto,
   AuditStatusFilter,
+  StudentAuditDto,
 } from "../interfaces/auditDtos";
-
+import type {
+  ResolveIssueRequestDto,
+  StudentIssueDetailDto,
+} from "../interfaces/issueDtos";
 import {
-  fetchStudentAudit,
   bulkEnroll,
-  resolveIssues,
+  fetchStudentAudit,
+  fetchStudentIssues,
+  resolveStudentIssue,
 } from "../services/studentAuditApi";
 
 export interface UseStudentAuditState {
@@ -15,53 +19,68 @@ export interface UseStudentAuditState {
   allStudents: StudentAuditDto[];
   isLoading: boolean;
   isBulkActionLoading: boolean;
-  isResolveActionLoading: Record<number, boolean>;
-  error: string | null;
   filter: AuditStatusFilter;
   lastFetch: Date | null;
+  error: string | null;
+  isResolutionModalOpen: boolean;
+  studentForResolution: StudentAuditDto | null;
+  issueDetails: StudentIssueDetailDto[];
+  isSubmittingResolution: boolean;
+  resolutionError: string | null;
+  resolvingStudentId: number | null;
 }
 
 export interface UseStudentAuditActions {
   setFilter: (filter: AuditStatusFilter) => void;
   confirmBulkEnrollment: (studentIds: number[]) => Promise<void>;
-  resolveStudentIssues: (studentId: number) => Promise<void>;
   refetch: () => Promise<void>;
   clearError: () => void;
+  openResolutionModal: (studentId: number) => Promise<void>;
+  closeResolutionModal: () => void;
+  submitResolution: (payload: ResolveIssueRequestDto) => Promise<boolean>;
 }
+
+const initialState: Omit<UseStudentAuditState, "students"> = {
+  allStudents: [],
+  isLoading: true,
+  isBulkActionLoading: false,
+  error: null,
+  filter: "All",
+  lastFetch: null,
+  isResolutionModalOpen: false,
+  studentForResolution: null,
+  issueDetails: [],
+  isSubmittingResolution: false,
+  resolutionError: null,
+  resolvingStudentId: null,
+};
 
 export function useStudentAudit(timetableId: string): {
   state: UseStudentAuditState;
   actions: UseStudentAuditActions;
 } {
-  const [allStudents, setAllStudents] = useState<StudentAuditDto[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
-  const [isResolveActionLoading, setIsResolveActionLoading] = useState<
-    Record<number, boolean>
-  >({});
-  const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<AuditStatusFilter>("All");
-  const [lastFetch, setLastFetch] = useState<Date | null>(null);
+  const [state, setState] = useState(initialState);
+
+  const setAuditState = (newState: Partial<typeof state>) => {
+    setState((prev) => ({ ...prev, ...newState }));
+  };
 
   const fetchAuditData = useCallback(async () => {
     if (!timetableId) return;
-
-    setIsLoading(true);
-    setError(null);
-
+    setAuditState({ isLoading: true, error: null });
     try {
       const data = await fetchStudentAudit(timetableId);
-      setAllStudents(data);
-      setLastFetch(new Date());
+      setAuditState({
+        allStudents: data,
+        lastFetch: new Date(),
+        isLoading: false,
+      });
     } catch (err) {
       const errorMessage =
         err instanceof Error
           ? err.message
           : "Failed to fetch student audit data";
-      setError(errorMessage);
-      console.error("Student audit fetch error:", err);
-    } finally {
-      setIsLoading(false);
+      setAuditState({ error: errorMessage, isLoading: false });
     }
   }, [timetableId]);
 
@@ -70,89 +89,120 @@ export function useStudentAudit(timetableId: string): {
   }, [fetchAuditData]);
 
   const filteredStudents = useMemo(() => {
-    if (filter === "All") return allStudents;
-    return allStudents.filter((student) => student.status === filter);
-  }, [allStudents, filter]);
+    if (state.filter === "All") return state.allStudents;
+    return state.allStudents.filter(
+      (student) => student.status === state.filter,
+    );
+  }, [state.allStudents, state.filter]);
 
   const confirmBulkEnrollment = useCallback(
     async (studentIds: number[]) => {
       if (!timetableId || studentIds.length === 0) return;
-
-      setIsBulkActionLoading(true);
-      setError(null);
-
+      setAuditState({ isBulkActionLoading: true, error: null });
       try {
         await bulkEnroll({ studentIds, timetableId });
-
-        // Optimistic update
-        setAllStudents((prev) =>
-          prev.map((student) =>
-            studentIds.includes(student.studentId)
-              ? {
-                  ...student,
-                  status: "Enrolled" as const,
-                  lastUpdated: new Date().toISOString(),
-                }
-              : student,
-          ),
-        );
+        await fetchAuditData();
       } catch (err) {
         const errorMessage =
           err instanceof Error
             ? err.message
             : "Failed to confirm bulk enrollment";
-        setError(errorMessage);
+        setAuditState({ error: errorMessage });
         throw err;
       } finally {
-        setIsBulkActionLoading(false);
+        setAuditState({ isBulkActionLoading: false });
       }
     },
-    [timetableId],
+    [timetableId, fetchAuditData],
   );
 
-  const resolveStudentIssues = useCallback(
+  const clearError = useCallback(
+    () => setAuditState({ error: null, resolutionError: null }),
+    [],
+  );
+
+  const setFilter = (newFilter: AuditStatusFilter) =>
+    setAuditState({ filter: newFilter });
+
+  const openResolutionModal = useCallback(
     async (studentId: number) => {
-      setIsResolveActionLoading((prev) => ({ ...prev, [studentId]: true }));
-      setError(null);
+      const student = state.allStudents.find((s) => s.studentId === studentId);
+      if (!student) return;
+
+      setAuditState({
+        resolvingStudentId: studentId,
+        resolutionError: null,
+        studentForResolution: student,
+      });
 
       try {
-        await resolveIssues(studentId);
-        await fetchAuditData(); // Refresh to get updated status
+        const issues = await fetchStudentIssues(studentId);
+        setAuditState({
+          issueDetails: issues,
+          isResolutionModalOpen: true,
+          resolvingStudentId: null,
+        });
       } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Failed to resolve student issues";
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setIsResolveActionLoading((prev) => ({ ...prev, [studentId]: false }));
+        setAuditState({
+          resolutionError:
+            err instanceof Error
+              ? err.message
+              : "Failed to load issue details.",
+          studentForResolution: null,
+          resolvingStudentId: null,
+        });
       }
     },
-    [fetchAuditData],
+    [state.allStudents],
   );
 
-  const clearError = useCallback(() => {
-    setError(null);
+  const closeResolutionModal = useCallback(() => {
+    setAuditState({
+      isResolutionModalOpen: false,
+      studentForResolution: null,
+      issueDetails: [],
+      isSubmittingResolution: false,
+      resolutionError: null,
+    });
   }, []);
+
+  const submitResolution = useCallback(
+    async (payload: ResolveIssueRequestDto): Promise<boolean> => {
+      const studentId = state.studentForResolution?.studentId;
+      if (!studentId) return false;
+
+      setAuditState({ isSubmittingResolution: true, resolutionError: null });
+
+      try {
+        await resolveStudentIssue(studentId, payload);
+        await fetchAuditData();
+        closeResolutionModal();
+        return true;
+      } catch (err) {
+        setAuditState({
+          resolutionError:
+            err instanceof Error ? err.message : "Failed to resolve issue.",
+          isSubmittingResolution: false,
+        });
+        return false;
+      }
+    },
+    [state.studentForResolution, fetchAuditData, closeResolutionModal],
+  );
 
   return {
     state: {
+      ...state,
       students: filteredStudents,
-      allStudents,
-      isLoading,
-      isBulkActionLoading,
-      isResolveActionLoading,
-      error,
-      filter,
-      lastFetch,
     },
     actions: {
       setFilter,
       confirmBulkEnrollment,
-      resolveStudentIssues,
       refetch: fetchAuditData,
       clearError,
+      openResolutionModal,
+      closeResolutionModal,
+      submitResolution,
     },
   };
 }

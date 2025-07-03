@@ -5,7 +5,8 @@ import { schedulingHandlers } from "./schedulingHandlers.ts";
 import { timetableHandlers } from "./timetableHandlers.ts";
 import { classHandlers } from "./classHandlers.ts";
 import { academicStructureHandlers } from "./academicStructureHandlers.ts";
-import { studentAuditHandlers } from "./studentAuditHandlers.ts"; // NEW
+import { studentAuditHandlers } from "./studentAuditHandlers.ts";
+import { issueResolutionHandlers } from "./issueResolutionHandlers.ts";
 
 export const handlers = [
   ...courseRequirementHandlers,
@@ -15,5 +16,6 @@ export const handlers = [
   ...timetableHandlers,
   ...classHandlers,
   ...academicStructureHandlers,
-  ...studentAuditHandlers, // NEW
+  ...studentAuditHandlers,
+  ...issueResolutionHandlers,
 ];

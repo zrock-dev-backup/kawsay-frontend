@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { StudentAuditGrid } from "./StudentAuditGrid";
+import { IssueResolutionModal } from "./IssueResolutionModal";
 import {
   UseStudentAuditActions,
   UseStudentAuditState,
@@ -40,12 +41,13 @@ export const StudentAuditTab: React.FC<Props> = ({
         students={state.students}
         isLoading={state.isLoading}
         isBulkActionLoading={state.isBulkActionLoading}
-        isResolveActionLoading={state.isResolveActionLoading}
-        error={state.error}
-        onResolveIssues={actions.resolveStudentIssues}
+        onResolveIssues={actions.openResolutionModal}
         onBulkConfirm={actions.confirmBulkEnrollment}
         onClearError={actions.clearError}
+        resolvingStudentId={state.resolvingStudentId}
       />
+
+      <IssueResolutionModal state={state} actions={actions} />
     </Box>
   );
 };

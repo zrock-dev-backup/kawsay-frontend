@@ -53,7 +53,7 @@ interface Props {
   students: StudentAuditDto[];
   isLoading: boolean;
   isBulkActionLoading: boolean;
-  isResolveActionLoading: Record<number, boolean>;
+  resolvingStudentId: number | null;
   error: string | null;
   onResolveIssues: (studentId: number) => Promise<void>;
   onBulkConfirm: (studentIds: number[]) => Promise<void>;
@@ -64,7 +64,7 @@ export const StudentAuditGrid: React.FC<Props> = ({
   students,
   isLoading,
   isBulkActionLoading,
-  isResolveActionLoading,
+  resolvingStudentId,
   error,
   onResolveIssues,
   onBulkConfirm,
@@ -77,12 +77,7 @@ export const StudentAuditGrid: React.FC<Props> = ({
 
   const handleRowAction = useCallback(
     async (studentId: number) => {
-      try {
-        await onResolveIssues(studentId);
-        setActionSuccess("Action completed successfully.");
-      } catch (err) {
-        console.error(err);
-      }
+      await onResolveIssues(studentId);
     },
     [onResolveIssues],
   );
@@ -149,14 +144,14 @@ export const StudentAuditGrid: React.FC<Props> = ({
           return (
             <StudentActionButton
               student={params.data}
-              isLoading={isResolveActionLoading[params.data.studentId] || false}
+              isLoading={resolvingStudentId === params.data.studentId}
               onAction={handleRowAction}
             />
           );
         },
       },
     ],
-    [isResolveActionLoading, handleRowAction],
+    [resolvingStudentId, handleRowAction],
   );
 
   const onSelectionChanged = useCallback(

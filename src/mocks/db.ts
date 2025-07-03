@@ -28,6 +28,8 @@ import { Course, Teacher } from "../interfaces/apiDataTypes.ts";
 import { getMockCohorts } from "./data/mockAcademicStructure.ts";
 import { CohortDetailDto } from "../interfaces/academicStructureDtos.ts";
 import { getMockStudentAudit } from "./data/mockStudentAudit.ts";
+import { StudentIssueDetailDto } from "../interfaces/issueDtos.ts";
+import { getMockIssueDetails } from "./data/mockIssueDetails.ts";
 
 class MockDb {
   public timetables: TimetableStructure[];
@@ -41,6 +43,7 @@ class MockDb {
   public teachers: Teacher[];
   public availableClasses: AvailableClassDto[];
   public cohorts: CohortDetailDto[];
+  public issueDetails: Record<string, StudentIssueDetailDto[]>;
 
   private nextTimetableId: number;
   private nextRequirementId: number;
@@ -60,6 +63,7 @@ class MockDb {
     this.classes = getMockClasses();
     this.cohorts = getMockCohorts();
     this.studentAudit = getMockStudentAudit();
+    this.issueDetails = getMockIssueDetails();
     this.availableClasses = [];
 
     this.nextTimetableId = this.timetables.length + 1;
