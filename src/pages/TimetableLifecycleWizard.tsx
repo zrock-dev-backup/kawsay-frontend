@@ -14,11 +14,11 @@ import { useSchedulingStore } from "../stores/useSchedulingStore";
 import { useStudentAudit } from "../hooks/useStudentAudit";
 import { useAcademicStructure } from "../hooks/useAcademicStructure";
 import AcademicStructureManager from "../components/academic-structure/AcademicStructureManager";
-import CourseRequirementsTab from "./CourseRequirementsTab";
 import AssistedSchedulingTab from "./AssistedSchedulingTab";
 import { StudentAuditTab } from "../components/audit/StudentAuditTab";
 import Step5_Publish from "./wizard-steps/Step5_Publish";
 import { TimetableWizardIndex } from "../utils/tabIndex.ts";
+import CourseRequirementsWizardStep from "./wizard-steps/CourseRequirementsWizardStep";
 
 const steps = [
   "Define Academic Structure",
@@ -81,7 +81,7 @@ const TimetableLifecycleWizard: React.FC = () => {
       case TimetableWizardIndex.ACADEMIC_STRUCTURE: // Academic Structure
         return <AcademicStructureManager />;
       case TimetableWizardIndex.COURSE_REQUIREMENTS: // Module Requirements
-        return <CourseRequirementsTab timetableId={timetableId} />;
+        return <CourseRequirementsWizardStep timetableId={timetableId} />;
       case TimetableWizardIndex.ASSISTED_SCHEDULING: // Build Schedule (Completion is handled by the component's internal 'Finalize' action)
         return <AssistedSchedulingTab />;
       case TimetableWizardIndex.AUDIT_STUDENTS: // Audit Enrollments

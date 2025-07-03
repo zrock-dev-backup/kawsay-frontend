@@ -1,0 +1,4 @@
+courseCode,studentGroupName,classType,frequency,length,priority,requiredTeacherId
+CSE401,"Group A",Masterclass,2,2,High,
+AI201,"Group A",Masterclass,1,2,Medium,5
+DB303,"Group B",Lab,1,3,Low,

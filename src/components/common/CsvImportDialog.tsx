@@ -8,34 +8,32 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  LinearProgress,
+  Link,
   Typography,
 } from "@mui/material";
-import { useCsvImporter } from "../../hooks/useCsvImporter";
 import { ImportResultDisplay } from "./ImportResultDisplay";
-import type { IngestionResult } from "../../hooks/useEndOfModule"; // Assuming result format matches
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  config: {
-    endpoint: string;
-    entityName: string;
-  };
-  onComplete: (result: IngestionResult | null) => void;
+  importer: ReturnType<
+    typeof import("../../hooks/useCsvImporter").useCsvImporter
+  >;
+  entityName: string;
+  templatePath: string;
 }
 
 export const CsvImportDialog: React.FC<Props> = ({
   open,
   onClose,
-  config,
-  onComplete,
+  importer,
+  entityName,
+  templatePath,
 }) => {
-  const { state, actions } = useCsvImporter(config);
-  const { file, isParsing, isSubmitting, progress, result, error } = state;
+  const { state, actions } = importer;
+  const { file, isParsing, isSubmitting, result, error } = state;
 
   const handleClose = () => {
-    onComplete(state.result as IngestionResult | null);
     actions.reset();
     onClose();
   };
@@ -44,12 +42,23 @@ export const CsvImportDialog: React.FC<Props> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>Bulk Import {config.entityName}s</DialogTitle>
+      <DialogTitle>Bulk Import {entityName}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
+        )}
+
+        {!result && (
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            Upload a CSV file to bulk create {entityName}. Please ensure the
+            file follows the structure of the provided template.
+            <br />
+            <Link href={templatePath} download>
+              Download Template
+            </Link>
+          </Typography>
         )}
 
         {!isLoading && !result && (
@@ -66,20 +75,12 @@ export const CsvImportDialog: React.FC<Props> = ({
           </Button>
         )}
 
-        {isParsing && (
-          <Box sx={{ width: "100%", mt: 2 }}>
-            <Typography sx={{ mb: 1 }}>Parsing file...</Typography>
-            <LinearProgress
-              variant="determinate"
-              value={progress ? (progress.processed / progress.total) * 100 : 0}
-            />
-          </Box>
-        )}
-
-        {isSubmitting && (
+        {(isParsing || isSubmitting) && (
           <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
             <CircularProgress size={24} sx={{ mr: 2 }} />
-            <Typography>Submitting data to server...</Typography>
+            <Typography>
+              {isParsing ? "Parsing file..." : "Submitting data to server..."}
+            </Typography>
           </Box>
         )}
 
@@ -87,13 +88,15 @@ export const CsvImportDialog: React.FC<Props> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>{result ? "Close" : "Cancel"}</Button>
-        <Button
-          onClick={actions.processImport}
-          variant="contained"
-          disabled={!file || isLoading}
-        >
-          {isLoading ? "Importing..." : "Start Import"}
-        </Button>
+        {!result && (
+          <Button
+            onClick={actions.processImport}
+            variant="contained"
+            disabled={!file || isLoading}
+          >
+            {isLoading ? "Importing..." : "Start Import"}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

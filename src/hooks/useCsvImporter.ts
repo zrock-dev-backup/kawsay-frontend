@@ -1,27 +1,23 @@
 import { useState } from "react";
 import Papa from "papaparse";
-
-interface ImportConfig {
-  endpoint: string;
-}
-
-interface ImportResult {
-  processedCount: number;
-  failedCount: number;
-  errors: { csvRow: number; studentId?: number; error: string }[];
-}
+import type {
+  BulkImportResultDto,
+  BulkRequirementRequestItem,
+} from "../interfaces/bulkImportDtos";
+import { useCourseRequirementStore } from "../stores/useCourseRequirementStore";
 
 interface ProgressState {
   processed: number;
   total: number;
 }
 
-export function useCsvImporter(config: ImportConfig) {
+export function useCsvImporter() {
+  const { bulkAddRequirements, isBulkImporting } = useCourseRequirementStore();
+
   const [file, setFile] = useState<File | null>(null);
   const [isParsing, setIsParsing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState<ProgressState | null>(null);
-  const [result, setResult] = useState<ImportResult | null>(null);
+  const [result, setResult] = useState<BulkImportResultDto | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileSelect = (selectedFile: File | null) => {
@@ -48,37 +44,25 @@ export function useCsvImporter(config: ImportConfig) {
     setResult(null);
     setError(null);
 
-    const data: Record<string, unknown>[] = [];
     Papa.parse(file, {
       worker: true,
       header: true,
       skipEmptyLines: true,
-      chunk: (results, parser) => {
-        setProgress({ processed: results.meta.cursor, total: file.size });
-        data.push(...(results.data as Record<string, unknown>[]));
-      },
-      complete: async () => {
+      dynamicTyping: true, // Automatically convert numbers
+      complete: async (results) => {
         setIsParsing(false);
-        setIsSubmitting(true);
-        try {
-          const response = await fetch(config.endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          });
+        const parsedData = results.data as BulkRequirementRequestItem[];
 
-          if (!response.ok) {
-            throw new Error("A network error occurred during the import.");
-          }
+        if (!parsedData || parsedData.length === 0) {
+          setError("CSV file is empty or could not be parsed.");
+          return;
+        }
 
-          const responseData = (await response.json()) as ImportResult;
-          setResult(responseData);
-        } catch (err) {
-          setError(
-            err instanceof Error ? err.message : "An unknown error occurred.",
-          );
-        } finally {
-          setIsSubmitting(false);
+        const importResult = await bulkAddRequirements(parsedData);
+        if (importResult) {
+          setResult(importResult);
+        } else {
+          setError("An unexpected error occurred during the import process.");
         }
       },
       error: (err) => {
@@ -92,7 +76,7 @@ export function useCsvImporter(config: ImportConfig) {
     state: {
       file,
       isParsing,
-      isSubmitting,
+      isSubmitting: isBulkImporting,
       progress,
       result,
       error,

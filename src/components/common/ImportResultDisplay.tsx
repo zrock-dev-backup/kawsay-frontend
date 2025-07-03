@@ -12,15 +12,10 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-
-interface ImportResult {
-  processedCount: number;
-  failedCount: number;
-  errors: { csvRow: number; studentId?: number; error: string }[];
-}
+import { BulkImportResultDto } from "../../interfaces/bulkImportDtos.ts";
 
 interface Props {
-  result: ImportResult;
+  result: BulkImportResultDto;
 }
 
 export const ImportResultDisplay: React.FC<Props> = ({ result }) => {

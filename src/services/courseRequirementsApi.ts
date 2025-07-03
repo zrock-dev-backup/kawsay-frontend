@@ -4,6 +4,10 @@ import type {
   CreateCourseRequirementRequest,
 } from "../interfaces/courseRequirementDtos";
 import type { RequirementIssueDto } from "../interfaces/auditDtos";
+import type {
+  BulkImportResultDto,
+  BulkRequirementRequestItem,
+} from "../interfaces/bulkImportDtos";
 
 const REQ_URL = `${API_BASE_URL}/requirements`;
 
@@ -63,4 +67,15 @@ export const fetchRequirementIssues = async (
 ): Promise<RequirementIssueDto[]> => {
   const response = await fetch(`${REQ_URL}/${id}/issues`);
   return handleResponse<RequirementIssueDto[]>(response);
+};
+
+export const bulkCreateRequirements = async (
+  data: BulkRequirementRequestItem[],
+): Promise<BulkImportResultDto> => {
+  const response = await fetch(`${REQ_URL}/bulk-import`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<BulkImportResultDto>(response);
 };

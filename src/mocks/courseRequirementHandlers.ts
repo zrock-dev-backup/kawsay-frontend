@@ -2,9 +2,14 @@ import { delay, http, HttpResponse } from "msw";
 import { API_BASE_URL } from "../services/api.helpers.ts";
 import { db } from "./db.ts";
 import type {
-  CreateCourseRequirementRequest,
   CourseRequirementDto,
+  CreateCourseRequirementRequest,
 } from "../interfaces/courseRequirementDtos.ts";
+import type {
+  BulkImportResultDto,
+  BulkRequirementRequestItem,
+} from "../interfaces/bulkImportDtos.ts";
+import dayjs from "dayjs";
 
 const REQ_URL = `${API_BASE_URL}/requirements`;
 
@@ -88,6 +93,13 @@ export const courseRequirementHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
+  http.get(`${REQ_URL}/:id/issues`, async ({ params }) => {
+    const { id } = params;
+    const issues = db.requirementIssues[id as string] || [];
+    await delay(400);
+    return HttpResponse.json(issues);
+  }),
+
   http.post(`${REQ_URL}/:id/run-preflight-check`, async ({ params }) => {
     const { id } = params;
     const reqIndex = db.requirements.findIndex((r) => r.id === Number(id));
@@ -108,5 +120,90 @@ export const courseRequirementHandlers = [
     const issues = db.requirementIssues[id as string] || [];
     await delay(400);
     return HttpResponse.json(issues);
+  }),
+
+  // POST /requirements/bulk-import
+  http.post(`${REQ_URL}/bulk-import`, async ({ request }) => {
+    const requestItems = (await request.json()) as BulkRequirementRequestItem[];
+    const result: BulkImportResultDto = {
+      processedCount: 0,
+      failedCount: 0,
+      errors: [],
+      createdRequirements: [],
+    };
+
+    // Simulate backend processing
+    await delay(800);
+
+    for (const [index, item] of requestItems.entries()) {
+      const csvRow = index + 2; // Assuming header is row 1
+      let validationError = "";
+
+      // 1. Validate Course
+      const course = db.courses.find((c) => c.code === item.courseCode);
+      if (!course) {
+        validationError = `courseCode '${item.courseCode}' not found.`;
+      }
+
+      // 2. Validate Student Group
+      let studentGroup = null;
+      let parentTimetableId = null;
+      if (!validationError) {
+        for (const cohort of db.cohorts) {
+          const foundGroup = cohort.studentGroups.find(
+            (g) => g.name === item.studentGroupName,
+          );
+          if (foundGroup) {
+            studentGroup = foundGroup;
+            parentTimetableId = cohort.timetableId;
+            break;
+          }
+        }
+        if (!studentGroup) {
+          validationError = `studentGroupName '${item.studentGroupName}' not found.`;
+        }
+      }
+
+      // 3. Validate Teacher (if provided)
+      if (!validationError && item.requiredTeacherId) {
+        const teacher = db.teachers.find(
+          (t) => t.id === item.requiredTeacherId,
+        );
+        if (!teacher) {
+          validationError = `requiredTeacherId '${item.requiredTeacherId}' not found.`;
+        }
+      }
+
+      // 4. Process result
+      if (validationError) {
+        result.failedCount++;
+        result.errors.push({ csvRow, error: validationError });
+      } else {
+        // Validation passed, create the new requirement
+        const newRequirement: CourseRequirementDto = {
+          id: db.getNextRequirementId(),
+          timetableId: parentTimetableId!, // We know this exists from validation
+          courseId: course!.id,
+          courseName: course!.name,
+          studentGroupId: studentGroup!.id,
+          studentGroupName: studentGroup!.name,
+          classType: item.classType,
+          length: Number(item.length) || 1,
+          frequency: Number(item.frequency) || 1,
+          priority: item.priority || "Medium",
+          requiredTeacherId: item.requiredTeacherId || null,
+          startDate: dayjs().format("YYYY-MM-DD"), // Mocked default
+          endDate: dayjs().add(8, "week").format("YYYY-MM-DD"), // Mocked default
+          schedulingPreferences: [],
+          eligibilitySummary: null, // Pre-flight check will populate this later
+        };
+
+        db.requirements.push(newRequirement);
+        result.createdRequirements.push(newRequirement);
+        result.processedCount++;
+      }
+    }
+
+    return HttpResponse.json(result, { status: 200 });
   }),
 ];
