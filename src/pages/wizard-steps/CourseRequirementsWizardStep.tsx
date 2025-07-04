@@ -3,6 +3,11 @@ import { Box, Button, Divider, Paper, Stack, Typography } from "@mui/material";
 import { CsvImportDialog } from "../../components/common/CsvImportDialog";
 import { useCsvImporter } from "../../hooks/useCsvImporter";
 import CourseRequirementsTab from "../CourseRequirementsTab";
+import { useCourseRequirementStore } from "../../stores/useCourseRequirementStore";
+import type {
+  BulkRequirementRequestItem,
+  CourseBulkImportResultDto,
+} from "../../interfaces/bulkImportDtos";
 
 interface Props {
   timetableId: string;
@@ -10,7 +15,40 @@ interface Props {
 
 const CourseRequirementsWizardStep: React.FC<Props> = ({ timetableId }) => {
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const importer = useCsvImporter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [importResult, setImportResult] =
+    useState<CourseBulkImportResultDto | null>(null);
+
+  const bulkAddRequirements = useCourseRequirementStore(
+    (state) => state.bulkAddRequirements,
+  );
+
+  const importer = useCsvImporter<BulkRequirementRequestItem>();
+
+  const handleImport = () => {
+    importer.actions.processImport(async (parsedData) => {
+      setIsSubmitting(true);
+      setImportResult(null);
+      try {
+
+        const result = await bulkAddRequirements(parsedData);
+        if (result) {
+
+          setImportResult(result as unknown as CourseBulkImportResultDto);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
+  };
+
+  const handleCloseDialog = () => {
+    setIsImportOpen(false);
+    importer.actions.reset();
+    setImportResult(null);
+  };
 
   return (
     <>
@@ -40,13 +78,22 @@ const CourseRequirementsWizardStep: React.FC<Props> = ({ timetableId }) => {
       <Divider sx={{ my: 3 }}>
         <Typography variant="overline">OR</Typography>
       </Divider>
+
       <CourseRequirementsTab timetableId={timetableId} />
+
+      {/* --- Pass all props explicitly as required by the new contract --- */}
       <CsvImportDialog
         open={isImportOpen}
-        onClose={() => setIsImportOpen(false)}
-        importer={importer}
+        onClose={handleCloseDialog}
         entityName="Course Requirements"
         templatePath="/templates/requirements_template.csv"
+        file={importer.state.file}
+        isParsing={importer.state.isParsing}
+        isSubmitting={isSubmitting}
+        result={importResult as any}
+        error={importer.state.error}
+        onFileSelect={importer.actions.handleFileSelect}
+        onProcessImport={handleImport}
       />
     </>
   );

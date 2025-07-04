@@ -16,7 +16,13 @@ interface Props {
 export const PrerequisiteIssueView: React.FC<Props> = ({ context }) => {
   return (
     <Box>
-      <Typography variant="body2" color="text.secondary" gutterBottom>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        gutterBottom
+        component="div"
+        sx={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}
+      >
         The student has not completed the following prerequisites for the
         course:
         <Chip label={context.courseName} size="small" sx={{ ml: 1 }} />

@@ -1,15 +1,30 @@
 import React, { useState } from "react";
-import { Alert, Box, CircularProgress, Grid, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Divider,
+  Grid,
+  Typography,
+} from "@mui/material";
 import { useParams } from "react-router-dom";
 import { useAcademicStructure } from "../../hooks/useAcademicStructure";
 import CohortList from "./CohortList";
 import CreateCohortForm from "./CreateCohortForm";
 import CohortDetailView from "./CohortDetailView";
+import { AcademicStructureImporter } from "./AcademicStructureImporter"; // NEW IMPORT
 
 const AcademicStructureManager: React.FC = () => {
   const { id: timetableId } = useParams<{ id: string }>();
-  const { cohorts, loading, error, addCohort, addStudentGroup, addSection } =
-    useAcademicStructure(timetableId);
+  const {
+    cohorts,
+    loading,
+    error,
+    addCohort,
+    addStudentGroup,
+    addSection,
+    reloadCohorts,
+  } = useAcademicStructure(timetableId);
 
   const [selectedCohortId, setSelectedCohortId] = useState<number | null>(null);
 
@@ -59,38 +74,49 @@ const AcademicStructureManager: React.FC = () => {
   }
 
   return (
-    <Grid container spacing={2} sx={{ p: 2, height: "100%" }}>
-      {/* Master Pane */}
-      <Grid size={{xs:12, md:4}}>
-        <Typography variant="h6" gutterBottom>
-          Cohorts
-        </Typography>
-        <Box sx={{ mb: 2 }}>
-          <CreateCohortForm
-            onSubmit={handleCreateCohort}
-            isSubmitting={isSubmittingCohort}
+    <>
+      <AcademicStructureImporter
+        timetableId={timetableId!}
+        onImportComplete={reloadCohorts}
+      />
+
+      <Divider sx={{ my: 3 }}>
+        <Typography variant="overline">OR MANAGE MANUALLY</Typography>
+      </Divider>
+
+      <Grid container spacing={2} sx={{ p: 2, height: "100%" }}>
+        {/* Master Pane */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Cohorts
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <CreateCohortForm
+              onSubmit={handleCreateCohort}
+              isSubmitting={isSubmittingCohort}
+            />
+            {formError && (
+              <Alert severity="error" sx={{ mt: 1 }}>
+                {formError}
+              </Alert>
+            )}
+          </Box>
+          <CohortList
+            cohorts={cohorts}
+            selectedCohortId={selectedCohortId}
+            onSelectCohort={setSelectedCohortId}
           />
-          {formError && (
-            <Alert severity="error" sx={{ mt: 1 }}>
-              {formError}
-            </Alert>
-          )}
-        </Box>
-        <CohortList
-          cohorts={cohorts}
-          selectedCohortId={selectedCohortId}
-          onSelectCohort={setSelectedCohortId}
-        />
+        </Grid>
+        {/* Detail Pane */}
+        <Grid size={{ xs: 12, md: 8 }}>
+          <CohortDetailView
+            selectedCohort={selectedCohort}
+            onAddGroup={handleAddGroup}
+            onAddSection={handleAddSection}
+          />
+        </Grid>
       </Grid>
-      {/* Detail Pane */}
-      <Grid size={{xs:12, md:8}}>
-        <CohortDetailView
-          selectedCohort={selectedCohort}
-          onAddGroup={handleAddGroup}
-          onAddSection={handleAddSection}
-        />
-      </Grid>
-    </Grid>
+    </>
   );
 };
 

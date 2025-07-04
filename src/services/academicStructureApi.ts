@@ -9,6 +9,11 @@ import type {
   StudentGroupDetailDto,
 } from "../interfaces/academicStructureDtos";
 
+import type {
+  BulkStructureRequestItem,
+  StructureBulkImportResultDto,
+} from "../interfaces/bulkImportDtos";
+
 const ACADEMIC_STRUCTURE_URL = `${API_BASE_URL}/academic-structure`;
 const TIMETABLE_API_URL = `${API_BASE_URL}/timetable`;
 
@@ -68,4 +73,19 @@ export const assignStudentToSection = async (
     body: JSON.stringify(data),
   });
   await handleResponse<void>(response); // Expecting 204 No Content
+};
+
+export const bulkImportStructure = async (
+  timetableId: string,
+  data: BulkStructureRequestItem[],
+): Promise<StructureBulkImportResultDto> => {
+  const response = await fetch(
+    `${TIMETABLE_API_URL}/${timetableId}/academic-structure/bulk-import`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    },
+  );
+  return handleResponse<StructureBulkImportResultDto>(response);
 };

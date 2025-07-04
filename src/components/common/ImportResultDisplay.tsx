@@ -3,20 +3,46 @@ import {
   Alert,
   AlertTitle,
   Box,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Typography,
 } from "@mui/material";
-import { BulkImportResultDto } from "../../interfaces/bulkImportDtos.ts";
+import type { StructureBulkImportResultDto } from "../../interfaces/bulkImportDtos";
 
 interface Props {
-  result: BulkImportResultDto;
+  result: StructureBulkImportResultDto;
 }
+
+const SummaryList: React.FC<{
+  title: string;
+  data: { created: string[]; found: string[] };
+}> = ({ title, data }) => (
+  <Box sx={{ mb: 1 }}>
+    <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+      {title}
+    </Typography>
+    {data.created.length > 0 && (
+      <Typography variant="body2" color="success.dark">
+        Created: {data.created.join(", ")}
+      </Typography>
+    )}
+    {data.found.length > 0 && (
+      <Typography variant="body2" color="text.secondary">
+        Found: {data.found.join(", ")}
+      </Typography>
+    )}
+    {data.created.length === 0 && data.found.length === 0 && (
+      <Typography variant="body2" color="text.secondary">
+        None
+      </Typography>
+    )}
+  </Box>
+);
 
 export const ImportResultDisplay: React.FC<Props> = ({ result }) => {
   const hasErrors = result.failedCount > 0;
@@ -29,6 +55,14 @@ export const ImportResultDisplay: React.FC<Props> = ({ result }) => {
         <br />
         Failed: {result.failedCount} row(s).
       </Alert>
+
+      {result.summary && (
+        <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
+          <SummaryList title="Cohorts" data={result.summary.cohorts} />
+          <SummaryList title="Groups" data={result.summary.groups} />
+          <SummaryList title="Sections" data={result.summary.sections} />
+        </Paper>
+      )}
 
       {hasErrors && (
         <Box sx={{ mt: 3 }}>

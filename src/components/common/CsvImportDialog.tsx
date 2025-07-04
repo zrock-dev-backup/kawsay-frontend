@@ -12,36 +12,41 @@ import {
   Typography,
 } from "@mui/material";
 import { ImportResultDisplay } from "./ImportResultDisplay";
+import type { StructureBulkImportResultDto } from "../../interfaces/bulkImportDtos";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  importer: ReturnType<
-    typeof import("../../hooks/useCsvImporter").useCsvImporter
-  >;
   entityName: string;
   templatePath: string;
+  // State props
+  file: File | null;
+  isParsing: boolean;
+  isSubmitting: boolean;
+  result: StructureBulkImportResultDto | null;
+  error: string | null;
+  // Action props
+  onFileSelect: (file: File | null) => void;
+  onProcessImport: () => void;
 }
 
 export const CsvImportDialog: React.FC<Props> = ({
   open,
   onClose,
-  importer,
   entityName,
   templatePath,
+  file,
+  isParsing,
+  isSubmitting,
+  result,
+  error,
+  onFileSelect,
+  onProcessImport,
 }) => {
-  const { state, actions } = importer;
-  const { file, isParsing, isSubmitting, result, error } = state;
-
-  const handleClose = () => {
-    actions.reset();
-    onClose();
-  };
-
   const isLoading = isParsing || isSubmitting;
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Bulk Import {entityName}</DialogTitle>
       <DialogContent>
         {error && (
@@ -68,9 +73,7 @@ export const CsvImportDialog: React.FC<Props> = ({
               type="file"
               hidden
               accept=".csv"
-              onChange={(e) =>
-                actions.handleFileSelect(e.target.files?.[0] || null)
-              }
+              onChange={(e) => onFileSelect(e.target.files?.[0] || null)}
             />
           </Button>
         )}
@@ -87,10 +90,10 @@ export const CsvImportDialog: React.FC<Props> = ({
         {result && <ImportResultDisplay result={result} />}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{result ? "Close" : "Cancel"}</Button>
+        <Button onClick={onClose}>{result ? "Close" : "Cancel"}</Button>
         {!result && (
           <Button
-            onClick={actions.processImport}
+            onClick={onProcessImport}
             variant="contained"
             disabled={!file || isLoading}
           >
