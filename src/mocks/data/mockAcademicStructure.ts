@@ -8,24 +8,30 @@ export const getMockCohorts = (): CohortDetailDto[] => [
     studentGroups: [
       {
         id: 101,
-        name: "Group A",
+        name: "Fall 2025 - Group A",
         sections: [
           {
             id: 1001,
-            name: "Section A1",
+            name: "Lab Section A1",
             students: [],
           },
           {
             id: 1002,
-            name: "Section A2",
+            name: "Lab Section A2",
             students: [],
           },
         ],
       },
       {
         id: 102,
-        name: "Group B",
-        sections: [],
+        name: "Fall 2025 - Group B",
+        sections: [
+          {
+            id: 1003,
+            name: "Lab Section B1",
+            students: [],
+          },
+        ],
       },
     ],
   },

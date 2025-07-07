@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
 import {
+  Alert,
   Autocomplete,
   Box,
   Button,
@@ -15,31 +16,12 @@ import {
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs, { Dayjs } from "dayjs";
-import { useCourseRequirementStore } from "../../stores/useCourseRequirementStore";
-import type {
-  CourseRequirementDto,
-  CreateCourseRequirementRequest,
-} from "../../interfaces/courseRequirementDtos";
+import dayjs from "dayjs";
+import type { CourseRequirementDto } from "../../interfaces/courseRequirementDtos";
 import type { ClassType } from "../../interfaces/classDtos";
 import SlotPicker from "../lecture/SlotPicker";
-import { useTimetableStore } from "../../stores/useTimetableStore";
-import {
-  runPreflightCheckForRequirement,
-  PreflightCheckResult,
-} from "../../services/courseRequirementsApi";
 import { EligibilityConfirmationDialog } from "./EligibilityConfirmationDialog";
-
-// --- MOCKED DATA FOR FORM ---
-const MOCK_COURSES = [
-  { id: 1, name: "Advanced Software Engineering", code: "CSE401" },
-  { id: 2, name: "Machine Learning Fundamentals", code: "AI201" },
-  { id: 3, name: "Database Systems", code: "DB303" },
-];
-const MOCK_STUDENT_GROUPS = [
-  { id: 101, name: "Fall 2025 - Group A" },
-  { id: 102, name: "Fall 2025 - Group B" },
-];
+import { useCourseRequirementForm } from "../../hooks/requirements/useCourseRequirementForm";
 
 interface Props {
   timetableId: number;
@@ -47,152 +29,61 @@ interface Props {
   onCancelEdit: () => void;
 }
 
-interface ConfirmationState {
-  payload: CreateCourseRequirementRequest;
-  checkResult: PreflightCheckResult;
-}
-
-const getInitialState = (
-  timetableId: number,
-): CreateCourseRequirementRequest => ({
-  timetableId,
-  courseId: null,
-  studentGroupId: null,
-  classType: "Masterclass",
-  length: 1,
-  frequency: 1,
-  priority: "Medium",
-  requiredTeacherId: null,
-  startDate: dayjs().add(1, "day"),
-  endDate: dayjs().add(8, "week"),
-  schedulingPreferences: [],
-});
-
 const CourseRequirementForm: React.FC<Props> = ({
   timetableId,
   requirementToEdit,
   onCancelEdit,
 }) => {
-  const { addRequirement, updateRequirement, isLoading } =
-    useCourseRequirementStore();
-  const { structure: timetableStructure } = useTimetableStore();
+  const {
+    formState,
+    uiState,
+    confirmationState,
+    dataError,
+    isEditMode,
+    isBusy,
+    isChecking,
+    isSubmitDisabled,
+    courses,
+    cohorts,
+    groups,
+    sections,
+    qualifiedTeachers,
+    timetableStructure,
+    sortedPeriods,
+    actions,
+  } = useCourseRequirementForm({
+    timetableId,
+    requirementToEdit,
+    onFormSuccess: onCancelEdit,
+  });
 
-  const [formState, setFormState] = useState<CreateCourseRequirementRequest>(
-    getInitialState(timetableId),
-  );
-
-  const [isChecking, setIsChecking] = useState(false);
-  const [confirmationState, setConfirmationState] =
-    useState<ConfirmationState | null>(null);
-
-  const isEditMode = requirementToEdit !== null;
-
-  useEffect(() => {
-    if (isEditMode) {
-      setFormState({
-        ...requirementToEdit,
-        startDate: dayjs(requirementToEdit.startDate),
-        endDate: dayjs(requirementToEdit.endDate),
-      });
-    } else {
-      setFormState(getInitialState(timetableId));
-    }
-  }, [requirementToEdit, isEditMode, timetableId]);
-
-  const handleInputChange = (
-    field: keyof CreateCourseRequirementRequest,
-    value: any,
-  ) => {
-    setFormState((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const sortedPeriods = useMemo(() => {
-    if (!timetableStructure?.periods) return [];
-    return [...timetableStructure.periods].sort((a, b) =>
-      a.start.localeCompare(b.start),
+  if (dataError) {
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        {dataError}
+        <Button onClick={() => window.location.reload()} sx={{ ml: 2 }}>
+          Retry
+        </Button>
+      </Alert>
     );
-  }, [timetableStructure?.periods]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!formState.courseId || !formState.studentGroupId) {
-          alert("Please select a Course and a Student Group.");
-    if (isEditMode) {
-      const payload = {
-        ...formState,
-        startDate: (formState.startDate as Dayjs).format("YYYY-MM-DD"),
-        endDate: (formState.endDate as Dayjs).format("YYYY-MM-DD"),
-      };
-      const success = await updateRequirement(
-        requirementToEdit.id,
-        payload as any,
-      );
-      if (success) onCancelEdit();
-      return;
-    }
-
-    // --- Create Mode Flow ---
-    const payload: CreateCourseRequirementRequest = {
-      ...formState,
-      startDate: (formState.startDate as Dayjs).format("YYYY-MM-DD") as any,
-      endDate: (formState.endDate as Dayjs).format("YYYY-MM-DD") as any,
-    };
-
-    setIsChecking(true);
-    try {
-      const checkResult = await runPreflightCheckForRequirement(payload);
-      if (checkResult.summary.issues === 0) {
-        // Case 1: No issues, create directly.
-        const success = await addRequirement(payload);
-        if (success) onCancelEdit();
-      } else {
-        // Case 2: Issues found, open confirmation dialog.
-        setConfirmationState({ payload, checkResult });
-      }
-    } catch (error) {
-      console.error("Pre-flight check failed:", error);
-      // TODO: Show an error to the user
-    } finally {
-      setIsChecking(false);
-    }
-  };
-
-  const handleConfirmCreate = async () => {
-    if (!confirmationState) return;
-
-    const { payload, checkResult } = confirmationState;
-    const finalPayload = {
-      ...payload,
-      ineligibleStudentIdsToFlag: checkResult.ineligibleStudentIds,
-    };
-
-    const success = await addRequirement(finalPayload);
-    if (success) {
-      onCancelEdit();
-    }
-    setConfirmationState(null); // Close the dialog
-  };
-
-  const isBusy = isLoading || isChecking;
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Typography variant="h6" gutterBottom>
-        {isEditMode
+        {isEditMode && requirementToEdit
           ? `Editing: ${requirementToEdit.courseName}`
           : "Add New Requirement"}
       </Typography>
-      <Box component="form" onSubmit={handleSubmit}>
+      <Box component="form" onSubmit={actions.handleSubmit}>
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{xs:12}}>
             <Autocomplete
-              options={MOCK_COURSES}
+              options={courses}
               getOptionLabel={(option) => `${option.name} (${option.code})`}
-              value={
-                MOCK_COURSES.find((c) => c.id === formState.courseId) || null
-              }
+              value={courses.find((c) => c.id === formState.courseId) || null}
               onChange={(_, newValue) =>
-                handleInputChange("courseId", newValue?.id ?? null)
+                actions.handleModelChange("courseId", newValue?.id ?? null)
               }
               renderInput={(params) => (
                 <TextField {...params} label="Course" required />
@@ -200,48 +91,96 @@ const CourseRequirementForm: React.FC<Props> = ({
               disabled={isBusy}
             />
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Autocomplete
-              options={MOCK_STUDENT_GROUPS}
-              getOptionLabel={(option) => option.name}
-              value={
-                MOCK_STUDENT_GROUPS.find(
-                  (g) => g.id === formState.studentGroupId,
-                ) || null
-              }
-              onChange={(_, newValue) =>
-                handleInputChange("studentGroupId", newValue?.id ?? null)
-              }
-              renderInput={(params) => (
-                <TextField {...params} label="Student Group" required />
-              )}
-              disabled={isLoading}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+
+          <Grid size={{xs:12, sm:6}}>
             <FormControl fullWidth>
               <InputLabel>Class Type</InputLabel>
               <Select
                 value={formState.classType}
                 label="Class Type"
                 onChange={(e) =>
-                  handleInputChange("classType", e.target.value as ClassType)
+                  actions.handleClassTypeChange(e.target.value as ClassType)
                 }
-                disabled={isLoading}
+                disabled={isBusy}
               >
                 <MenuItem value="Masterclass">Masterclass</MenuItem>
                 <MenuItem value="Lab">Lab</MenuItem>
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+
+          {formState.classType === 'Masterclass' ? (
+            <Grid size={{xs:12, sm:6}}>
+              <Autocomplete
+                options={groups}
+                getOptionLabel={(option) => option.name}
+                value={groups.find((g) => g.id === formState.studentGroupId) || null}
+                onChange={(_, newValue) =>
+                  actions.handleModelChange("studentGroupId", newValue?.id ?? null)
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label="Student Group" required />
+                )}
+                disabled={isBusy}
+              />
+            </Grid>
+          ) : (
+            <>
+              <Grid size={{xs:12, sm:4}}>
+                <Autocomplete
+                  options={cohorts}
+                  getOptionLabel={(option) => option.name}
+                  value={cohorts.find((c) => c.id === uiState.cohortId) || null}
+                  onChange={(_, newValue) => {
+                    actions.handleUiChange("cohortId", newValue?.id ?? null);
+                  }}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Cohort" required />
+                  )}
+                  disabled={isBusy}
+                />
+              </Grid>
+              <Grid size={{xs:12, sm:4}}>
+                <Autocomplete
+                  options={groups}
+                  getOptionLabel={(option) => option.name}
+                  value={groups.find((g) => g.id === uiState.groupId) || null}
+                  onChange={(_, newValue) => {
+                    actions.handleUiChange("groupId", newValue?.id ?? null);
+                    // Also update the model's studentGroupId for validation purposes
+                    actions.handleModelChange("studentGroupId", newValue?.id ?? null);
+                  }}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Group" required />
+                  )}
+                  disabled={isBusy || !uiState.cohortId}
+                />
+              </Grid>
+              <Grid size={{xs:12, sm:4}}>
+                <Autocomplete
+                  options={sections}
+                  getOptionLabel={(option) => option.name}
+                  value={sections.find((s) => s.id === formState.studentSectionId) || null}
+                  onChange={(_, newValue) =>
+                    actions.handleModelChange("studentSectionId", newValue?.id ?? null)
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Section" required />
+                  )}
+                  disabled={isBusy || !uiState.groupId}
+                />
+              </Grid>
+            </>
+          )}
+
+          <Grid size={{xs:12, sm:6}}>
             <FormControl fullWidth>
               <InputLabel>Priority</InputLabel>
               <Select
                 value={formState.priority}
                 label="Priority"
-                onChange={(e) => handleInputChange("priority", e.target.value)}
-                disabled={isLoading}
+                onChange={(e) => actions.handleModelChange("priority", e.target.value)}
+                disabled={isBusy}
               >
                 <MenuItem value="High">High</MenuItem>
                 <MenuItem value="Medium">Medium</MenuItem>
@@ -249,55 +188,81 @@ const CourseRequirementForm: React.FC<Props> = ({
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+
+          <Grid size={{xs:12, sm:6}}>
+            <Autocomplete
+              options={qualifiedTeachers}
+              getOptionLabel={(teacher) => teacher.name}
+              value={qualifiedTeachers.find((t) => t.id === formState.requiredTeacherId) || null}
+              onChange={(_, newValue) =>
+                actions.handleModelChange("requiredTeacherId", newValue?.id ?? null)
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Required Teacher (Optional)" />
+              )}
+              disabled={isBusy || !formState.courseId}
+            />
+          </Grid>
+
+          <Grid size={{xs:12, sm:6}}>
             <TextField
               label="Periods Length"
               type="number"
               fullWidth
               value={formState.length || ""}
               onChange={(e) =>
-                handleInputChange("length", Number(e.target.value))
+                actions.handleModelChange("length", Number(e.target.value))
               }
-              InputProps={{ inputProps: { min: 1 } }}
-              disabled={isLoading}
+              InputProps={{ inputProps: { min: 1, max: 8 } }}
+              disabled={isBusy}
+              required
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+
+          <Grid size={{xs:12, sm:6}}>
             <TextField
               label="Frequency (per week)"
               type="number"
               fullWidth
               value={formState.frequency || ""}
               onChange={(e) =>
-                handleInputChange("frequency", Number(e.target.value))
+                actions.handleModelChange("frequency", Number(e.target.value))
               }
-              InputProps={{ inputProps: { min: 1 } }}
-              disabled={isLoading}
+              InputProps={{ inputProps: { min: 1, max: 7 } }}
+              disabled={isBusy}
+              required
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+
+          <Grid size={{xs:12, sm:6}}>
             <DatePicker
               label="Start Date"
               value={formState.startDate}
-              onChange={(newValue) => handleInputChange("startDate", newValue)}
+              onChange={(newValue) => actions.handleModelChange("startDate", newValue)}
               minDate={dayjs(timetableStructure?.startDate)}
               maxDate={dayjs(timetableStructure?.endDate)}
-              disabled={isLoading}
+              disabled={isBusy}
+              slotProps={{
+                textField: { fullWidth: true, required: true },
+              }}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+
+          <Grid size={{xs:12, sm:6}}>
             <DatePicker
               label="End Date"
               value={formState.endDate}
-              onChange={(newValue) => handleInputChange("endDate", newValue)}
-              minDate={
-                formState.startDate ?? dayjs(timetableStructure?.startDate)
-              }
+              onChange={(newValue) => actions.handleModelChange("endDate", newValue)}
+              minDate={formState.startDate ?? dayjs(timetableStructure?.startDate)}
               maxDate={dayjs(timetableStructure?.endDate)}
-              disabled={isLoading}
+              disabled={isBusy}
+              slotProps={{
+                textField: { fullWidth: true, required: true },
+              }}
             />
           </Grid>
-          <Grid size={{ xs: 12 }}>
+
+          <Grid size={{xs:12}}>
             <Box sx={{ mt: 1, mb: 1 }}>
               <Typography variant="subtitle2">
                 Ideal Time Slot Preferences (Optional)
@@ -318,19 +283,18 @@ const CourseRequirementForm: React.FC<Props> = ({
               length={formState.length}
               value={formState.schedulingPreferences}
               onChange={(newValue) =>
-                handleInputChange("schedulingPreferences", newValue)
+                actions.handleModelChange("schedulingPreferences", newValue)
               }
             />
           </Grid>
-          <Grid size={{ xs: 12 }}>
+
+          <Grid size={{xs:12}}>
             <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
               <Button
                 type="submit"
                 variant="contained"
                 fullWidth
-                disabled={
-                  isBusy || !formState.courseId || !formState.studentGroupId
-                }
+                disabled={isSubmitDisabled}
               >
                 {isChecking ? (
                   <CircularProgress size={24} />
@@ -352,8 +316,8 @@ const CourseRequirementForm: React.FC<Props> = ({
 
       <EligibilityConfirmationDialog
         open={!!confirmationState}
-        onClose={() => setConfirmationState(null)}
-        onConfirm={handleConfirmCreate}
+        onClose={actions.handleCancelConfirmation}
+        onConfirm={actions.handleConfirmCreate}
         summary={confirmationState?.checkResult.summary ?? null}
       />
     </LocalizationProvider>

@@ -14,6 +14,11 @@ import {
 const ACADEMIC_STRUCTURE_URL = `${API_BASE_URL}/academic-structure`;
 const TIMETABLE_URL = `${API_BASE_URL}/timetable`;
 
+const toSummary = (item: { id: number; name: string }) => ({
+  id: item.id,
+  name: item.name,
+});
+
 export const academicStructureHandlers = [
   // GET /timetable/:id/cohorts
   http.get(`${TIMETABLE_URL}/:id/cohorts`, async ({ params }) => {
@@ -205,4 +210,38 @@ export const academicStructureHandlers = [
       return HttpResponse.json(result, { status: 200 });
     },
   ),
+
+  // Get all Cohorts for a given Timetable
+  http.get(`${TIMETABLE_URL}/:id/cohorts-summary`, async ({ params }) => {
+    const timetableId = Number(params.id);
+    await delay(50);
+    const cohorts = db.cohorts
+        .filter((c) => c.timetableId === timetableId)
+        .map(toSummary);
+    return HttpResponse.json(cohorts);
+  }),
+
+  // Get all Groups for a given Cohort
+  http.get(`${ACADEMIC_STRUCTURE_URL}/cohorts/:id/groups-summary`, async ({ params }) => {
+    const cohortId = Number(params.id);
+    await delay(50);
+    const cohort = db.cohorts.find((c) => c.id === cohortId);
+    const groups = cohort ? cohort.studentGroups.map(toSummary) : [];
+    return HttpResponse.json(groups);
+  }),
+
+  // Get all Sections for a given Group
+  http.get(`${ACADEMIC_STRUCTURE_URL}/groups/:id/sections-summary`, async ({ params }) => {
+    const groupId = Number(params.id);
+    await delay(50);
+    let sections: { id: number; name: string }[] = [];
+    for (const cohort of db.cohorts) {
+      const group = cohort.studentGroups.find((g) => g.id === groupId);
+      if (group) {
+        sections = group.sections.map(toSummary);
+        break;
+      }
+    }
+    return HttpResponse.json(sections);
+  }),
 ];

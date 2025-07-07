@@ -14,8 +14,10 @@ export interface CourseRequirementDto {
   courseId: number;
   courseName: string;
 
-  studentGroupId: number;
-  studentGroupName: string;
+  studentGroupId: number | null;
+  studentGroupName: string | null;
+  studentSectionId: number | null;
+  studentSectionName: string | null;
 
   classType: ClassType;
   length: number;
@@ -34,5 +36,10 @@ export interface CourseRequirementDto {
 export interface CreateCourseRequirementRequest
   extends Omit<
     CourseRequirementDto,
-    "id" | "courseName" | "studentGroupName"
+    "id" | "courseName" | "studentGroupName" | "studentSectionName"
   > {}
+
+export interface CourseRequirementFormData extends CreateCourseRequirementRequest {
+  cohortId?: number | null;
+  groupId?: number | null;
+}

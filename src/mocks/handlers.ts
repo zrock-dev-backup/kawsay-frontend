@@ -7,6 +7,7 @@ import { classHandlers } from "./classHandlers.ts";
 import { academicStructureHandlers } from "./academicStructureHandlers.ts";
 import { studentAuditHandlers } from "./studentAuditHandlers.ts";
 import { issueResolutionHandlers } from "./issueResolutionHandlers.ts";
+import {courseHandlers} from "./courseHandlers.ts";
 
 export const handlers = [
   ...courseRequirementHandlers,
@@ -18,4 +19,5 @@ export const handlers = [
   ...academicStructureHandlers,
   ...studentAuditHandlers,
   ...issueResolutionHandlers,
+  ...courseHandlers,
 ];
