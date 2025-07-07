@@ -41,16 +41,82 @@ export const courseRequirementHandlers = [
     return HttpResponse.json(requirement);
   }),
 
+  http.post(`${REQ_URL}/preflight-check`, async ({ request }) => {
+    const data = (await request.json()) as CreateCourseRequirementRequest;
+    await delay(400); // Simulate network latency for validation
+
+    // Mock Logic: If the requirement is for "Group B" (ID 102), return issues.
+    // Otherwise, return a clean bill of health.
+    if (data.studentGroupId === 102) {
+      console.log(
+        `[MSW] Pre-flight check for Group ID ${data.studentGroupId} found 2 issues.`,
+      );
+      return HttpResponse.json({
+        summary: { eligible: 48, total: 50, issues: 2 },
+        ineligibleStudentIds: [1002, 1025], // Mocked student IDs with issues
+      });
+    }
+
+    console.log(
+      `[MSW] Pre-flight check for Group ID ${data.studentGroupId} found 0 issues.`,
+    );
+    return HttpResponse.json({
+      summary: { eligible: 50, total: 50, issues: 0 },
+      ineligibleStudentIds: [],
+    });
+  }),
+
   // POST /requirements
   http.post(REQ_URL, async ({ request }) => {
-    const data = (await request.json()) as CreateCourseRequirementRequest;
+    // The request can now optionally include a list of students to flag.
+    const data = (await request.json()) as CreateCourseRequirementRequest & {
+      ineligibleStudentIdsToFlag?: number[];
+    };
+
     const newRequirement: CourseRequirementDto = {
-      ...data,
       id: db.getNextRequirementId(),
-      courseName: `Course ID: ${data.courseId}`, // Mocked data
-      studentGroupName: `Group ID: ${data.studentGroupId}`, // Mocked data
+      timetableId: data.timetableId,
+      courseId: data.courseId,
+      studentGroupId: data.studentGroupId,
+      classType: data.classType,
+      length: data.length,
+      frequency: data.frequency,
+      priority: data.priority,
+      requiredTeacherId: data.requiredTeacherId,
+      startDate: dayjs(data.startDate).format("YYYY-MM-DD"),
+      endDate: dayjs(data.endDate).format("YYYY-MM-DD"),
+      schedulingPreferences: data.schedulingPreferences,
+      // Mocked data for display
+      courseName: `Course ID: ${data.courseId}`,
+      studentGroupName: `Group ID: ${data.studentGroupId}`,
+      // The summary is now derived from the pre-flight check results
       eligibilitySummary: null,
     };
+
+    // Simulate backend logic based on the "Informed Deferral" contract
+    if (
+      data.ineligibleStudentIdsToFlag &&
+      data.ineligibleStudentIdsToFlag.length > 0
+    ) {
+      const issues = data.ineligibleStudentIdsToFlag.length;
+      const total = 50; // Mocked total
+      console.log(
+        `[MSW] Creating requirement and quarantining ${issues} students for later audit.`,
+      );
+      newRequirement.eligibilitySummary = {
+        eligible: total - issues,
+        total: total,
+        issues: issues,
+      };
+    } else {
+      console.log(`[MSW] Creating requirement with no eligibility issues.`);
+      newRequirement.eligibilitySummary = {
+        eligible: 50, // Mocked total
+        total: 50,
+        issues: 0,
+      };
+    }
+
     db.requirements.push(newRequirement);
     await delay(300);
     return HttpResponse.json(newRequirement, { status: 201 });
@@ -91,13 +157,6 @@ export const courseRequirementHandlers = [
 
     await delay(200);
     return new HttpResponse(null, { status: 204 });
-  }),
-
-  http.get(`${REQ_URL}/:id/issues`, async ({ params }) => {
-    const { id } = params;
-    const issues = db.requirementIssues[id as string] || [];
-    await delay(400);
-    return HttpResponse.json(issues);
   }),
 
   http.post(`${REQ_URL}/:id/run-preflight-check`, async ({ params }) => {

@@ -24,6 +24,11 @@ import type {
 import type { ClassType } from "../../interfaces/classDtos";
 import SlotPicker from "../lecture/SlotPicker";
 import { useTimetableStore } from "../../stores/useTimetableStore";
+import {
+  runPreflightCheckForRequirement,
+  PreflightCheckResult,
+} from "../../services/courseRequirementsApi";
+import { EligibilityConfirmationDialog } from "./EligibilityConfirmationDialog";
 
 // --- MOCKED DATA FOR FORM ---
 const MOCK_COURSES = [
@@ -36,12 +41,15 @@ const MOCK_STUDENT_GROUPS = [
   { id: 102, name: "Fall 2025 - Group B" },
 ];
 
-// --- END MOCKED DATA ---
-
 interface Props {
   timetableId: number;
   requirementToEdit: CourseRequirementDto | null;
   onCancelEdit: () => void;
+}
+
+interface ConfirmationState {
+  payload: CreateCourseRequirementRequest;
+  checkResult: PreflightCheckResult;
 }
 
 const getInitialState = (
@@ -72,6 +80,10 @@ const CourseRequirementForm: React.FC<Props> = ({
   const [formState, setFormState] = useState<CreateCourseRequirementRequest>(
     getInitialState(timetableId),
   );
+
+  const [isChecking, setIsChecking] = useState(false);
+  const [confirmationState, setConfirmationState] =
+    useState<ConfirmationState | null>(null);
 
   const isEditMode = requirementToEdit !== null;
 
@@ -104,29 +116,64 @@ const CourseRequirementForm: React.FC<Props> = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!formState.courseId || !formState.studentGroupId) {
-      // Basic validation
-      alert("Please select a Course and a Student Group.");
+          alert("Please select a Course and a Student Group.");
+    if (isEditMode) {
+      const payload = {
+        ...formState,
+        startDate: (formState.startDate as Dayjs).format("YYYY-MM-DD"),
+        endDate: (formState.endDate as Dayjs).format("YYYY-MM-DD"),
+      };
+      const success = await updateRequirement(
+        requirementToEdit.id,
+        payload as any,
+      );
+      if (success) onCancelEdit();
       return;
     }
 
-    const payload = {
+    // --- Create Mode Flow ---
+    const payload: CreateCourseRequirementRequest = {
       ...formState,
-      // date formatting
-      startDate: (formState.startDate as Dayjs).format("YYYY-MM-DD"),
-      endDate: (formState.endDate as Dayjs).format("YYYY-MM-DD"),
+      startDate: (formState.startDate as Dayjs).format("YYYY-MM-DD") as any,
+      endDate: (formState.endDate as Dayjs).format("YYYY-MM-DD") as any,
     };
 
-    let success = false;
-    if (isEditMode) {
-      success = await updateRequirement(requirementToEdit.id, payload as any);
-    } else {
-      success = await addRequirement(payload as any);
+    setIsChecking(true);
+    try {
+      const checkResult = await runPreflightCheckForRequirement(payload);
+      if (checkResult.summary.issues === 0) {
+        // Case 1: No issues, create directly.
+        const success = await addRequirement(payload);
+        if (success) onCancelEdit();
+      } else {
+        // Case 2: Issues found, open confirmation dialog.
+        setConfirmationState({ payload, checkResult });
+      }
+    } catch (error) {
+      console.error("Pre-flight check failed:", error);
+      // TODO: Show an error to the user
+    } finally {
+      setIsChecking(false);
     }
+  };
 
+  const handleConfirmCreate = async () => {
+    if (!confirmationState) return;
+
+    const { payload, checkResult } = confirmationState;
+    const finalPayload = {
+      ...payload,
+      ineligibleStudentIdsToFlag: checkResult.ineligibleStudentIds,
+    };
+
+    const success = await addRequirement(finalPayload);
     if (success) {
       onCancelEdit();
     }
+    setConfirmationState(null); // Close the dialog
   };
+
+  const isBusy = isLoading || isChecking;
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -150,7 +197,7 @@ const CourseRequirementForm: React.FC<Props> = ({
               renderInput={(params) => (
                 <TextField {...params} label="Course" required />
               )}
-              disabled={isLoading}
+              disabled={isBusy}
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -282,10 +329,10 @@ const CourseRequirementForm: React.FC<Props> = ({
                 variant="contained"
                 fullWidth
                 disabled={
-                  isLoading || !formState.courseId || !formState.studentGroupId
+                  isBusy || !formState.courseId || !formState.studentGroupId
                 }
               >
-                {isLoading ? (
+                {isChecking ? (
                   <CircularProgress size={24} />
                 ) : isEditMode ? (
                   "Save Changes"
@@ -302,6 +349,13 @@ const CourseRequirementForm: React.FC<Props> = ({
           </Grid>
         </Grid>
       </Box>
+
+      <EligibilityConfirmationDialog
+        open={!!confirmationState}
+        onClose={() => setConfirmationState(null)}
+        onConfirm={handleConfirmCreate}
+        summary={confirmationState?.checkResult.summary ?? null}
+      />
     </LocalizationProvider>
   );
 };

@@ -2,6 +2,7 @@ import { API_BASE_URL, handleResponse } from "./api.helpers";
 import type {
   CourseRequirementDto,
   CreateCourseRequirementRequest,
+  EligibilitySummary,
 } from "../interfaces/courseRequirementDtos";
 import type { RequirementIssueDto } from "../interfaces/auditDtos";
 import type {
@@ -11,6 +12,11 @@ import type {
 
 const REQ_URL = `${API_BASE_URL}/requirements`;
 
+export interface PreflightCheckResult {
+  summary: EligibilitySummary;
+  ineligibleStudentIds: number[];
+}
+
 export const fetchRequirements = async (
   timetableId: number,
 ): Promise<CourseRequirementDto[]> => {
@@ -19,7 +25,10 @@ export const fetchRequirements = async (
 };
 
 export const createRequirement = async (
-  data: CreateCourseRequirementRequest,
+  // The payload now officially includes the optional list of student IDs to flag
+  data: CreateCourseRequirementRequest & {
+    ineligibleStudentIdsToFlag?: number[];
+  },
 ): Promise<CourseRequirementDto> => {
   const response = await fetch(REQ_URL, {
     method: "POST",
@@ -78,4 +87,15 @@ export const bulkCreateRequirements = async (
     body: JSON.stringify(data),
   });
   return handleResponse<BulkImportResultDto>(response);
+};
+
+export const runPreflightCheckForRequirement = async (
+  data: CreateCourseRequirementRequest,
+): Promise<PreflightCheckResult> => {
+  const response = await fetch(`${REQ_URL}/preflight-check`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<PreflightCheckResult>(response);
 };
