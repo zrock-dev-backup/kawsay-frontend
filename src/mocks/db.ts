@@ -29,8 +29,11 @@ import { CohortDetailDto } from "../interfaces/academicStructureDtos.ts";
 import { getMockStudentAudit } from "./data/mockStudentAudit.ts";
 import { StudentIssueDetailDto } from "../interfaces/issueDtos.ts";
 import { getMockIssueDetails } from "./data/mockIssueDetails.ts";
-import type { TeacherDto } from "../interfaces/teacherDtos.ts";
-import {getMockClasses} from "./data/mockClasses.ts";
+import type {
+  TeacherDto,
+  TimetableAssignmentDto,
+} from "../interfaces/teacherDtos.ts";
+import { getMockClasses } from "./data/mockClasses.ts";
 
 class MockDb {
   public timetables: TimetableStructure[];
@@ -45,6 +48,7 @@ class MockDb {
   public availableClasses: AvailableClassDto[];
   public cohorts: CohortDetailDto[];
   public issueDetails: Record<string, StudentIssueDetailDto[]>;
+  public timetableAssignments: TimetableAssignmentDto[];
 
   private nextTimetableId: number;
   private nextRequirementId: number;
@@ -53,6 +57,7 @@ class MockDb {
   private nextGroupId: number;
   private nextSectionId: number;
   private nextTeacherId: number;
+  private nextAssignmentId: number;
 
   constructor() {
     this.timetables = getMockTimetables();
@@ -67,6 +72,7 @@ class MockDb {
     this.studentAudit = getMockStudentAudit();
     this.issueDetails = getMockIssueDetails();
     this.availableClasses = [];
+    this.timetableAssignments = [];
 
     this.nextTimetableId = this.timetables.length + 1;
     this.nextRequirementId = this.requirements.length + 1;
@@ -75,6 +81,7 @@ class MockDb {
     this.nextGroupId = 1000;
     this.nextSectionId = 10000;
     this.nextTeacherId = this.teachers.length + 1;
+    this.nextAssignmentId = 1;
   }
 
   public getNextTimetableId = (): number => this.nextTimetableId++;
@@ -84,6 +91,7 @@ class MockDb {
   public getNextGroupId = (): number => this.nextGroupId++;
   public getNextSectionId = (): number => this.nextSectionId++;
   public getNextTeacherId = (): number => this.nextTeacherId++;
+  public getNextAssignmentId = (): number => this.nextAssignmentId++;
 }
 
 export const db = new MockDb();

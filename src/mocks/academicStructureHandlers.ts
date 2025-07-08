@@ -10,6 +10,7 @@ import {
   BulkStructureRequestItem,
   StructureBulkImportResultDto,
 } from "../interfaces/bulkImportDtos.ts";
+import { CreateTimetableAssignmentRequestDto } from "../interfaces/teacherDtos.ts";
 
 const ACADEMIC_STRUCTURE_URL = `${API_BASE_URL}/academic-structure`;
 const TIMETABLE_URL = `${API_BASE_URL}/timetable`;
@@ -216,32 +217,95 @@ export const academicStructureHandlers = [
     const timetableId = Number(params.id);
     await delay(50);
     const cohorts = db.cohorts
-        .filter((c) => c.timetableId === timetableId)
-        .map(toSummary);
+      .filter((c) => c.timetableId === timetableId)
+      .map(toSummary);
     return HttpResponse.json(cohorts);
   }),
 
   // Get all Groups for a given Cohort
-  http.get(`${ACADEMIC_STRUCTURE_URL}/cohorts/:id/groups-summary`, async ({ params }) => {
-    const cohortId = Number(params.id);
-    await delay(50);
-    const cohort = db.cohorts.find((c) => c.id === cohortId);
-    const groups = cohort ? cohort.studentGroups.map(toSummary) : [];
-    return HttpResponse.json(groups);
-  }),
+  http.get(
+    `${ACADEMIC_STRUCTURE_URL}/cohorts/:id/groups-summary`,
+    async ({ params }) => {
+      const cohortId = Number(params.id);
+      await delay(50);
+      const cohort = db.cohorts.find((c) => c.id === cohortId);
+      const groups = cohort ? cohort.studentGroups.map(toSummary) : [];
+      return HttpResponse.json(groups);
+    },
+  ),
 
   // Get all Sections for a given Group
-  http.get(`${ACADEMIC_STRUCTURE_URL}/groups/:id/sections-summary`, async ({ params }) => {
-    const groupId = Number(params.id);
-    await delay(50);
-    let sections: { id: number; name: string }[] = [];
-    for (const cohort of db.cohorts) {
-      const group = cohort.studentGroups.find((g) => g.id === groupId);
-      if (group) {
-        sections = group.sections.map(toSummary);
-        break;
+  http.get(
+    `${ACADEMIC_STRUCTURE_URL}/groups/:id/sections-summary`,
+    async ({ params }) => {
+      const groupId = Number(params.id);
+      await delay(50);
+      let sections: { id: number; name: string }[] = [];
+      for (const cohort of db.cohorts) {
+        const group = cohort.studentGroups.find((g) => g.id === groupId);
+        if (group) {
+          sections = group.sections.map(toSummary);
+          break;
+        }
       }
-    }
-    return HttpResponse.json(sections);
+      return HttpResponse.json(sections);
+    },
+  ),
+
+  // GET /timetable/:id/assignments
+  http.get(`${TIMETABLE_URL}/:id/assignments`, async ({ params }) => {
+    const timetableId = Number(params.id);
+    const assignments = db.timetableAssignments.filter(
+      (a) => a.timetableId === timetableId,
+    );
+    await delay(200);
+    return HttpResponse.json(assignments);
   }),
+
+  // POST /timetable/:id/assignments
+  http.post(`${TIMETABLE_URL}/:id/assignments`, async ({ request, params }) => {
+    const timetableId = Number(params.id);
+    const data = (await request.json()) as CreateTimetableAssignmentRequestDto;
+
+    const teacher = db.teachers.find((t) => t.id === data.teacherId);
+    if (!teacher) {
+      return HttpResponse.json(
+        { message: "Teacher not found" },
+        { status: 404 },
+      );
+    }
+
+    const newAssignment = {
+      ...data,
+      assignmentId: db.getNextAssignmentId(),
+      timetableId: timetableId,
+      teacherFullName: teacher.fullName,
+    };
+
+    db.timetableAssignments.push(newAssignment);
+    await delay(300);
+    return HttpResponse.json(newAssignment, { status: 201 });
+  }),
+
+  // DELETE /timetable/:id/assignments/:assignmentId
+  http.delete(
+    `${TIMETABLE_URL}/:id/assignments/:assignmentId`,
+    async ({ params }) => {
+      const assignmentId = Number(params.assignmentId);
+      const initialLength = db.timetableAssignments.length;
+      db.timetableAssignments = db.timetableAssignments.filter(
+        (a) => a.assignmentId !== assignmentId,
+      );
+
+      if (db.timetableAssignments.length === initialLength) {
+        return HttpResponse.json(
+          { message: "Assignment not found" },
+          { status: 404 },
+        );
+      }
+
+      await delay(400);
+      return new HttpResponse(null, { status: 204 });
+    },
+  ),
 ];

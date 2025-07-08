@@ -11,3 +11,19 @@ export interface TeacherDto {
 
 export type CreateTeacherRequestDto = Omit<TeacherDto, "id">;
 export type UpdateTeacherRequestDto = Partial<CreateTeacherRequestDto>;
+
+export interface TimetableAssignmentDto {
+  assignmentId: number;
+  timetableId: number;
+  teacherId: number;
+  teacherFullName: string; // Denormalized for UI
+  startWeek: number;
+  endWeek: number;
+  maximumWorkload: number;
+  workloadUnit: "Classes" | "Hours per Week";
+}
+
+export type CreateTimetableAssignmentRequestDto = Omit<
+  TimetableAssignmentDto,
+  "assignmentId" | "teacherFullName"
+>;

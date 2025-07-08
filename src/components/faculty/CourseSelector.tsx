@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Autocomplete, Checkbox, CircularProgress, TextField } from "@mui/material";
+import {
+  Autocomplete,
+  Checkbox,
+  CircularProgress,
+  TextField,
+} from "@mui/material";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import type { Course } from "../../interfaces/apiDataTypes";
-import { fetchCourses } from "../../services/courseApi";
+import { fetchCourseSummaries } from "../../services/courseApi";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -33,7 +38,7 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
     (async () => {
       // This assumes a 'fetchCourses' function exists in one of your API services.
       // If not, it would need to be created, similar to `fetchTeachers`.
-      const courses = await fetchCourses();
+      const courses = await fetchCourseSummaries();
       if (active) {
         setOptions(courses);
       }
@@ -84,7 +89,9 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
             ...params.InputProps,
             endAdornment: (
               <>
-                {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                {loading ? (
+                  <CircularProgress color="inherit" size={20} />
+                ) : null}
                 {params.InputProps.endAdornment}
               </>
             ),

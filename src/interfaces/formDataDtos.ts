@@ -5,6 +5,6 @@ export interface SummaryDto {
 
 export interface CourseSummaryDto {
   id: number;
-  name: string; // Pre-formatted as "Course Name (CODE)"
+  name: string;
   code: string;
 }

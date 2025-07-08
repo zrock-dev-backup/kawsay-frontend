@@ -13,7 +13,11 @@ import type {
   BulkStructureRequestItem,
   StructureBulkImportResultDto,
 } from "../interfaces/bulkImportDtos";
-import {SummaryDto} from "../interfaces/formDataDtos.ts";
+import { SummaryDto } from "../interfaces/formDataDtos.ts";
+import type {
+  CreateTimetableAssignmentRequestDto,
+  TimetableAssignmentDto,
+} from "../interfaces/teacherDtos.ts";
 
 const ACADEMIC_STRUCTURE_URL = `${API_BASE_URL}/academic-structure`;
 const TIMETABLE_API_URL = `${API_BASE_URL}/timetable`;
@@ -92,22 +96,68 @@ export const bulkImportStructure = async (
 };
 
 export const fetchCohortsForTimetableSummary = async (
-    timetableId: string | number,
+  timetableId: string | number,
 ): Promise<SummaryDto[]> => {
-  const response = await fetch(`${TIMETABLE_API_URL}/${timetableId}/cohorts-summary`);
+  const response = await fetch(
+    `${TIMETABLE_API_URL}/${timetableId}/cohorts-summary`,
+  );
   return handleResponse<SummaryDto[]>(response);
 };
 
 export const fetchGroupsForCohortSummary = async (
-    cohortId: string | number,
+  cohortId: string | number,
 ): Promise<SummaryDto[]> => {
-  const response = await fetch(`${ACADEMIC_STRUCTURE_URL}/cohorts/${cohortId}/groups-summary`);
+  const response = await fetch(
+    `${ACADEMIC_STRUCTURE_URL}/cohorts/${cohortId}/groups-summary`,
+  );
   return handleResponse<SummaryDto[]>(response);
 };
 
 export const fetchSectionsForGroupSummary = async (
-    groupId: string | number,
+  groupId: string | number,
 ): Promise<SummaryDto[]> => {
-  const response = await fetch(`${ACADEMIC_STRUCTURE_URL}/groups/${groupId}/sections-summary`);
+  const response = await fetch(
+    `${ACADEMIC_STRUCTURE_URL}/groups/${groupId}/sections-summary`,
+  );
   return handleResponse<SummaryDto[]>(response);
+};
+
+export const fetchAssignmentsForTimetable = async (
+  timetableId: string,
+): Promise<TimetableAssignmentDto[]> => {
+  const response = await fetch(
+    `${TIMETABLE_API_URL}/${timetableId}/assignments`,
+  );
+  return handleResponse<TimetableAssignmentDto[]>(response);
+};
+
+export const createAssignment = async (
+  timetableId: string,
+  data: CreateTimetableAssignmentRequestDto,
+): Promise<TimetableAssignmentDto> => {
+  const response = await fetch(
+    `${TIMETABLE_API_URL}/${timetableId}/assignments`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+  return handleResponse<TimetableAssignmentDto>(response);
+};
+
+export const deleteAssignment = async (
+  timetableId: string,
+  assignmentId: number,
+): Promise<void> => {
+  const response = await fetch(
+    `${TIMETABLE_API_URL}/${timetableId}/assignments/${assignmentId}`,
+    {
+      method: "DELETE",
+    },
+  );
+  await handleResponse<void>(response);
 };

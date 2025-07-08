@@ -9,10 +9,18 @@ import {
   createSection,
   createStudentGroup,
   fetchCohortsForTimetable,
+  fetchAssignmentsForTimetable,
+  createAssignment,
+  deleteAssignment,
 } from "../services/academicStructureApi";
+import type {
+  CreateTimetableAssignmentRequestDto,
+  TimetableAssignmentDto,
+} from "../interfaces/teacherDtos";
 
 export function useAcademicStructure(timetableId: string | undefined) {
   const [cohorts, setCohorts] = useState<CohortDetailDto[]>([]);
+  const [assignments, setAssignments] = useState<TimetableAssignmentDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -138,13 +146,87 @@ export function useAcademicStructure(timetableId: string | undefined) {
     }
   };
 
+  const loadInitialData = useCallback(async () => {
+    if (!timetableId) {
+      setError("No timetable ID provided.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const [fetchedCohorts, fetchedAssignments] = await Promise.all([
+        fetchCohortsForTimetable(timetableId),
+        fetchAssignmentsForTimetable(timetableId),
+      ]);
+      setCohorts(fetchedCohorts);
+      setAssignments(fetchedAssignments);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch academic structure.";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [timetableId]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
+
+  const addAssignment = async (
+    data: CreateTimetableAssignmentRequestDto,
+  ): Promise<boolean> => {
+    if (!timetableId) {
+      setError("Cannot create assignment without a timetable ID.");
+      return false;
+    }
+    try {
+      const newAssignment = await createAssignment(timetableId, data);
+      setAssignments((prev) => [...prev, newAssignment]);
+      return true;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to add assignment.",
+      );
+      return false;
+    }
+  };
+
+  const removeAssignment = async (assignmentId: number): Promise<boolean> => {
+    if (!timetableId) {
+      setError("Cannot remove assignment without a timetable ID.");
+      return false;
+    }
+    const originalAssignments = assignments;
+    setAssignments((prev) =>
+      prev.filter((a) => a.assignmentId !== assignmentId),
+    );
+    try {
+      await deleteAssignment(timetableId, assignmentId);
+      return true;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to remove assignment.",
+      );
+      setAssignments(originalAssignments); // Revert on failure
+      return false;
+    }
+  };
+
   return {
     cohorts,
+    assignments,
     loading,
     error,
     addCohort,
-    reloadCohorts: loadCohorts,
+    reloadCohorts: loadInitialData,
     addStudentGroup,
     addSection,
+    addAssignment,
+    removeAssignment,
   };
 }

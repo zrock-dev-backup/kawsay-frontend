@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import {
-  fetchCoursesForForm,
+  fetchCourseSummaries,
   getQualifiedTeachersForCourse,
 } from "../../services/courseApi";
 import {
@@ -78,8 +78,11 @@ export const useCourseRequirementForm = ({
   requirementToEdit,
   onFormSuccess,
 }: UseCourseRequirementFormProps) => {
-  const { addRequirement, updateRequirement, isLoading: isStoreLoading } =
-    useCourseRequirementStore();
+  const {
+    addRequirement,
+    updateRequirement,
+    isLoading: isStoreLoading,
+  } = useCourseRequirementStore();
   const { structure: timetableStructure } = useTimetableStore();
 
   const [formModel, setFormModel] = useState<RequirementFormModel>(
@@ -101,7 +104,10 @@ export const useCourseRequirementForm = ({
   const [confirmationState, setConfirmationState] =
     useState<ConfirmationState | null>(null);
 
-  const isEditMode = useMemo(() => requirementToEdit !== null, [requirementToEdit]);
+  const isEditMode = useMemo(
+    () => requirementToEdit !== null,
+    [requirementToEdit],
+  );
 
   // --- Data Fetching Effects ---
   useEffect(() => {
@@ -110,7 +116,7 @@ export const useCourseRequirementForm = ({
       setDataError(null);
       try {
         const [coursesData, cohortsData] = await Promise.all([
-          fetchCoursesForForm(),
+          fetchCourseSummaries(),
           fetchCohortsForTimetableSummary(timetableId),
         ]);
         setCourses(coursesData);
@@ -129,7 +135,9 @@ export const useCourseRequirementForm = ({
     if (uiState.cohortId) {
       setGroups([]);
       setSections([]);
-      fetchGroupsForCohortSummary(uiState.cohortId).then(setGroups).catch(console.error);
+      fetchGroupsForCohortSummary(uiState.cohortId)
+        .then(setGroups)
+        .catch(console.error);
     } else {
       setGroups([]);
     }
@@ -138,7 +146,9 @@ export const useCourseRequirementForm = ({
   useEffect(() => {
     if (uiState.groupId) {
       setSections([]);
-      fetchSectionsForGroupSummary(uiState.groupId).then(setSections).catch(console.error);
+      fetchSectionsForGroupSummary(uiState.groupId)
+        .then(setSections)
+        .catch(console.error);
     } else {
       setSections([]);
     }
@@ -179,14 +189,12 @@ export const useCourseRequirementForm = ({
 
   const isSubmitDisabled = useMemo(() => {
     if (isBusy || !formModel.courseId || !formModel.studentGroupId) return true;
-    if (formModel.classType === 'Lab' && !formModel.studentSectionId) return true;
+    if (formModel.classType === "Lab" && !formModel.studentSectionId)
+      return true;
     return false;
   }, [isBusy, formModel]);
 
-  const handleModelChange = (
-    field: keyof RequirementFormModel,
-    value: any,
-  ) => {
+  const handleModelChange = (field: keyof RequirementFormModel, value: any) => {
     setFormModel((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -204,7 +212,9 @@ export const useCourseRequirementForm = ({
     setUiState(getInitialUiState());
   };
 
-  const modelToApiPayload = (model: RequirementFormModel): CreateCourseRequirementRequest => {
+  const modelToApiPayload = (
+    model: RequirementFormModel,
+  ): CreateCourseRequirementRequest => {
     if (!model.startDate || !model.endDate) {
       throw new Error("Start and End dates are required.");
     }
@@ -247,7 +257,7 @@ export const useCourseRequirementForm = ({
   const handleConfirmCreate = async () => {
     if (!confirmationState) return;
     const { payload, checkResult } = confirmationState;
-    
+
     const finalPayload = {
       ...payload,
       ineligibleStudentIdsToFlag: checkResult.ineligibleStudentIds,
