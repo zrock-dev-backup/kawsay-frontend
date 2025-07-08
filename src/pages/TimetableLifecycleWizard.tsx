@@ -12,13 +12,13 @@ import { useTimetableStore } from "../stores/useTimetableStore";
 import { useCourseRequirementStore } from "../stores/useCourseRequirementStore";
 import { useSchedulingStore } from "../stores/useSchedulingStore";
 import { useStudentAudit } from "../hooks/useStudentAudit";
-import { useAcademicStructure } from "../hooks/useAcademicStructure";
 import AcademicStructureManager from "../components/academic-structure/AcademicStructureManager";
 import AssistedSchedulingTab from "./AssistedSchedulingTab";
 import { StudentAuditTab } from "../components/audit/StudentAuditTab";
 import Step5_Publish from "./wizard-steps/Step5_Publish";
 import { TimetableWizardIndex } from "../utils/tabIndex.ts";
 import CourseRequirementsWizardStep from "./wizard-steps/CourseRequirementsWizardStep";
+import {useCohorts} from "../hooks/useCohorts.ts";
 
 const steps = [
   "Define Academic Structure",
@@ -34,7 +34,7 @@ const TimetableLifecycleWizard: React.FC = () => {
   const timetableId = structure?.id.toString();
 
   // --- State selectors for step completion gating ---
-  const { cohorts } = useAcademicStructure(timetableId);
+  const { cohorts } = useCohorts(timetableId);
   const { requirements } = useCourseRequirementStore();
   const { stagedPlacements } = useSchedulingStore();
   const { state: auditState, actions: auditActions } = useStudentAudit(

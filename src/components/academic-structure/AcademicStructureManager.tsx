@@ -10,30 +10,36 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useParams } from "react-router-dom";
-import { useAcademicStructure } from "../../hooks/useAcademicStructure";
+import { useCohorts } from "../../hooks/useCohorts";
+import { useAssignments } from "../../hooks/useAssignments";
 import CohortList from "./CohortList";
 import CreateCohortForm from "./CreateCohortForm";
 import CohortDetailView from "./CohortDetailView";
 import { AcademicStructureImporter } from "./AcademicStructureImporter";
 import { AssignedFacultyList } from "./AssignedFacultyList";
 import { AssignTeacherModal } from "./AssignTeacherModal";
-import ConfirmationDialog from "../common/ConfirmationDialog";
+import ConfirmationDialog from "../common/ConfirmationDialog.tsx";
 import type { TimetableAssignmentDto } from "../../interfaces/teacherDtos";
 
 const AcademicStructureManager: React.FC = () => {
   const { id: timetableId } = useParams<{ id: string }>();
   const {
     cohorts,
-    assignments,
-    loading,
-    error,
+    isCohortsLoading,
+    cohortsError,
     addCohort,
     addStudentGroup,
     addSection,
+    reloadCohorts,
+  } = useCohorts(timetableId);
+  const {
+    assignments,
+    isAssignmentsLoading,
+    assignmentsError,
     addAssignment,
     removeAssignment,
-    reloadCohorts: reloadData,
-  } = useAcademicStructure(timetableId);
+    reloadAssignments,
+  } = useAssignments(timetableId);
 
   const [selectedCohortId, setSelectedCohortId] = useState<number | null>(null);
   const [isSubmittingCohort, setIsSubmittingCohort] = useState(false);
@@ -41,15 +47,23 @@ const AcademicStructureManager: React.FC = () => {
   const [isAssignModalOpen, setAssignModalOpen] = useState(false);
   const [isSubmittingAssignment, setIsSubmittingAssignment] = useState(false);
   const [unassigningId, setUnassigningId] = useState<number | null>(null);
+
   const selectedCohort = cohorts.find((c) => c.id === selectedCohortId) || null;
+
+  const reloadData = () => {
+    reloadCohorts();
+    reloadAssignments();
+  };
 
   const handleCreateCohort = async (name: string) => {
     setIsSubmittingCohort(true);
     setFormError(null);
-    const newCohort = await addCohort(name);
-    if (newCohort) {
-      setSelectedCohortId(newCohort.id);
-    } else {
+    try {
+      const newCohort = await addCohort(name);
+      if (newCohort) {
+        setSelectedCohortId(newCohort.id);
+      }
+    } catch (e) {
       setFormError("Failed to create cohort.");
     }
     setIsSubmittingCohort(false);
@@ -82,19 +96,14 @@ const AcademicStructureManager: React.FC = () => {
     sectionName: string,
   ) => addSection(cohortId, groupId, sectionName);
 
-  if (loading && cohorts.length === 0 && assignments.length === 0) {
+  const isInitialLoading = isCohortsLoading && isAssignmentsLoading;
+  const overallError = cohortsError || assignmentsError;
+
+  if (isInitialLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
         <CircularProgress />
       </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ m: 2 }}>
-        An error occurred: {error}
-      </Alert>
     );
   }
 
@@ -104,15 +113,18 @@ const AcademicStructureManager: React.FC = () => {
         timetableId={timetableId!}
         onImportComplete={reloadData}
       />
-
       <Divider sx={{ my: 3 }}>
         <Typography variant="overline">OR MANAGE MANUALLY</Typography>
       </Divider>
 
+      {overallError && (
+        <Alert severity="error" sx={{ m: 2 }}>
+          An error occurred: {overallError}
+        </Alert>
+      )}
+
       <Grid container spacing={4} sx={{ p: 2, height: "100%" }}>
-        {/* Master Pane - Cohorts & Faculty */}
         <Grid size={{ xs: 12, md: 5 }}>
-          {/* Cohort Management */}
           <Box>
             <Typography variant="h6" gutterBottom>
               Cohorts
@@ -134,7 +146,6 @@ const AcademicStructureManager: React.FC = () => {
               onSelectCohort={setSelectedCohortId}
             />
           </Box>
-          {/* Faculty Management */}
           <Box sx={{ mt: 4 }}>
             <Box
               sx={{
@@ -162,7 +173,6 @@ const AcademicStructureManager: React.FC = () => {
             />
           </Box>
         </Grid>
-        {/* Detail Pane - Cohort Details */}
         <Grid size={{ xs: 12, md: 7 }}>
           <CohortDetailView
             selectedCohort={selectedCohort}
@@ -172,7 +182,6 @@ const AcademicStructureManager: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Modals */}
       <AssignTeacherModal
         open={isAssignModalOpen}
         onClose={() => setAssignModalOpen(false)}
@@ -187,7 +196,7 @@ const AcademicStructureManager: React.FC = () => {
         title="Un-assign Teacher?"
         description="This will remove the teacher's contract for this timetable. They can be assigned again later. Are you sure?"
         confirmText="Un-assign"
-        isLoading={loading}
+        isLoading={isAssignmentsLoading}
       />
     </>
   );
