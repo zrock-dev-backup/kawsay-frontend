@@ -1,23 +1,27 @@
-import { courseRequirementHandlers } from "./courseRequirementHandlers";
-import { studentHandlers } from "./studentHandlers";
-import { eomHandlers } from "./eomHandlers";
-import { schedulingHandlers } from "./schedulingHandlers.ts";
-import { timetableHandlers } from "./timetableHandlers.ts";
-import { classHandlers } from "./classHandlers.ts";
 import { academicStructureHandlers } from "./academicStructureHandlers.ts";
-import { studentAuditHandlers } from "./studentAuditHandlers.ts";
+import { classHandlers } from "./classHandlers.ts";
+import { courseHandlers } from "./courseHandlers.ts";
+import { courseRequirementHandlers } from "./courseRequirementHandlers.ts";
+import { eomHandlers } from "./eomHandlers.ts";
+import { formDataHandlers } from "./formDataHandlers.ts";
 import { issueResolutionHandlers } from "./issueResolutionHandlers.ts";
-import {courseHandlers} from "./courseHandlers.ts";
+import { schedulingHandlers } from "./schedulingHandlers.ts";
+import { studentAuditHandlers } from "./studentAuditHandlers.ts";
+import { studentHandlers } from "./studentHandlers.ts";
+import { timetableHandlers } from "./timetableHandlers.ts";
+import { facultyHandlers } from "./facultyHandlers.ts";
 
 export const handlers = [
+  ...timetableHandlers,
+  ...academicStructureHandlers,
   ...courseRequirementHandlers,
   ...studentHandlers,
-  ...eomHandlers,
   ...schedulingHandlers,
-  ...timetableHandlers,
+  ...eomHandlers,
   ...classHandlers,
-  ...academicStructureHandlers,
+  ...courseHandlers,
   ...studentAuditHandlers,
   ...issueResolutionHandlers,
-  ...courseHandlers,
+  ...formDataHandlers,
+  ...facultyHandlers,
 ];

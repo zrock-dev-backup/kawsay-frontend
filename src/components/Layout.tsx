@@ -1,4 +1,3 @@
-// src/components/Layout.tsx
 import React from "react";
 import { Link as RouterLink, Outlet } from "react-router-dom";
 import {
@@ -30,10 +29,11 @@ const Layout: React.FC = () => {
             <Button color="inherit" component={RouterLink} to="/creation">Create Timetable</Button>
             <Button color="inherit" component={RouterLink} to="/selection">View Timetables</Button>
             <Button color="inherit" component={RouterLink} to="/enrollment/1">Enroll Students</Button>
+            <Button color="inherit" component={RouterLink} to="/faculty">Faculty Directory</Button>
           </Toolbar>
         </AppBar>
+
         <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
-          {/* WRAP Outlet WITH ErrorBoundary */}
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>

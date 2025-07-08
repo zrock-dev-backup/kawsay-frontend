@@ -3,7 +3,6 @@ import {
   getMockCourses,
   getMockTeachers,
 } from "./data/mockCoursesAndTeachers.ts";
-import { getMockClasses } from "./data/mockClasses.ts";
 import type { CourseRequirementDto } from "../interfaces/courseRequirementDtos.ts";
 import type {
   RequirementIssueDto,
@@ -24,12 +23,14 @@ import {
   getMockStudents,
   getMockProposedEnrollments,
 } from "./data/mockStudents.ts";
-import { Course, Teacher } from "../interfaces/apiDataTypes.ts";
+import { Course } from "../interfaces/apiDataTypes.ts";
 import { getMockCohorts } from "./data/mockAcademicStructure.ts";
 import { CohortDetailDto } from "../interfaces/academicStructureDtos.ts";
 import { getMockStudentAudit } from "./data/mockStudentAudit.ts";
 import { StudentIssueDetailDto } from "../interfaces/issueDtos.ts";
 import { getMockIssueDetails } from "./data/mockIssueDetails.ts";
+import type { TeacherDto } from "../interfaces/teacherDtos.ts";
+import {getMockClasses} from "./data/mockClasses.ts";
 
 class MockDb {
   public timetables: TimetableStructure[];
@@ -40,7 +41,7 @@ class MockDb {
   public studentAudit: StudentAuditDto[];
   public classes: Class[];
   public courses: Course[];
-  public teachers: Teacher[];
+  public teachers: TeacherDto[];
   public availableClasses: AvailableClassDto[];
   public cohorts: CohortDetailDto[];
   public issueDetails: Record<string, StudentIssueDetailDto[]>;
@@ -51,6 +52,7 @@ class MockDb {
   private nextCohortId: number;
   private nextGroupId: number;
   private nextSectionId: number;
+  private nextTeacherId: number;
 
   constructor() {
     this.timetables = getMockTimetables();
@@ -72,6 +74,7 @@ class MockDb {
     this.nextCohortId = this.cohorts.length + 1;
     this.nextGroupId = 1000;
     this.nextSectionId = 10000;
+    this.nextTeacherId = this.teachers.length + 1;
   }
 
   public getNextTimetableId = (): number => this.nextTimetableId++;
@@ -80,6 +83,7 @@ class MockDb {
   public getNextCohortId = (): number => this.nextCohortId++;
   public getNextGroupId = (): number => this.nextGroupId++;
   public getNextSectionId = (): number => this.nextSectionId++;
+  public getNextTeacherId = (): number => this.nextTeacherId++;
 }
 
 export const db = new MockDb();

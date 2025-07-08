@@ -1,1 +1,1 @@
-src/mocks/courseHandlers.ts
+// TODO: we are dead

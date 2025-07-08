@@ -7,6 +7,7 @@ import TrackSelectionPage from "./pages/TrackSelectionPage.tsx";
 import TimetableGridPage from "./pages/TimetableGridPage.tsx";
 import EndofModulePage from "./pages/EndofModulePage.tsx";
 import StudentEnrollmentPage from "./pages/StudentEnrollmentPage.tsx";
+import FacultyDirectoryPage from "./pages/FacultyDirectoryPage.tsx";
 
 // --- FEATURE FLAG ---
 const isEndOfModuleEnabled =
@@ -31,6 +32,7 @@ function App() {
             element={<EndofModulePage />}
           />
         )}
+        <Route path="faculty" element={<FacultyDirectoryPage />} />
       </Route>
     </Routes>
   );
