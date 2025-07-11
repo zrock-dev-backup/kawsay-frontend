@@ -29,7 +29,18 @@ export const TimetableListItem: React.FC<Props> = ({ timetable }) => {
 
   return (
     <ListItem disablePadding>
-      <ListItemButton onClick={handleNavigate}>
+      <ListItemButton
+        onClick={handleNavigate}
+        sx={{
+          transition: (theme) =>
+            theme.transitions.create("background-color", {
+              duration: theme.transitions.duration.short,
+            }),
+          "&:hover": {
+            backgroundColor: (theme) => theme.palette.action.hover,
+          },
+        }}
+      >
         <ListItemText
           primary={
             <Stack direction="row" spacing={2} alignItems="center">

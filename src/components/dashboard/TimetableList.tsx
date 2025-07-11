@@ -10,7 +10,7 @@ interface Props {
 
 export const TimetableList: React.FC<Props> = ({ title, timetables }) => {
   return (
-    <Paper variant="outlined">
+    <Paper variant="outlined" elevation={0}>
       <Box sx={{ p: 2 }}>
         <Typography variant="h6">{title}</Typography>
       </Box>

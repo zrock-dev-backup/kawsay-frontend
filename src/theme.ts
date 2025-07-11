@@ -42,6 +42,11 @@ const baseThemeOptions: ThemeOptions = {
   shape: {
     borderRadius: 8,
   },
+  transitions: {
+    duration: {
+      short: 250,
+    },
+  },
 };
 
 export const getTheme = (mode: PaletteMode) => {
