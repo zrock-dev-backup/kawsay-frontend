@@ -11,8 +11,8 @@ import CourseRequirementList from "../components/requirements/CourseRequirementL
 import CourseRequirementForm from "../components/requirements/CourseRequirementForm.tsx";
 import type { CourseRequirementDto } from "../interfaces/courseRequirementDtos.ts";
 import ConfirmationDialog from "../components/common/ConfirmationDialog.tsx";
-import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts"; // NEW IMPORT
-import { RequirementDetailsContent } from "../components/details/RequirementDetailsContent.tsx"; // NEW IMPORT
+import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts";
+import { RequirementDetailsContent } from "../components/details/RequirementDetailsContent.tsx";
 
 interface Props {
   timetableId: string;
@@ -80,7 +80,7 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
                 requirements={requirements}
                 onEdit={setEditingRequirement}
                 onDelete={handleDeleteRequest}
-                onViewDetails={handleViewDetails} // UPDATED PROP
+                onViewDetails={handleViewDetails}
               />
             )}
           </Paper>

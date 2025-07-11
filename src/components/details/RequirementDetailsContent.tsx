@@ -1,4 +1,3 @@
-// src/components/details/RequirementDetailsContent.tsx
 import React from "react";
 import { Box, Chip, Stack, Typography } from "@mui/material";
 import dayjs from "dayjs";

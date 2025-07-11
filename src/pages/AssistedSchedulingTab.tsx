@@ -1,4 +1,3 @@
-// src/pages/AssistedSchedulingTab.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Grid,
@@ -22,8 +21,8 @@ import type { CourseRequirementDto } from "../interfaces/courseRequirementDtos.t
 import ConfirmationDialog from "../components/common/ConfirmationDialog.tsx";
 import { useTimetableStore } from "../stores/useTimetableStore.ts";
 import { useStudentAudit } from "../hooks/useStudentAudit.ts";
-import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts"; // NEW IMPORT
-import { RequirementDetailsContent } from "../components/details/RequirementDetailsContent.tsx"; // NEW IMPORT
+import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts";
+import { RequirementDetailsContent } from "../components/details/RequirementDetailsContent.tsx";
 
 const AssistedSchedulingTab: React.FC = () => {
   const { requirements } = useCourseRequirementStore();

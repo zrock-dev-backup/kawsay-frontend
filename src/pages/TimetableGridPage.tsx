@@ -11,12 +11,12 @@ import dayjs from "dayjs";
 import { useTimetableStore } from "../stores/useTimetableStore.ts";
 import TimetableLifecycleWizard from "./TimetableLifecycleWizard.tsx";
 import TimetableToolboxView from "./TimetableToolboxView.tsx";
-import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts"; // NEW IMPORT
-import { ClassDetailsContent } from "../components/details/ClassDetailsContent.tsx"; // NEW IMPORT
+import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts";
+import { ClassDetailsContent } from "../components/details/ClassDetailsContent.tsx";
 
 const TimetableGridPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { openDrawer } = useDetailsDrawerStore(); // NEW: Get the action from the store
+  const { openDrawer } = useDetailsDrawerStore();
 
   const {
     structure,
