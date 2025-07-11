@@ -44,6 +44,7 @@ export const TimetableListItem: React.FC<Props> = ({ timetable }) => {
             </Stack>
           }
           secondary={secondaryText}
+          primaryTypographyProps={{ fontWeight: "bold" }}
         />
       </ListItemButton>
     </ListItem>
