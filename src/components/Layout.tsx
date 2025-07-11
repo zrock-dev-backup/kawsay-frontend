@@ -4,6 +4,7 @@ import {
   AppBar,
   Box,
   Container,
+  IconButton,
   List,
   ListItem,
   ListItemText,
@@ -13,14 +14,17 @@ import {
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 import ErrorBoundary from "./common/ErrorBoundary.tsx";
 import {
   StyledDrawer,
   StyledListItemButton,
   StyledListItemIcon,
 } from "./Layout.styles";
-import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts";
 import { DetailsDrawer } from "./common/DetailsDrawer.tsx";
+import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts";
+import { useThemeContext } from "../contexts/ThemeContext.tsx";
 
 const globalNavItems = [
   {
@@ -43,8 +47,8 @@ const globalNavItems = [
 const Layout: React.FC = () => {
   const { isOpen, title, content, closeDrawer } = useDetailsDrawerStore();
   const location = useLocation();
+  const { mode, toggleColorMode } = useThemeContext();
 
-  // Effect to close the drawer on any route change
   useEffect(() => {
     closeDrawer();
   }, [location.pathname, closeDrawer]);
@@ -92,6 +96,14 @@ const Layout: React.FC = () => {
               component="div"
               sx={{ flexGrow: 1, color: "text.primary" }}
             ></Typography>
+            {/* NEW: Theme toggle button */}
+            <IconButton
+              sx={{ ml: 1 }}
+              onClick={toggleColorMode}
+              color="inherit"
+            >
+              {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
           </Toolbar>
         </AppBar>
 
@@ -116,6 +128,7 @@ const Layout: React.FC = () => {
           </Typography>
         </Box>
       </Box>
+
       <DetailsDrawer open={isOpen} onClose={closeDrawer} title={title}>
         {content}
       </DetailsDrawer>
