@@ -18,6 +18,7 @@ import {
   DialogActions,
   Snackbar,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 import { AgGridReact } from "ag-grid-react";
 
@@ -27,10 +28,13 @@ import {
   SelectionChangedEvent,
   ModuleRegistry,
   ClientSideRowModelModule,
+  RowClassRules,
   ValidationModule,
   RowSelectionModule,
   DateFilterModule,
   TextFilterModule,
+  CellStyleModule,
+  RowStyleModule,
 } from "ag-grid-community";
 
 ModuleRegistry.registerModules([
@@ -39,9 +43,10 @@ ModuleRegistry.registerModules([
   RowSelectionModule,
   DateFilterModule,
   TextFilterModule,
+  CellStyleModule,
+  RowStyleModule,
 ]);
 
-import { themeBalham } from "ag-grid-community";
 import type { StudentAuditDto } from "../../interfaces/auditDtos";
 import {
   AUDIT_STATUS_CONFIG,
@@ -54,7 +59,8 @@ interface Props {
   isLoading: boolean;
   isBulkActionLoading: boolean;
   resolvingStudentId: number | null;
-  error: string | null;
+  error?: string | null;
+  density: "comfortable" | "compact";
   onResolveIssues: (studentId: number) => Promise<void>;
   onBulkConfirm: (studentIds: number[]) => Promise<void>;
   onClearError: () => void;
@@ -66,6 +72,7 @@ export const StudentAuditGrid: React.FC<Props> = ({
   isBulkActionLoading,
   resolvingStudentId,
   error,
+  density,
   onResolveIssues,
   onBulkConfirm,
   onClearError,
@@ -74,6 +81,7 @@ export const StudentAuditGrid: React.FC<Props> = ({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const theme = useTheme();
 
   const handleRowAction = useCallback(
     async (studentId: number) => {
@@ -81,6 +89,14 @@ export const StudentAuditGrid: React.FC<Props> = ({
     },
     [onResolveIssues],
   );
+
+  const rowClassRules: RowClassRules<StudentAuditDto> = useMemo(() => {
+    return {
+      "custom-row-even": (params) => (params.node.rowIndex ?? 0) % 2 === 0,
+      "custom-row-odd": (params) => (params.node.rowIndex ?? 0) % 2 !== 0,
+      "custom-row-selected": (params) => params.node.isSelected(),
+    };
+  }, []);
 
   const colDefs = useMemo(
     (): ColDef<StudentAuditDto>[] => [
@@ -97,20 +113,37 @@ export const StudentAuditGrid: React.FC<Props> = ({
         flex: 1,
         minWidth: 200,
         filter: "agTextColumnFilter",
+        cellStyle: {
+          fontWeight: 500,
+          color: theme.palette.text.primary,
+        },
       },
-      { field: "studentId", headerName: "Student ID", width: 120 },
+      {
+        field: "studentId",
+        headerName: "Student ID",
+        width: 120,
+        cellStyle: {
+          color: theme.palette.text.secondary,
+          fontWeight: 400,
+        },
+      },
       {
         field: "studentGroupName",
         headerName: "Group",
         flex: 1,
         minWidth: 150,
         filter: "agTextColumnFilter",
+        cellStyle: {
+          color: theme.palette.text.secondary,
+          fontWeight: 400,
+        },
       },
       {
         field: "status",
         headerName: "Status",
         width: 180,
         cellRenderer: (params: { value: keyof typeof AUDIT_STATUS_CONFIG }) => {
+          if (!params.value) return null;
           const config = AUDIT_STATUS_CONFIG[params.value];
           const IconComponent = config.icon;
           return (
@@ -151,7 +184,7 @@ export const StudentAuditGrid: React.FC<Props> = ({
         },
       },
     ],
-    [resolvingStudentId, handleRowAction],
+    [resolvingStudentId, handleRowAction, theme],
   );
 
   const onSelectionChanged = useCallback(
@@ -200,6 +233,46 @@ export const StudentAuditGrid: React.FC<Props> = ({
     }
   }, [isLoading, students]);
 
+  const gridClassName =
+    density === "compact" ? "ag-theme-quartz-compact" : "ag-theme-quartz";
+
+  const gridStyles = useMemo(
+    () => ({
+      "& .ag-theme-quartz": {
+        "--ag-row-height": density === "compact" ? "32px" : "40px",
+      },
+      "& .ag-theme-quartz-compact": {
+        "--ag-row-height": "32px",
+      },
+      "& .custom-row-even": {
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "rgba(255, 255, 255, 0.02)"
+            : "rgba(0, 0, 0, 0.01)",
+      },
+      "& .custom-row-odd": {
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "rgba(255, 255, 255, 0.05)"
+            : "rgba(0, 0, 0, 0.03)",
+      },
+      "& .custom-row-selected": {
+        backgroundColor: `${theme.palette.primary.main}15 !important`,
+        transition: "background-color 0.2s ease-in-out",
+      },
+      "& .ag-row:hover": {
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "rgba(255, 255, 255, 0.08)"
+            : "rgba(0, 0, 0, 0.04)",
+      },
+      "& .ag-row-selected:hover": {
+        backgroundColor: `${theme.palette.primary.main}20 !important`,
+      },
+    }),
+    [theme, density],
+  );
+
   return (
     <Box
       sx={{
@@ -207,6 +280,7 @@ export const StudentAuditGrid: React.FC<Props> = ({
         width: "100%",
         display: "flex",
         flexDirection: "column",
+        ...gridStyles,
       }}
     >
       {error && (
@@ -239,10 +313,9 @@ export const StudentAuditGrid: React.FC<Props> = ({
         </Button>
       </Box>
 
-      <div className="ag-theme-quartz" style={{ flex: 1 }}>
+      <div className={gridClassName} style={{ flex: 1 }}>
         <AgGridReact<StudentAuditDto>
           ref={gridRef}
-          theme={themeBalham}
           rowData={students}
           columnDefs={colDefs}
           rowSelection="multiple"
@@ -252,6 +325,8 @@ export const StudentAuditGrid: React.FC<Props> = ({
           isRowSelectable={(node: IRowNode<StudentAuditDto>) =>
             node.data ? AUDIT_STATUS_CONFIG[node.data.status].selectable : false
           }
+          rowClassRules={rowClassRules}
+          suppressRowHoverHighlight={false}
         />
       </div>
 
