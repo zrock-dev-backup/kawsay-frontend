@@ -11,41 +11,29 @@ export const GridContainer = styled(Box)(({ theme }) => ({
   position: "relative",
 }));
 
-const GridCell = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1),
+export const DayHeaderCell = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "isactive",
+})<{ isactive: "true" | "false" }>(({ theme, isactive }) => ({
+  padding: theme.spacing(0.5, 1),
+  textAlign: "center",
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderLeft: `1px solid ${theme.palette.divider}`,
-  "&:nth-of-type(8n + 2)": {
-    borderLeft: "none",
-  },
+  fontWeight: 600,
+  color: theme.palette.text.primary,
+  opacity: isactive === "true" ? 1 : 0.5,
 }));
 
-export const DayHeaderCell = styled(GridCell)<{ isactive: "true" | "false" }>(
-  ({ theme, isactive }) => ({
-    textAlign: "center",
-    backgroundColor:
-      isactive === "true" ? theme.palette.grey[100] : theme.palette.grey[50],
-    color:
-      isactive === "true"
-        ? theme.palette.text.primary
-        : theme.palette.text.disabled,
-    "&:first-of-type": {
-      borderLeft: `1px solid ${theme.palette.divider}`,
-    },
-  }),
-);
-
 export const TimeLabelCell = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1),
+  padding: theme.spacing(0.5),
   textAlign: "right",
-  borderRight: `1px solid ${theme.palette.divider}`,
-  borderTop: `1px solid ${theme.palette.divider}`,
-  position: "relative",
+  color: theme.palette.text.secondary,
+  fontWeight: 500,
+  borderLeft: `1px solid ${theme.palette.divider}`,
 }));
 
 export const BackgroundCell = styled(Box)(({ theme }) => ({
-  borderTop: `1px solid ${theme.palette.divider}`,
-  borderLeft: `1px solid ${theme.palette.divider}`,
+  // borderTop: `1px solid ${theme.palette.divider}`,
+  // borderLeft: `1px solid ${theme.palette.divider}`,
 }));
 
 export const SingleEventPaper = styled(Paper)(({ theme }) => ({

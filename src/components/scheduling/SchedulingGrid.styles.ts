@@ -13,40 +13,54 @@ export const SlotOverlay = styled(Box, {
   shouldForwardProp: (prop) => prop !== "status",
 })<{ status: "ideal" | "viable" }>(({ theme, status }) => ({
   position: "absolute",
-  top: 2,
-  left: 2,
-  right: 2,
-  bottom: 2,
+  top: 1,
+  left: 1,
+  right: 1,
+  bottom: 1,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: "2px",
   cursor: "pointer",
-  backgroundColor:
-    status === "ideal" ? "rgba(76, 175, 80, 0.2)" : "rgba(255, 193, 7, 0.2)",
-  border: "1px dashed",
-  borderColor:
-    status === "ideal"
-      ? theme.palette.success.main
-      : theme.palette.warning.main,
-  "&:hover": {
-    backgroundColor:
-      status === "ideal" ? "rgba(76, 175, 80, 0.4)" : "rgba(255, 193, 7, 0.4)",
-  },
-  color:
-    status === "ideal"
-      ? theme.palette.success.dark
-      : theme.palette.warning.dark,
+  borderRadius: `calc(${theme.shape.borderRadius}px - 2px)`,
+  transition: `background-color ${theme.transitions.duration.shorter}ms ease-in-out`,
+  ...(status === "ideal" && {
+    backgroundColor: alpha(theme.palette.success.light, 0.4),
+    color: theme.palette.success.dark,
+    "&:hover": {
+      backgroundColor: alpha(theme.palette.success.light, 0.6),
+    },
+  }),
+  ...(status === "viable" && {
+    backgroundColor: alpha(theme.palette.warning.light, 0.5),
+    color: theme.palette.warning.dark,
+    "&:hover": {
+      backgroundColor: alpha(theme.palette.warning.light, 0.7),
+    },
+  }),
 }));
 
 export const StagedPlacementItem = styled(Paper)(({ theme }) => ({
-  position: "absolute",
-  padding: theme.spacing(0.5),
-  backgroundColor: theme.palette.primary.light,
-  color: theme.palette.primary.contrastText,
-  overflow: "hidden",
-  zIndex: 2,
   cursor: "pointer",
+  padding: theme.spacing(0.5, 1),
+  margin: "1px",
+  overflow: "hidden",
   display: "flex",
   flexDirection: "column",
+  justifyContent: "center",
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  transition: theme.transitions.create(["box-shadow", "transform"], {
+    duration: theme.transitions.duration.short,
+  }),
+  "&:hover": {
+    boxShadow: theme.shadows[4],
+    transform: "translateY(-2px)",
+  },
 }));
+
+function alpha(color: string, value: number) {
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${value})`;
+}
