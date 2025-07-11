@@ -11,7 +11,8 @@ import CourseRequirementList from "../components/requirements/CourseRequirementL
 import CourseRequirementForm from "../components/requirements/CourseRequirementForm.tsx";
 import type { CourseRequirementDto } from "../interfaces/courseRequirementDtos.ts";
 import ConfirmationDialog from "../components/common/ConfirmationDialog.tsx";
-import RequirementDetailsModal from "../components/requirements/RequirementDetailsModal.tsx";
+import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts"; // NEW IMPORT
+import { RequirementDetailsContent } from "../components/details/RequirementDetailsContent.tsx"; // NEW IMPORT
 
 interface Props {
   timetableId: string;
@@ -29,14 +30,21 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
     useState<CourseRequirementDto | null>(null);
   const [requirementToDelete, setRequirementToDelete] =
     useState<CourseRequirementDto | null>(null);
-  const [viewingRequirement, setViewingRequirement] =
-    useState<CourseRequirementDto | null>(null);
+
+  const { openDrawer } = useDetailsDrawerStore(); // NEW
 
   useEffect(() => {
     if (timetableId) {
       fetchRequirements(Number(timetableId));
     }
   }, [timetableId, fetchRequirements]);
+
+  const handleViewDetails = (req: CourseRequirementDto) => {
+    openDrawer(
+      "Requirement Details",
+      <RequirementDetailsContent requirement={req} />,
+    );
+  };
 
   const handleCancelEdit = () => {
     setEditingRequirement(null);
@@ -64,16 +72,16 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
               Current Requirements
             </Typography>
             {isLoading && requirements.length === 0 ? (
-                <CircularProgress />
+              <CircularProgress />
             ) : error ? (
-                <Alert severity="error">{error}</Alert>
+              <Alert severity="error">{error}</Alert>
             ) : (
-                <CourseRequirementList
-                    requirements={requirements}
-                    onEdit={setEditingRequirement}
-                    onDelete={handleDeleteRequest}
-                    onViewDetails={setViewingRequirement}
-                />
+              <CourseRequirementList
+                requirements={requirements}
+                onEdit={setEditingRequirement}
+                onDelete={handleDeleteRequest}
+                onViewDetails={handleViewDetails} // UPDATED PROP
+              />
             )}
           </Paper>
         </Grid>
@@ -96,11 +104,6 @@ const CourseRequirementsTab: React.FC<Props> = ({ timetableId }) => {
         description={`Are you sure you want to delete the requirement for "${requirementToDelete?.courseName}"? This action cannot be undone.`}
         confirmText="Delete"
         isLoading={isLoading}
-      />
-      <RequirementDetailsModal
-        requirement={viewingRequirement}
-        open={!!viewingRequirement}
-        onClose={() => setViewingRequirement(null)}
       />
     </>
   );

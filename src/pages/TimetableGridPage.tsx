@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   Alert,
@@ -9,32 +9,14 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import { useTimetableStore } from "../stores/useTimetableStore.ts";
-import ClassDetailsModal from "../components/ClassDetailsModal.tsx";
 import TimetableLifecycleWizard from "./TimetableLifecycleWizard.tsx";
 import TimetableToolboxView from "./TimetableToolboxView.tsx";
-
-const useDetailsModal = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [classId, setClassId] = useState<number | null>(null);
-  const openModal = (id: number) => {
-    setClassId(id);
-    setIsOpen(true);
-  };
-  const closeModal = () => {
-    setIsOpen(false);
-    setClassId(null);
-  };
-  return { isOpen, classId, openModal, closeModal };
-};
+import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts"; // NEW IMPORT
+import { ClassDetailsContent } from "../components/details/ClassDetailsContent.tsx"; // NEW IMPORT
 
 const TimetableGridPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const {
-    isOpen: isDetailsModalOpen,
-    classId: detailsClassId,
-    openModal: openDetailsModal,
-    closeModal: closeDetailsModal,
-  } = useDetailsModal();
+  const { openDrawer } = useDetailsDrawerStore(); // NEW: Get the action from the store
 
   const {
     structure,
@@ -50,6 +32,10 @@ const TimetableGridPage: React.FC = () => {
       fetchTimetableData(id);
     }
   }, [id, fetchTimetableData]);
+
+  const handleLessonClick = (classId: number) => {
+    openDrawer("Class Details", <ClassDetailsContent classId={classId} />);
+  };
 
   if (loading)
     return (
@@ -75,41 +61,33 @@ const TimetableGridPage: React.FC = () => {
     );
 
   return (
-    <>
-      <Container maxWidth={false} sx={{ maxWidth: "95vw" }}>
-        <Box sx={{ my: 2 }}>
-          <Typography variant="h4" component="h1">
-            {structure.name}
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            {dayjs(structure.startDate).format("MMMM D, YYYY")} -{" "}
-            {dayjs(structure.endDate).format("MMMM D, YYYY")}
-          </Typography>
-        </Box>
+    <Container maxWidth={false} sx={{ maxWidth: "95vw" }}>
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h4" component="h1">
+          {structure.name}
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          {dayjs(structure.startDate).format("MMMM D, YYYY")} -{" "}
+          {dayjs(structure.endDate).format("MMMM D, YYYY")}
+        </Typography>
+      </Box>
 
-        {generateStatus && (
-          <Alert
-            severity={generateStatus.type}
-            sx={{ mb: 2 }}
-            onClose={clearGenerateStatus}
-          >
-            {generateStatus.message}
-          </Alert>
-        )}
+      {generateStatus && (
+        <Alert
+          severity={generateStatus.type}
+          sx={{ mb: 2 }}
+          onClose={clearGenerateStatus}
+        >
+          {generateStatus.message}
+        </Alert>
+      )}
 
-        {structure.status === "Published" ? (
-          <TimetableToolboxView onLessonClick={openDetailsModal} />
-        ) : (
-          <TimetableLifecycleWizard />
-        )}
-      </Container>
-
-      <ClassDetailsModal
-        classId={detailsClassId}
-        open={isDetailsModalOpen}
-        onClose={closeDetailsModal}
-      />
-    </>
+      {structure.status === "Published" ? (
+        <TimetableToolboxView onLessonClick={handleLessonClick} />
+      ) : (
+        <TimetableLifecycleWizard />
+      )}
+    </Container>
   );
 };
 

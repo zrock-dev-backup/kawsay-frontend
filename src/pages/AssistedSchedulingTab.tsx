@@ -1,3 +1,4 @@
+// src/pages/AssistedSchedulingTab.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Grid,
@@ -18,10 +19,11 @@ import UnscheduledList from "../components/scheduling/UnscheduledList.tsx";
 import SchedulingGrid from "../components/scheduling/SchedulingGrid.tsx";
 import { useCourseRequirementStore } from "../stores/useCourseRequirementStore.ts";
 import type { CourseRequirementDto } from "../interfaces/courseRequirementDtos.ts";
-import RequirementDetailsModal from "../components/requirements/RequirementDetailsModal.tsx";
 import ConfirmationDialog from "../components/common/ConfirmationDialog.tsx";
 import { useTimetableStore } from "../stores/useTimetableStore.ts";
 import { useStudentAudit } from "../hooks/useStudentAudit.ts";
+import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts"; // NEW IMPORT
+import { RequirementDetailsContent } from "../components/details/RequirementDetailsContent.tsx"; // NEW IMPORT
 
 const AssistedSchedulingTab: React.FC = () => {
   const { requirements } = useCourseRequirementStore();
@@ -39,9 +41,7 @@ const AssistedSchedulingTab: React.FC = () => {
   const isWizardMode = structure?.status === "Draft";
 
   const studentAuditHook = useStudentAudit(timetableId?.toString() ?? "");
-
-  const [viewingRequirement, setViewingRequirement] =
-    useState<CourseRequirementDto | null>(null);
+  const { openDrawer } = useDetailsDrawerStore(); // NEW
   const [isConfirmingFinalize, setIsConfirmingFinalize] = useState(false);
 
   useEffect(() => {
@@ -49,6 +49,13 @@ const AssistedSchedulingTab: React.FC = () => {
       reset();
     };
   }, [reset]);
+
+  const handleViewDetails = (req: CourseRequirementDto) => {
+    openDrawer(
+      "Requirement Details",
+      <RequirementDetailsContent requirement={req} />,
+    );
+  };
 
   const unscheduledCount = useMemo(() => {
     const stagedIds = new Set(
@@ -124,21 +131,16 @@ const AssistedSchedulingTab: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Unscheduled ({unscheduledCount})
           </Typography>
-          <UnscheduledList onViewDetails={setViewingRequirement} />
+          <UnscheduledList onViewDetails={handleViewDetails} />
         </Grid>
         <Grid size={{ xs: 12, md: 8 }} sx={{ height: "100%" }}>
           <Typography variant="h6" gutterBottom>
             Scheduling Grid
           </Typography>
-          <SchedulingGrid onViewDetails={setViewingRequirement} />
+          <SchedulingGrid onViewDetails={handleViewDetails} />
         </Grid>
       </Grid>
 
-      <RequirementDetailsModal
-        requirement={viewingRequirement}
-        open={!!viewingRequirement}
-        onClose={() => setViewingRequirement(null)}
-      />
       <ConfirmationDialog
         open={isConfirmingFinalize}
         onClose={() => setIsConfirmingFinalize(false)}
@@ -148,7 +150,6 @@ const AssistedSchedulingTab: React.FC = () => {
         confirmText="Finalize"
         isLoading={isFinalizing}
       />
-      {/* --- Wizard Transition Modal --- */}
       <Dialog open={!!lastFinalizationResult && isWizardMode}>
         <DialogTitle>Step Complete: Schedule Built</DialogTitle>
         <DialogContent>
