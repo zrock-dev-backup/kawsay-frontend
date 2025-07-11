@@ -1,4 +1,3 @@
-// src/components/Layout.styles.ts
 import {
   styled,
   Drawer as MuiDrawer,

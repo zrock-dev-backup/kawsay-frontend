@@ -1,13 +1,12 @@
 import { Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
-import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import TimetableCreation from "./pages/TimetableCreation.tsx";
-import TrackSelectionPage from "./pages/TrackSelectionPage.tsx";
 import TimetableGridPage from "./pages/TimetableGridPage.tsx";
 import EndofModulePage from "./pages/EndofModulePage.tsx";
 import StudentEnrollmentPage from "./pages/StudentEnrollmentPage.tsx";
 import FacultyDirectoryPage from "./pages/FacultyDirectoryPage.tsx";
+import TimetableDashboardPage from "./pages/TimetableDashboardPage.tsx";
 
 // --- FEATURE FLAG ---
 const isEndOfModuleEnabled =
@@ -17,9 +16,9 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<HomePage />} />
+        <Route index element={<TimetableDashboardPage />} />
         <Route path="creation" element={<TimetableCreation />} />
-        <Route path="selection" element={<TrackSelectionPage />} />
+        <Route path="selection" element={<TimetableDashboardPage />} />
         <Route
           path="enrollment/:timetableId"
           element={<StudentEnrollmentPage />}
