@@ -18,6 +18,7 @@ interface ConfirmationDialogProps {
   confirmText?: string;
   cancelText?: string;
   isLoading?: boolean;
+  confirmButtonColor?: "primary" | "secondary" | "error" | "success";
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -29,6 +30,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   isLoading = false,
+  confirmButtonColor = "error",
 }) => {
   return (
     <Dialog
@@ -50,7 +52,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           onClick={onConfirm}
           disabled={isLoading}
           variant="contained"
-          color="error"
+          color={confirmButtonColor}
           autoFocus
         >
           {isLoading ? (

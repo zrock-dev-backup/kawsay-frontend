@@ -55,7 +55,7 @@ const renderCell = (cell: GridCellViewModel) => {
                     e.stopPropagation();
                     cell.onViewDetails!();
                   }}
-                  sx={{ color: "white", p: 0.2 }}
+                  sx={{ color: "primary.contrastText", p: 0.2 }}
                 >
                   <InfoOutlinedIcon fontSize="inherit" />
                 </IconButton>

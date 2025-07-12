@@ -1,11 +1,11 @@
-import { Box, Paper, styled } from "@mui/material";
+import { Box, Paper } from "@mui/material";
+import { styled, alpha } from "@mui/material/styles";
 
 export const GridContainer = styled(Box)({
   display: "grid",
-  border: "1px solid",
+  border: `1px solid`,
   borderColor: "divider",
-  backgroundColor: "background.paper",
-  width: "100%",
+  overflow: "hidden",
   position: "relative",
 });
 
@@ -57,10 +57,3 @@ export const StagedPlacementItem = styled(Paper)(({ theme }) => ({
     transform: "translateY(-2px)",
   },
 }));
-
-function alpha(color: string, value: number) {
-  const r = parseInt(color.slice(1, 3), 16);
-  const g = parseInt(color.slice(3, 5), 16);
-  const b = parseInt(color.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${value})`;
-}

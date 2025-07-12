@@ -26,7 +26,8 @@ const style = {
   transform: "translate(-50%, -50%)",
   width: { xs: "95%", sm: 500, md: 600 },
   bgcolor: "background.paper",
-  border: "2px solid #000",
+  border: (theme: { palette: { divider: any } }) =>
+    `1px solid ${theme.palette.divider}`,
   boxShadow: 24,
   p: 4,
   maxHeight: "90vh",
@@ -107,29 +108,29 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({
         )}
         {!loading && !error && classData && (
           <Grid container spacing={2}>
-            <Grid size={{xs:12}}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="body1">
                 <strong>Course:</strong> {classData.courseName} (
                 {classData.courseCode})
               </Typography>
             </Grid>
-            <Grid size={{xs:12}}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="body1">
                 <strong>Teacher:</strong>{" "}
                 {classData.teacherName || "Not Assigned"}
               </Typography>
             </Grid>
-            <Grid size={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <Typography variant="body1">
                 <strong>Type:</strong> {classData.classType}
               </Typography>
             </Grid>
-            <Grid size={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <Typography variant="body1">
                 <strong>Frequency:</strong> {classData.frequency} per week
               </Typography>
             </Grid>
-            <Grid size={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <Typography variant="body1">
                 <strong>Length:</strong> {classData.length} period(s)
               </Typography>
