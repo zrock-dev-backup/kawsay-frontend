@@ -1,21 +1,26 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   AppBar,
   Box,
   Container,
+  Divider,
   IconButton,
   List,
   ListItem,
   ListItemText,
   Toolbar,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ErrorBoundary from "./common/ErrorBoundary.tsx";
 import {
   StyledDrawer,
@@ -48,6 +53,26 @@ const Layout: React.FC = () => {
   const { isOpen, title, content, closeDrawer } = useDetailsDrawerStore();
   const location = useLocation();
   const { mode, toggleColorMode } = useThemeContext();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [open, setOpen] = useState(() => {
+    const storedValue = localStorage.getItem("drawerOpen");
+    return storedValue ? JSON.parse(storedValue) : true;
+  });
+
+  const handleDrawerClose = () => setOpen(false);
+  const handleDrawerToggle = () => setOpen(!open);
+
+  useEffect(() => {
+    localStorage.setItem("drawerOpen", JSON.stringify(open));
+  }, [open]);
+
+  useEffect(() => {
+    if (isMobile) {
+      handleDrawerClose();
+    }
+  }, [location.pathname, isMobile]);
 
   useEffect(() => {
     closeDrawer();
@@ -55,58 +80,89 @@ const Layout: React.FC = () => {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      {/* Persistent Sidebar */}
-      <StyledDrawer variant="permanent" anchor="left">
+      <AppBar
+        position="fixed"
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          backgroundColor: "background.paper",
+          boxShadow: "none",
+          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+        }}
+      >
         <Toolbar>
-          <Typography variant="h6" noWrap component="div">
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ flexGrow: 1, color: "text.primary" }}
+          >
             Kawsay
           </Typography>
+          <IconButton sx={{ ml: 1 }} onClick={toggleColorMode} color="inherit">
+            {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
         </Toolbar>
-        <List>
-          {globalNavItems.map((item) => (
-            <ListItem key={item.text} disablePadding>
-              <StyledListItemButton
-                component={NavLink}
-                to={item.path}
-                end={item.path === "/selection"}
-              >
-                <StyledListItemIcon>{item.icon}</StyledListItemIcon>
-                <ListItemText primary={item.text} />
-              </StyledListItemButton>
-            </ListItem>
-          ))}
-        </List>
+      </AppBar>
+
+      <StyledDrawer
+        variant={isMobile ? "temporary" : "permanent"}
+        open={open}
+        onClose={handleDrawerClose}
+      >
+        {/* MODIFIED: Flexbox container for layout */}
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          {/* MODIFIED: Top section with brand */}
+          <Toolbar sx={{ justifyContent: open ? "flex-start" : "center" }}>
+            <Typography variant="h6" noWrap component="div">
+              {open ? "Kawsay" : "K"}
+            </Typography>
+          </Toolbar>
+
+          <Box sx={{ flexGrow: 1, overflowY: "auto", overflowX: "hidden" }}>
+            <List>
+              {globalNavItems.map((item) => (
+                <ListItem
+                  key={item.text}
+                  disablePadding
+                  sx={{ display: "block" }}
+                >
+                  <StyledListItemButton
+                    component={NavLink}
+                    to={item.path}
+                    end={item.path === "/selection"}
+                    open={open}
+                    title={item.text}
+                  >
+                    <StyledListItemIcon open={open}>
+                      {item.icon}
+                    </StyledListItemIcon>
+                    {open && <ListItemText primary={item.text} />}
+                  </StyledListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+
+          <Box>
+            <Divider />
+            <List>
+              <ListItem disablePadding sx={{ display: "block" }}>
+                <StyledListItemButton onClick={handleDrawerToggle} open={open}>
+                  <StyledListItemIcon open={open}>
+                    {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+                  </StyledListItemIcon>
+                  {open && <ListItemText primary="Collapse" />}
+                </StyledListItemButton>
+              </ListItem>
+            </List>
+          </Box>
+        </Box>
       </StyledDrawer>
 
       <Box
         component="main"
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
       >
-        <AppBar
-          position="static"
-          sx={{
-            backgroundColor: "background.paper",
-            boxShadow: "none",
-            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-          }}
-        >
-          <Toolbar>
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{ flexGrow: 1, color: "text.primary" }}
-            ></Typography>
-            {/* NEW: Theme toggle button */}
-            <IconButton
-              sx={{ ml: 1 }}
-              onClick={toggleColorMode}
-              color="inherit"
-            >
-              {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
-            </IconButton>
-          </Toolbar>
-        </AppBar>
-
+        <Toolbar />
         <Container maxWidth={false} sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
           <ErrorBoundary>
             <Outlet />
