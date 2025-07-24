@@ -5,8 +5,8 @@ import TimetableCreation from "./pages/TimetableCreation.tsx";
 import TimetableGridPage from "./pages/TimetableGridPage.tsx";
 import EndofModulePage from "./pages/EndofModulePage.tsx";
 import StudentEnrollmentPage from "./pages/StudentEnrollmentPage.tsx";
-import FacultyDirectoryPage from "./pages/FacultyDirectoryPage.tsx";
 import TimetableDashboardPage from "./pages/TimetableDashboardPage.tsx";
+import { FacultyRosterPage } from "./pages/FacultyRosterPage.tsx";
 
 // --- FEATURE FLAG ---
 const isEndOfModuleEnabled =
@@ -31,7 +31,7 @@ function App() {
             element={<EndofModulePage />}
           />
         )}
-        <Route path="faculty" element={<FacultyDirectoryPage />} />
+        <Route path="faculty" element={<FacultyRosterPage />} />
       </Route>
     </Routes>
   );

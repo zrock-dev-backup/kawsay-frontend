@@ -7,7 +7,7 @@ import type {
 const TIMETABLE_URL = `${API_BASE_URL}/timetable`;
 
 export const fetchTimetables = async (): Promise<TimetableStructure[]> => {
-  const response = await fetch(`${API_BASE_URL}/timetables`);
+  const response = await fetch(`${TIMETABLE_URL}`);
   return handleResponse<TimetableStructure[]>(response);
 };
 
@@ -38,5 +38,15 @@ export const publishTimetable = async (
   const response = await fetch(`${TIMETABLE_URL}/${timetableId}/publish`, {
     method: "POST",
   });
+  return handleResponse<TimetableStructure>(response);
+};
+
+export const fetchAllTimetables = async (): Promise<TimetableStructure[]> => {
+  const response = await fetch(`${TIMETABLE_URL}`);
+  return handleResponse<TimetableStructure[]>(response);
+};
+
+export const fetchMasterTimetable = async (): Promise<TimetableStructure> => {
+  const response = await fetch(`${TIMETABLE_URL}/master`);
   return handleResponse<TimetableStructure>(response);
 };

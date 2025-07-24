@@ -8,7 +8,7 @@ import {
   createTeacher,
   deleteTeacher,
   fetchTeachers,
-  updateTeacher,
+  updateTeacher as apiUpdateTeacher,
 } from "../services/facultyApi";
 
 interface FacultyState {
@@ -17,7 +17,11 @@ interface FacultyState {
   error: string | null;
   fetchTeachers: () => Promise<void>;
   addTeacher: (data: CreateTeacherRequestDto) => Promise<boolean>;
-  editTeacher: (id: number, data: UpdateTeacherRequestDto) => Promise<boolean>;
+  updateTeacher: (
+    id: number,
+    data: UpdateTeacherRequestDto,
+  ) => Promise<boolean>;
+  /** Deactivates a teacher's profile (soft delete). */
   removeTeacher: (id: number) => Promise<boolean>;
 }
 
@@ -55,13 +59,14 @@ export const useFacultyStore = create<FacultyState>((set, get) => ({
     }
   },
 
-  editTeacher: async (id: number, data: UpdateTeacherRequestDto) => {
-    set({ isLoading: true });
+  updateTeacher: async (id: number, data: UpdateTeacherRequestDto) => {
+    set({ isLoading: true, error: null });
     try {
-      const updatedTeacher = await updateTeacher(id, data);
+      const updatedTeacherFromServer = await apiUpdateTeacher(id, data);
+
       set((state) => ({
         teachers: state.teachers.map((t) =>
-          t.id === id ? updatedTeacher : t,
+          t.id === id ? updatedTeacherFromServer : t,
         ),
         isLoading: false,
       }));
@@ -70,22 +75,32 @@ export const useFacultyStore = create<FacultyState>((set, get) => ({
       const message =
         err instanceof Error ? err.message : "Failed to update teacher.";
       set({ error: message, isLoading: false });
+      // Do not revert state on failure, as the server might have failed
+      // for reasons other than bad data. The user can retry.
       return false;
     }
   },
 
   removeTeacher: async (id: number) => {
+    // TODO: For a soft delete, we can perform an optimistic update for a faster UI response.
     const originalTeachers = get().teachers;
+    // TODO: We assume the API call will succeed and filter the teacher out of the active list.
+    // In a real app, we might move them to an "inactive" list instead.
     set((state) => ({
-      teachers: state.teachers.filter((t) => t.id !== id),
+      teachers: state.teachers.map((t) =>
+        t.id === id ? { ...t, isActive: false } : t,
+      ),
     }));
 
     try {
       await deleteTeacher(id);
+      // TODO: On success, we can trigger a refetch to ensure consistency, or just leave the optimistic update.
+      // For now, the optimistic update is sufficient.
       return true;
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to delete teacher.";
+        err instanceof Error ? err.message : "Failed to deactivate teacher.";
+      // On failure, revert the optimistic update and set an error.
       set({ error: message, teachers: originalTeachers });
       return false;
     }

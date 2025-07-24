@@ -5,7 +5,8 @@ import {
   fetchTimetableStructureById,
   publishTimetable as apiPublishTimetable,
 } from "../services/timetableApi";
-import { generateScheduleForTimetable } from "../services/apiService"; // This could also be moved
+// TODO: This could also be moved
+import { generateScheduleForTimetable } from "../services/apiService";
 import type { TimetableStructure } from "../interfaces/timetableDtos.ts";
 
 interface TimetableState {

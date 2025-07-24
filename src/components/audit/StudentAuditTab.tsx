@@ -68,7 +68,6 @@ export const StudentAuditTab: React.FC<Props> = ({
           </Select>
         </FormControl>
 
-        {/* MODIFIED: Add density toggle button group */}
         <ToggleButtonGroup
           value={density}
           exclusive

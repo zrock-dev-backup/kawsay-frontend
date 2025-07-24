@@ -13,6 +13,7 @@ import { FacultyList } from "./FacultyList";
 import { FacultyForm } from "./FacultyForm";
 import type { TeacherDto } from "../../interfaces/teacherDtos";
 import ConfirmationDialog from "../common/ConfirmationDialog.tsx";
+import { useTimetableStore } from "../../stores/useTimetableStore.ts";
 
 export const FacultyDirectoryManager: React.FC = () => {
   const {
@@ -25,13 +26,16 @@ export const FacultyDirectoryManager: React.FC = () => {
     removeTeacher,
   } = useFacultyStore();
 
+  const { fetchTimetableData } = useTimetableStore();
+
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<TeacherDto | null>(null);
   const [deactivatingId, setDeactivatingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchTeachers();
-  }, [fetchTeachers]);
+    fetchTimetableData("1");
+  }, [fetchTeachers, fetchTimetableData]);
 
   const handleOpenForm = (teacher: TeacherDto | null = null) => {
     setEditingTeacher(teacher);
@@ -66,8 +70,15 @@ export const FacultyDirectoryManager: React.FC = () => {
   }
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+    <Paper sx={{ p: 2, m: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <Typography variant="h5">Faculty Directory</Typography>
         <Button
           variant="contained"
@@ -78,7 +89,11 @@ export const FacultyDirectoryManager: React.FC = () => {
         </Button>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <FacultyList
         teachers={teachers}

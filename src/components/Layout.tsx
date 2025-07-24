@@ -38,14 +38,14 @@ const globalNavItems = [
     path: "/selection",
   },
   {
-    text: "Faculty Directory",
+    text: "Faculty Roster",
     icon: <GroupIcon />,
     path: "/faculty",
   },
   {
     text: "Student Enrollment",
     icon: <HowToRegIcon />,
-    path: "/enrollment/1",
+    path: "/enrollment/1", // TODO: be dynamic
   },
 ];
 
@@ -108,9 +108,7 @@ const Layout: React.FC = () => {
         open={open}
         onClose={handleDrawerClose}
       >
-        {/* MODIFIED: Flexbox container for layout */}
         <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-          {/* MODIFIED: Top section with brand */}
           <Toolbar sx={{ justifyContent: open ? "flex-start" : "center" }}>
             <Typography variant="h6" noWrap component="div">
               {open ? "Kawsay" : "K"}

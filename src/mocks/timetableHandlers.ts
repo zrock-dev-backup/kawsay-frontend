@@ -5,6 +5,7 @@ import type {
   CreateTimetableRequest,
   TimetableStatus,
 } from "../interfaces/timetableDtos.ts";
+import { MASTER_TIMETABLE_STRUCTURE } from "./data/mockTimetables.ts";
 
 const TIMETABLE_URL = `${API_BASE_URL}/timetable`;
 
@@ -31,8 +32,13 @@ export const timetableHandlers = [
   }),
 
   // GET all timetables
-  http.get(`${API_BASE_URL}/timetables`, async () => {
+  http.get(`${TIMETABLE_URL}`, async () => {
     return HttpResponse.json(db.timetables);
+  }),
+
+  // GET /api/timetables/master
+  http.get(`${TIMETABLE_URL}/master`, async () => {
+    return HttpResponse.json(MASTER_TIMETABLE_STRUCTURE);
   }),
 
   // GET timetable by ID
