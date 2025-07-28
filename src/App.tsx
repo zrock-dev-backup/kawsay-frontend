@@ -8,6 +8,7 @@ import StudentEnrollmentPage from "./pages/StudentEnrollmentPage.tsx";
 import TimetableDashboardPage from "./pages/TimetableDashboardPage.tsx";
 import { FacultyRosterPage } from "./pages/FacultyRosterPage.tsx";
 import SignInPage from "./pages/SignInPage.tsx";
+import SignUpPage from "./pages/SignUpPage.tsx"; // Import the new page
 import ProtectedRoute from "./components/common/ProtectedRoute.tsx";
 
 // --- FEATURE FLAG ---
@@ -19,6 +20,7 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/sign-in" element={<SignInPage />} />
+      <Route path="/sign-up" element={<SignUpPage />} /> {/* Add this route */}
 
       {/* Protected Academic System Routes */}
       <Route

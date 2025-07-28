@@ -6,6 +6,7 @@ import {
   Card,
   CircularProgress,
   Container,
+  Stack, // Import Stack
   TextField,
   Typography,
 } from "@mui/material";
@@ -17,7 +18,7 @@ import {
   type AuthError,
 } from "firebase/auth";
 import { auth } from "../firebaseConfig";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom"; // Import Link
 
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email format").required("Email is required"),
@@ -133,6 +134,14 @@ const SignInPage: React.FC = () => {
           >
             {isSubmitting ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
           </Button>
+          {/* Add link to Sign Up page */}
+          <Stack direction="row" justifyContent="flex-end">
+            <RouterLink to="/sign-up" style={{ textDecoration: 'none' }}>
+              <Typography variant="body2" color="primary.main" sx={{ "&:hover": { textDecoration: 'underline' }}}>
+                Don't have an account? Sign Up
+              </Typography>
+            </RouterLink>
+          </Stack>
         </Box>
       </Card>
     </Container>
