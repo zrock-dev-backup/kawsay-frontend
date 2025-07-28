@@ -98,7 +98,7 @@ const Layout: React.FC = () => {
           >
             Kawsay
           </Typography>
-          <IconButton sx={{ ml: 1 }} onClick={toggleColorMode} color="inherit">
+          <IconButton sx={{ ml: 1 }} onClick={toggleColorMode} color="default">
             {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
           <UserMenu/>
