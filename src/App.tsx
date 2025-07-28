@@ -7,6 +7,8 @@ import EndofModulePage from "./pages/EndofModulePage.tsx";
 import StudentEnrollmentPage from "./pages/StudentEnrollmentPage.tsx";
 import TimetableDashboardPage from "./pages/TimetableDashboardPage.tsx";
 import { FacultyRosterPage } from "./pages/FacultyRosterPage.tsx";
+import SignInPage from "./pages/SignInPage.tsx";
+import ProtectedRoute from "./components/common/ProtectedRoute.tsx";
 
 // --- FEATURE FLAG ---
 const isEndOfModuleEnabled =
@@ -15,7 +17,18 @@ const isEndOfModuleEnabled =
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      {/* Public Routes */}
+      <Route path="/sign-in" element={<SignInPage />} />
+
+      {/* Protected Academic System Routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<TimetableDashboardPage />} />
         <Route path="creation" element={<TimetableCreation />} />
         <Route path="selection" element={<TimetableDashboardPage />} />
@@ -23,8 +36,7 @@ function App() {
           path="enrollment/:timetableId"
           element={<StudentEnrollmentPage />}
         />
-        <Route path="*" element={<NotFoundPage />} />
-        <Route path={"table/:id"} element={<TimetableGridPage />} />
+        <Route path="table/:id" element={<TimetableGridPage />} />
         {isEndOfModuleEnabled && (
           <Route
             path={"module-processing/:timetableId"}
@@ -33,6 +45,9 @@ function App() {
         )}
         <Route path="faculty" element={<FacultyRosterPage />} />
       </Route>
+
+      {/* Catch-all Not Found Route */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

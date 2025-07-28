@@ -30,6 +30,7 @@ import {
 import { DetailsDrawer } from "./common/DetailsDrawer.tsx";
 import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts";
 import { useThemeContext } from "../contexts/ThemeContext.tsx";
+import UserMenu from "./common/UserMenu.tsx";
 
 const globalNavItems = [
   {
@@ -100,6 +101,7 @@ const Layout: React.FC = () => {
           <IconButton sx={{ ml: 1 }} onClick={toggleColorMode} color="inherit">
             {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
+          <UserMenu/>
         </Toolbar>
       </AppBar>
 

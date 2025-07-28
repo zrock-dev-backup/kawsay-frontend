@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProviderWrapper } from "./contexts/ThemeContext.tsx";
+import { AuthProvider } from "./contexts/AuthContext.tsx";
 
 async function enableMocking() {
   if (import.meta.env.MODE !== "development") {
@@ -19,7 +20,9 @@ enableMocking().then(() => {
       <ThemeProviderWrapper>
         <CssBaseline />
         <BrowserRouter>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </BrowserRouter>
       </ThemeProviderWrapper>
     </React.StrictMode>,
