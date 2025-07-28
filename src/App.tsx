@@ -8,8 +8,9 @@ import StudentEnrollmentPage from "./pages/StudentEnrollmentPage.tsx";
 import TimetableDashboardPage from "./pages/TimetableDashboardPage.tsx";
 import { FacultyRosterPage } from "./pages/FacultyRosterPage.tsx";
 import SignInPage from "./pages/SignInPage.tsx";
-import SignUpPage from "./pages/SignUpPage.tsx"; // Import the new page
+import SignUpPage from "./pages/SignUpPage.tsx";
 import ProtectedRoute from "./components/common/ProtectedRoute.tsx";
+import ProfilePage from "./pages/ProfilePage.tsx"; // Import the new page
 
 // --- FEATURE FLAG ---
 const isEndOfModuleEnabled =
@@ -20,7 +21,7 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/sign-in" element={<SignInPage />} />
-      <Route path="/sign-up" element={<SignUpPage />} /> {/* Add this route */}
+      <Route path="/sign-up" element={<SignUpPage />} />
 
       {/* Protected Academic System Routes */}
       <Route
@@ -32,6 +33,7 @@ function App() {
         }
       >
         <Route index element={<TimetableDashboardPage />} />
+        <Route path="profile" element={<ProfilePage />} /> {/* Add this route */}
         <Route path="creation" element={<TimetableCreation />} />
         <Route path="selection" element={<TimetableDashboardPage />} />
         <Route
