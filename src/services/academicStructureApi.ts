@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from "./api.helpers";
+import { API_BASE_URL, apiRequest, handleResponse } from "./api.helpers";
 import type {
   AssignStudentToSectionRequest,
   CohortDetailDto,
@@ -9,15 +9,12 @@ import type {
   StudentGroupDetailDto,
 } from "../interfaces/academicStructureDtos";
 
-import type {
-  BulkStructureRequestItem,
-  StructureBulkImportResultDto,
-} from "../interfaces/bulkImportDtos";
 import { SummaryDto } from "../interfaces/formDataDtos.ts";
 import type {
   CreateTimetableAssignmentRequestDto,
   TimetableAssignmentDto,
 } from "../interfaces/teacherDtos.ts";
+import type { AcademicStructureSyncResultDto } from "../interfaces/syncDtos.ts";
 
 const ACADEMIC_STRUCTURE_URL = `${API_BASE_URL}/academic-structure`;
 const TIMETABLE_API_URL = `${API_BASE_URL}/timetable`;
@@ -25,8 +22,13 @@ const TIMETABLE_API_URL = `${API_BASE_URL}/timetable`;
 export const fetchCohortsForTimetable = async (
   timetableId: string,
 ): Promise<CohortDetailDto[]> => {
-  const response = await fetch(`${TIMETABLE_API_URL}/${timetableId}/cohorts`);
-  return handleResponse<CohortDetailDto[]>(response);
+  return apiRequest<CohortDetailDto[]>(
+    `${TIMETABLE_API_URL}/${timetableId}/cohorts`,
+    {
+      cacheTtlMs: 30_000,
+      retries: 2,
+    },
+  );
 };
 
 export const createCohort = async (
@@ -80,55 +82,63 @@ export const assignStudentToSection = async (
   await handleResponse<void>(response); // Expecting 204 No Content
 };
 
-export const bulkImportStructure = async (
+export const syncAcademicStructureFromSource = async (
   timetableId: string,
-  data: BulkStructureRequestItem[],
-): Promise<StructureBulkImportResultDto> => {
-  const response = await fetch(
-    `${TIMETABLE_API_URL}/${timetableId}/academic-structure/bulk-import`,
+): Promise<AcademicStructureSyncResultDto> => {
+  return apiRequest<AcademicStructureSyncResultDto>(
+    `${TIMETABLE_API_URL}/${timetableId}/academic-structure/sync`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      timeoutMs: 15_000,
+      retries: 2,
     },
   );
-  return handleResponse<StructureBulkImportResultDto>(response);
 };
 
 export const fetchCohortsForTimetableSummary = async (
   timetableId: string | number,
 ): Promise<SummaryDto[]> => {
-  const response = await fetch(
+  return apiRequest<SummaryDto[]>(
     `${TIMETABLE_API_URL}/${timetableId}/cohorts-summary`,
+    {
+      cacheTtlMs: 60_000,
+      retries: 1,
+    },
   );
-  return handleResponse<SummaryDto[]>(response);
 };
 
 export const fetchGroupsForCohortSummary = async (
   cohortId: string | number,
 ): Promise<SummaryDto[]> => {
-  const response = await fetch(
+  return apiRequest<SummaryDto[]>(
     `${ACADEMIC_STRUCTURE_URL}/cohorts/${cohortId}/groups-summary`,
+    {
+      cacheTtlMs: 60_000,
+    },
   );
-  return handleResponse<SummaryDto[]>(response);
 };
 
 export const fetchSectionsForGroupSummary = async (
   groupId: string | number,
 ): Promise<SummaryDto[]> => {
-  const response = await fetch(
+  return apiRequest<SummaryDto[]>(
     `${ACADEMIC_STRUCTURE_URL}/groups/${groupId}/sections-summary`,
+    {
+      cacheTtlMs: 60_000,
+    },
   );
-  return handleResponse<SummaryDto[]>(response);
 };
 
 export const fetchAssignmentsForTimetable = async (
   timetableId: string,
 ): Promise<TimetableAssignmentDto[]> => {
-  const response = await fetch(
+  return apiRequest<TimetableAssignmentDto[]>(
     `${TIMETABLE_API_URL}/${timetableId}/assignments`,
+    {
+      cacheTtlMs: 15_000,
+      retries: 1,
+    },
   );
-  return handleResponse<TimetableAssignmentDto[]>(response);
 };
 
 export const createAssignment = async (

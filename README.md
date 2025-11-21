@@ -1,54 +1,27 @@
-# React + TypeScript + Vite
+# Kawsay Scheduling Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This Vite + React application powers the Kawsay scheduling and academic-structure console. The UI relies on a typed API service layer (`src/services`) and MSW-backed mocks (`src/mocks`) when `VITE_DEMO_MODE=true`.
 
-Currently, two official plugins are available:
+## Getting started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Set `VITE_API_BASE_URL` to the backend host (without the `/kawsay` suffix). When omitted, enabling `VITE_DEMO_MODE=true` will proxy all requests to the in-browser MSW server.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## End-of-Module API contract
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+Bulk CSV ingestion has been removed. The EOM workflow now synchronizes data on-demand through these endpoints:
+
+| Endpoint | Method | Description | Body |
+| --- | --- | --- | --- |
+| `/kawsay/eom/:timetableId/sync-grades` | `POST` | Fetches LMS grade snapshots, returning `GradeSyncReportDto` with `processedCount`, `failedCount`, `retakeDemand`, and `advancingCohorts`. | _none_ |
+| `/kawsay/eom/:timetableId/prepare-enrollments` | `POST` | Builds enrollment proposals for the next module and returns `EnrollmentProposalResultDto`. | `{ "destinationTimetableId": string }` |
+
+See `src/interfaces/eomDtos.ts` for the full TypeScript definitions used throughout the app.
+
+## Mock data
+
+When running in demo mode, `src/mocks/eomHandlers.ts` responds with deterministic data seeded from `src/mocks/data/mockEomReports.ts`. The mock DB stores the latest grade sync report and a rolling history of generated enrollment proposals so UI flows behave like the production API.

@@ -1,14 +1,11 @@
-import { API_BASE_URL, handleResponse } from "./api.helpers";
+import { API_BASE_URL, apiRequest, handleResponse } from "./api.helpers";
 import type {
   CourseRequirementDto,
   CreateCourseRequirementRequest,
   EligibilitySummary,
 } from "../interfaces/courseRequirementDtos";
 import type { RequirementIssueDto } from "../interfaces/auditDtos";
-import type {
-  BulkImportResultDto,
-  BulkRequirementRequestItem,
-} from "../interfaces/bulkImportDtos";
+import type { CourseRequirementSyncResultDto } from "../interfaces/syncDtos.ts";
 
 const REQ_URL = `${API_BASE_URL}/requirements`;
 
@@ -20,8 +17,13 @@ export interface PreflightCheckResult {
 export const fetchRequirements = async (
   timetableId: number,
 ): Promise<CourseRequirementDto[]> => {
-  const response = await fetch(`${REQ_URL}?timetableId=${timetableId}`);
-  return handleResponse<CourseRequirementDto[]>(response);
+  return apiRequest<CourseRequirementDto[]>(
+    `${REQ_URL}?timetableId=${timetableId}`,
+    {
+      cacheTtlMs: 30_000,
+      retries: 2,
+    },
+  );
 };
 
 export const createRequirement = async (
@@ -78,17 +80,6 @@ export const fetchRequirementIssues = async (
   return handleResponse<RequirementIssueDto[]>(response);
 };
 
-export const bulkCreateRequirements = async (
-  data: BulkRequirementRequestItem[],
-): Promise<BulkImportResultDto> => {
-  const response = await fetch(`${REQ_URL}/bulk-import`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return handleResponse<BulkImportResultDto>(response);
-};
-
 export const runPreflightCheckForRequirement = async (
   data: CreateCourseRequirementRequest,
 ): Promise<PreflightCheckResult> => {
@@ -98,4 +89,17 @@ export const runPreflightCheckForRequirement = async (
     body: JSON.stringify(data),
   });
   return handleResponse<PreflightCheckResult>(response);
+};
+
+export const syncRequirementsFromSource = async (
+  timetableId: number,
+): Promise<CourseRequirementSyncResultDto> => {
+  return apiRequest<CourseRequirementSyncResultDto>(
+    `${REQ_URL}/${timetableId}/sync`,
+    {
+      method: "POST",
+      timeoutMs: 15_000,
+      retries: 2,
+    },
+  );
 };

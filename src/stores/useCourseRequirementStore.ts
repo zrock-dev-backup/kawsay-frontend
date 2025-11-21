@@ -10,12 +10,9 @@ import {
   deleteRequirement,
   fetchRequirementById,
   runPreflightCheck,
-  bulkCreateRequirements,
+  syncRequirementsFromSource as syncRequirementsFromSourceApi,
 } from "../services/courseRequirementsApi.ts";
-import {
-  BulkImportResultDto,
-  BulkRequirementRequestItem,
-} from "../interfaces/bulkImportDtos.ts";
+import type { CourseRequirementSyncResultDto } from "../interfaces/syncDtos.ts";
 
 const POLLING_INTERVAL = 3000;
 const POLLING_TIMEOUT = 60000; // 1 minute
@@ -26,8 +23,9 @@ interface CourseRequirementState {
   error: string | null;
   checkingIds: Set<number>;
 
-  isBulkImporting: boolean;
-  bulkImportError: string | null;
+  isSyncingFromSource: boolean;
+  syncError: string | null;
+  lastSyncResult: CourseRequirementSyncResultDto | null;
 
   fetchRequirements: (timetableId: number) => Promise<void>;
   addRequirement: (data: CreateCourseRequirementRequest) => Promise<boolean>;
@@ -37,9 +35,9 @@ interface CourseRequirementState {
   ) => Promise<boolean>;
   deleteRequirement: (id: number) => Promise<boolean>;
   runPreflightCheck: (id: number) => Promise<void>;
-  bulkAddRequirements: (
-    data: BulkRequirementRequestItem[],
-  ) => Promise<BulkImportResultDto | null>;
+  syncRequirementsFromSource: (
+    timetableId: number,
+  ) => Promise<CourseRequirementSyncResultDto | null>;
 }
 
 export const useCourseRequirementStore = create<CourseRequirementState>(
@@ -48,8 +46,9 @@ export const useCourseRequirementStore = create<CourseRequirementState>(
     isLoading: false,
     error: null,
     checkingIds: new Set(),
-    isBulkImporting: false,
-    bulkImportError: null,
+    isSyncingFromSource: false,
+    syncError: null,
+    lastSyncResult: null,
 
     fetchRequirements: async (timetableId: number) => {
       set({ isLoading: true, error: null });
@@ -166,35 +165,22 @@ export const useCourseRequirementStore = create<CourseRequirementState>(
         return false; // Failure
       }
     },
-    bulkAddRequirements: async (data: BulkRequirementRequestItem[]) => {
-      set({ isBulkImporting: true, bulkImportError: null });
+    syncRequirementsFromSource: async (timetableId: number) => {
+      set({ isSyncingFromSource: true, syncError: null });
       try {
-        const result = await bulkCreateRequirements(data);
-
-        if (
-          result.createdRequirements &&
-          result.createdRequirements.length > 0
-        ) {
-          set((state) => ({
-            requirements: [
-              ...state.requirements,
-              ...result.createdRequirements,
-            ],
-          }));
-          // Optional: Trigger pre-flight checks for all newly created requirements
-          result.createdRequirements.forEach((req) => {
-            get().runPreflightCheck(req.id);
-          });
-        }
-
-        set({ isBulkImporting: false });
+        const result = await syncRequirementsFromSourceApi(timetableId);
+        await get().fetchRequirements(timetableId);
+        set({
+          lastSyncResult: result,
+          isSyncingFromSource: false,
+        });
         return result;
       } catch (err) {
         const message =
           err instanceof Error
             ? err.message
-            : "An unknown error occurred during bulk import.";
-        set({ bulkImportError: message, isBulkImporting: false });
+            : "Unable to sync requirements from source.";
+        set({ syncError: message, isSyncingFromSource: false });
         return null;
       }
     },

@@ -2,9 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { Alert, Button, Container, Paper, Typography } from "@mui/material";
 import { useEndOfModule } from "../hooks/useEndOfModule";
-import { CsvImportDialog } from "../components/common/CsvImportDialog";
 import { EomSummaryReport } from "../components/eom/EomSummaryReport";
-import { API_BASE_URL } from "../services/api.helpers";
 
 export const EndOfModulePage: React.FC = () => {
   const { timetableId } = useParams<{ timetableId: string }>();
@@ -20,11 +18,6 @@ export const EndOfModulePage: React.FC = () => {
       <Alert severity="error">Timetable ID is missing from the URL.</Alert>
     );
   }
-
-  const importConfig = {
-    endpoint: `${API_BASE_URL}/eom/${timetableId}/ingest-grades`,
-    entityName: "Final Grades",
-  };
 
   return (
     <Container maxWidth="lg" sx={{ my: 4 }}>
@@ -48,13 +41,17 @@ export const EndOfModulePage: React.FC = () => {
       )}
 
       <Paper elevation={2} sx={{ p: 3 }}>
-        <Typography variant="h6">Step 1: Ingest Final Grade Data</Typography>
+        <Typography variant="h6">Step 1: Sync Final Grade Data</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Trigger a sync whenever the latest results are available.
+        </Typography>
         <Button
           variant="contained"
-          onClick={actions.openImportDialog}
+          onClick={actions.syncGradesFromSource}
+          disabled={state.isSyncingGrades}
           sx={{ mt: 2 }}
         >
-          Import Grades CSV
+          {state.isSyncingGrades ? "Syncing..." : "Sync Grades from LMS"}
         </Button>
       </Paper>
 
@@ -67,13 +64,6 @@ export const EndOfModulePage: React.FC = () => {
           }
         />
       )}
-
-      <CsvImportDialog
-        open={state.isImportDialogOpen}
-        onClose={actions.closeImportDialog}
-        onComplete={actions.handleIngestionComplete}
-        config={importConfig}
-      />
     </Container>
   );
 };

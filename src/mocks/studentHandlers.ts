@@ -75,27 +75,6 @@ export const studentHandlers = [
     return HttpResponse.json(newEnrollment, { status: 201 });
   }),
 
-  http.post(`${API_BASE_URL}/students/bulk-import`, async ({ request }) => {
-    const body = (await request.json()) as { id: number; name: string }[];
-    const errors: { csvRow: number; studentId: number; error: string }[] = [];
-
-    const invalidRow = body.find((s) => s.id === 9999);
-    if (invalidRow) {
-      errors.push({
-        csvRow: body.indexOf(invalidRow) + 1,
-        studentId: 9999,
-        error: "Student ID 9999 does not exist in the database.",
-      });
-    }
-
-    await delay(800);
-    return HttpResponse.json({
-      processedCount: body.length - errors.length,
-      failedCount: errors.length,
-      errors: errors,
-    });
-  }),
-
   http.get(`${API_BASE_URL}/timetables/:id/student-audit`, async () => {
     await delay(800);
     return HttpResponse.json(db.studentAudit);

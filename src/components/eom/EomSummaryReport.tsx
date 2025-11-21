@@ -12,10 +12,10 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import type { IngestionResult } from "../../hooks/useEndOfModule";
+import type { GradeSyncReportDto } from "../../interfaces/eomDtos";
 
 interface Props {
-  ingestionResult: IngestionResult;
+  ingestionResult: GradeSyncReportDto;
   isPreparingProposals: boolean;
   onPrepareEnrollments: () => void;
 }

@@ -25,29 +25,3 @@ export interface DayPeriodPreferenceDto {
   dayId: number;
   startPeriodId: number;
 }
-
-export interface GradeIngestionDto {
-  studentId: number;
-  courseId: number;
-  gradeValue: number;
-}
-
-export interface StudentCohortDto {
-  advancingStudents: { id: number; name: string }[];
-  retakeStudents: { id: number; name: string }[];
-}
-
-export interface BulkAdvanceRequest {
-  timetableId: number;
-  studentIds: number[];
-}
-
-export interface BulkRetakeRequest {
-  timetableId: number;
-  studentIds: number[];
-}
-
-export interface BulkActionResponse {
-  message: string;
-  processedCount: number;
-}

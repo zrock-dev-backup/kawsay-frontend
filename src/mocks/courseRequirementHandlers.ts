@@ -5,11 +5,9 @@ import type {
   CourseRequirementDto,
   CreateCourseRequirementRequest,
 } from "../interfaces/courseRequirementDtos.ts";
-import type {
-  BulkImportResultDto,
-  BulkRequirementRequestItem,
-} from "../interfaces/bulkImportDtos.ts";
+import type { CourseRequirementSyncResultDto } from "../interfaces/syncDtos.ts";
 import dayjs from "dayjs";
+import { getRequirementSyncSeeds } from "./data/mockRequirementSyncSource.ts";
 
 const REQ_URL = `${API_BASE_URL}/requirements`;
 
@@ -181,87 +179,116 @@ export const courseRequirementHandlers = [
     return HttpResponse.json(issues);
   }),
 
-  // POST /requirements/bulk-import
-  http.post(`${REQ_URL}/bulk-import`, async ({ request }) => {
-    const requestItems = (await request.json()) as BulkRequirementRequestItem[];
-    const result: BulkImportResultDto = {
-      processedCount: 0,
-      failedCount: 0,
-      errors: [],
-      createdRequirements: [],
-    };
+  // POST /requirements/:timetableId/sync
+  http.post(`${REQ_URL}/:timetableId/sync`, async ({ params }) => {
+    const timetableId = Number(params.timetableId);
+    const seeds = getRequirementSyncSeeds(timetableId);
 
-    // Simulate backend processing
-    await delay(800);
+    if (!seeds) {
+      return HttpResponse.json(
+        { message: "No requirement source data found for timetable." },
+        { status: 404 },
+      );
+    }
 
-    for (const [index, item] of requestItems.entries()) {
-      const csvRow = index + 2; // Assuming header is row 1
-      let validationError = "";
+    const startedAt = new Date();
+    let requirementsCreated = 0;
+    let requirementsUpdated = 0;
+    let skipped = 0;
+    const warnings: string[] = [];
 
-      // 1. Validate Course
-      const course = db.courses.find((c) => c.code === item.courseCode);
+    await delay(700);
+
+    for (const seed of seeds) {
+      const course = db.courses.find((c) => c.code === seed.courseCode);
       if (!course) {
-        validationError = `courseCode '${item.courseCode}' not found.`;
+        warnings.push(`Course ${seed.courseCode} not found.`);
+        skipped++;
+        continue;
       }
 
-      // 2. Validate Student Group
-      let studentGroup = null;
-      let parentTimetableId = null;
-      if (!validationError) {
-        for (const cohort of db.cohorts) {
-          const foundGroup = cohort.studentGroups.find(
-            (g) => g.name === item.studentGroupName,
-          );
-          if (foundGroup) {
-            studentGroup = foundGroup;
-            parentTimetableId = cohort.timetableId;
-            break;
-          }
-        }
-        if (!studentGroup) {
-          validationError = `studentGroupName '${item.studentGroupName}' not found.`;
-        }
-      }
+      let studentGroupId: number | null = null;
+      let studentGroupName: string | null = null;
 
-      // 3. Validate Teacher (if provided)
-      if (!validationError && item.requiredTeacherId) {
-        const teacher = db.teachers.find(
-          (t) => t.id === item.requiredTeacherId,
+      for (const cohort of db.cohorts) {
+        const group = cohort.studentGroups.find(
+          (g) => g.name === seed.studentGroupName,
         );
-        if (!teacher) {
-          validationError = `requiredTeacherId '${item.requiredTeacherId}' not found.`;
+        if (group && cohort.timetableId === timetableId) {
+          studentGroupId = group.id;
+          studentGroupName = group.name;
+          break;
         }
       }
 
-      // 4. Process result
-      if (validationError) {
-        result.failedCount++;
-        result.errors.push({ csvRow, error: validationError });
+      if (!studentGroupId || !studentGroupName) {
+        warnings.push(
+          `Student group '${seed.studentGroupName}' not found for timetable ${timetableId}.`,
+        );
+        skipped++;
+        continue;
+      }
+
+      const existingRequirement = db.requirements.find(
+        (req) =>
+          req.timetableId === timetableId &&
+          req.courseId === course.id &&
+          req.studentGroupId === studentGroupId,
+      );
+
+      const baseDates = {
+        start: dayjs().add(1, "week").format("YYYY-MM-DD"),
+        end: dayjs().add(9, "week").format("YYYY-MM-DD"),
+      };
+
+      if (existingRequirement) {
+        existingRequirement.classType = seed.classType;
+        existingRequirement.length = seed.length;
+        existingRequirement.frequency = seed.frequency;
+        existingRequirement.priority = seed.priority;
+        existingRequirement.requiredTeacherId = seed.requiredTeacherId ?? null;
+        existingRequirement.startDate = baseDates.start;
+        existingRequirement.endDate = baseDates.end;
+        existingRequirement.eligibilitySummary = null;
+        requirementsUpdated++;
       } else {
-        // Validation passed, create the new requirement
         const newRequirement: CourseRequirementDto = {
           id: db.getNextRequirementId(),
-          timetableId: parentTimetableId!, // We know this exists from validation
-          courseId: course!.id,
-          courseName: course!.name,
-          studentGroupId: studentGroup!.id,
-          studentGroupName: studentGroup!.name,
-          classType: item.classType,
-          length: Number(item.length) || 1,
-          frequency: Number(item.frequency) || 1,
-          priority: item.priority || "Medium",
-          requiredTeacherId: item.requiredTeacherId || null,
-          startDate: dayjs().format("YYYY-MM-DD"), // Mocked default
-          endDate: dayjs().add(8, "week").format("YYYY-MM-DD"), // Mocked default
+          timetableId,
+          courseId: course.id,
+          courseName: course.name,
+          studentGroupId,
+          studentGroupName,
+          studentSectionId: null,
+          studentSectionName: null,
+          classType: seed.classType,
+          length: seed.length,
+          frequency: seed.frequency,
+          priority: seed.priority,
+          requiredTeacherId: seed.requiredTeacherId ?? null,
+          startDate: baseDates.start,
+          endDate: baseDates.end,
           schedulingPreferences: [],
-          eligibilitySummary: null, // Pre-flight check will populate this later
+          eligibilitySummary: null,
         };
-
         db.requirements.push(newRequirement);
-        result.createdRequirements.push(newRequirement);
-        result.processedCount++;
+        requirementsCreated++;
       }
     }
+
+    const result: CourseRequirementSyncResultDto = {
+      source: "mock-rules-engine",
+      startedAt: startedAt.toISOString(),
+      completedAt: new Date().toISOString(),
+      requirementsCreated,
+      requirementsUpdated,
+      skipped,
+      message:
+        requirementsCreated === 0 && requirementsUpdated === 0
+          ? "Requirement sync completed. No changes detected."
+          : `Requirement sync created ${requirementsCreated} and updated ${requirementsUpdated} record(s).`,
+      warnings: warnings.length ? warnings : undefined,
+    };
 
     return HttpResponse.json(result, { status: 200 });
   }),

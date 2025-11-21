@@ -36,6 +36,11 @@ import type {
 import { getMockClasses } from "./data/mockClasses.ts";
 import { getMockAvailableClasses } from "./data/mockAvailableClasses.ts";
 import type { EnrollmentResponse } from "../services/enrollmentApi.ts";
+import type {
+  EnrollmentProposalResultDto,
+  GradeSyncReportDto,
+} from "../interfaces/eomDtos.ts";
+import { getMockEomReports } from "./data/mockEomReports.ts";
 
 class MockDb {
   public timetables: TimetableStructure[];
@@ -52,6 +57,11 @@ class MockDb {
   public issueDetails: Record<string, StudentIssueDetailDto[]>;
   public timetableAssignments: TimetableAssignmentDto[];
   public enrollments: EnrollmentResponse[];
+  public eomReports: Record<number, GradeSyncReportDto>;
+  public enrollmentProposalHistory: Record<
+    number,
+    EnrollmentProposalResultDto[]
+  >;
 
   private nextTimetableId: number;
   private nextRequirementId: number;
@@ -78,6 +88,8 @@ class MockDb {
     this.availableClasses = getMockAvailableClasses();
     this.timetableAssignments = [];
     this.enrollments = [];
+    this.eomReports = getMockEomReports();
+    this.enrollmentProposalHistory = {};
 
     this.nextTimetableId = this.timetables.length + 1;
     this.nextRequirementId = this.requirements.length + 1;

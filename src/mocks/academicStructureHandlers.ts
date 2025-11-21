@@ -6,11 +6,9 @@ import type {
   CreateSectionRequest,
   CreateStudentGroupRequest,
 } from "../interfaces/academicStructureDtos.ts";
-import {
-  BulkStructureRequestItem,
-  StructureBulkImportResultDto,
-} from "../interfaces/bulkImportDtos.ts";
 import { CreateTimetableAssignmentRequestDto } from "../interfaces/teacherDtos.ts";
+import type { AcademicStructureSyncResultDto } from "../interfaces/syncDtos.ts";
+import { getRosterSyncSource } from "./data/mockRosterSyncSource.ts";
 
 const ACADEMIC_STRUCTURE_URL = `${API_BASE_URL}/academic-structure`;
 const TIMETABLE_URL = `${API_BASE_URL}/timetable`;
@@ -99,114 +97,105 @@ export const academicStructureHandlers = [
     return HttpResponse.json(newSection, { status: 201 });
   }),
 
-  // POST :id/academic-structure/bulk-import
+  // POST :id/academic-structure/sync
   http.post(
-    `${TIMETABLE_URL}/:id/academic-structure/bulk-import`,
-    async ({ params, request }) => {
+    `${TIMETABLE_URL}/:id/academic-structure/sync`,
+    async ({ params }) => {
       const timetableId = Number(params.id);
-      const requestItems = (await request.json()) as BulkStructureRequestItem[];
+      const seeds = getRosterSyncSource(timetableId);
 
-      const result: StructureBulkImportResultDto = {
-        processedCount: 0,
-        failedCount: 0,
-        errors: [],
-        summary: {
-          cohorts: { created: [], found: [] },
-          groups: { created: [], found: [] },
-          sections: { created: [], found: [] },
-        },
-      };
+      if (!seeds) {
+        return HttpResponse.json(
+          { message: "No roster source data found for timetable." },
+          { status: 404 },
+        );
+      }
 
-      // Use Sets to avoid duplicate names in the summary report
-      const createdCohorts = new Set<string>();
-      const foundCohorts = new Set<string>();
-      const createdGroups = new Set<string>();
-      const foundGroups = new Set<string>();
-      const createdSections = new Set<string>();
-      const foundSections = new Set<string>();
+      const startedAt = new Date();
+      let processedStudents = 0;
+      let cohortsCreated = 0;
+      let groupsCreated = 0;
+      let sectionsCreated = 0;
+      const warnings: string[] = [];
 
-      await delay(1200); // Simulate processing time
+      await delay(800);
 
-      for (const [index, item] of requestItems.entries()) {
-        const csvRow = index + 2; // Assuming header row
-        if (!item.studentId) {
-          result.failedCount++;
-          result.errors.push({
-            csvRow,
-            error: `Invalid or missing studentId.`,
-          });
-          continue; // Skip to the next item
-        }
-
-        // --- Find or Create Cohort ---
+      for (const cohortSeed of seeds) {
         let cohort = db.cohorts.find(
-          (c) => c.name === item.cohortName && c.timetableId === timetableId,
+          (c) => c.name === cohortSeed.name && c.timetableId === timetableId,
         );
         if (!cohort) {
           cohort = {
             id: db.getNextCohortId(),
-            name: item.cohortName,
-            timetableId: timetableId,
+            name: cohortSeed.name,
+            timetableId,
             studentGroups: [],
           };
           db.cohorts.push(cohort);
-          createdCohorts.add(cohort.name);
-        } else {
-          foundCohorts.add(cohort.name);
+          cohortsCreated++;
         }
 
-        // --- Find or Create Student Group ---
-        let group = cohort.studentGroups.find((g) => g.name === item.groupName);
-        if (!group) {
-          group = {
-            id: db.getNextGroupId(),
-            name: item.groupName,
-            sections: [],
-          };
-          cohort.studentGroups.push(group);
-          createdGroups.add(group.name);
-        } else {
-          foundGroups.add(group.name);
-        }
+        for (const groupSeed of cohortSeed.groups) {
+          let group = cohort.studentGroups.find(
+            (g) => g.name === groupSeed.name,
+          );
+          if (!group) {
+            group = {
+              id: db.getNextGroupId(),
+              name: groupSeed.name,
+              sections: [],
+            };
+            cohort.studentGroups.push(group);
+            groupsCreated++;
+          }
 
-        // --- Find or Create Section ---
-        let section = group.sections.find((s) => s.name === item.sectionName);
-        if (!section) {
-          section = {
-            id: db.getNextSectionId(),
-            name: item.sectionName,
-            students: [],
-          };
-          group.sections.push(section);
-          createdSections.add(section.name);
-        } else {
-          foundSections.add(section.name);
-        }
+          for (const sectionSeed of groupSeed.sections) {
+            let section = group.sections.find(
+              (s) => s.name === sectionSeed.name,
+            );
+            if (!section) {
+              section = {
+                id: db.getNextSectionId(),
+                name: sectionSeed.name,
+                students: [],
+              };
+              group.sections.push(section);
+              sectionsCreated++;
+            }
 
-        // --- Assign Student ---
-        const studentExists = section.students.some(
-          (s) => s.id === item.studentId,
-        );
-        if (!studentExists) {
-          section.students.push({
-            id: item.studentId,
-            name: item.studentName,
-            // Mocked defaults for other StudentDto fields
-            currentCourseLoad: 0,
-            standing: "GoodStanding",
-            proposedEnrollmentCount: 0,
-          });
+            for (const studentId of sectionSeed.studentIds) {
+              const student = db.students.find((s) => s.id === studentId);
+              if (!student) {
+                warnings.push(`Student ${studentId} not found in mock DB.`);
+                continue;
+              }
+
+              const alreadyEnrolled = section.students.some(
+                (s) => s.id === student.id,
+              );
+              if (!alreadyEnrolled) {
+                section.students.push({ ...student });
+                processedStudents++;
+              }
+            }
+          }
         }
-        result.processedCount++;
       }
 
-      // Populate summary from Sets
-      result.summary.cohorts.created = Array.from(createdCohorts);
-      result.summary.cohorts.found = Array.from(foundCohorts);
-      result.summary.groups.created = Array.from(createdGroups);
-      result.summary.groups.found = Array.from(foundGroups);
-      result.summary.sections.created = Array.from(createdSections);
-      result.summary.sections.found = Array.from(foundSections);
+      const result: AcademicStructureSyncResultDto = {
+        source: "mock-sis",
+        startedAt: startedAt.toISOString(),
+        completedAt: new Date().toISOString(),
+        processedStudents,
+        cohortsCreated,
+        groupsCreated,
+        sectionsCreated,
+        message:
+          processedStudents === 0 && cohortsCreated === 0
+            ? "Roster sync completed. No changes detected."
+            : `Roster sync completed with ${processedStudents} student updates.`,
+        warnings: warnings.length ? warnings : undefined,
+      };
 
       return HttpResponse.json(result, { status: 200 });
     },

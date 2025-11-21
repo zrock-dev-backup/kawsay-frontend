@@ -1,53 +1,39 @@
-import React, { useState } from "react";
-import { Box, Button, Divider, Paper, Stack, Typography } from "@mui/material";
-import { CsvImportDialog } from "../../components/common/CsvImportDialog";
-import { useCsvImporter } from "../../hooks/useCsvImporter";
+import React from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  Divider,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import CourseRequirementsTab from "../CourseRequirementsTab";
 import { useCourseRequirementStore } from "../../stores/useCourseRequirementStore";
-import type {
-  BulkRequirementRequestItem,
-  CourseBulkImportResultDto,
-} from "../../interfaces/bulkImportDtos";
 
 interface Props {
   timetableId: string;
 }
 
 const CourseRequirementsWizardStep: React.FC<Props> = ({ timetableId }) => {
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [importResult, setImportResult] =
-    useState<CourseBulkImportResultDto | null>(null);
+  const timetableNumericId = Number(timetableId);
+  const {
+    syncRequirementsFromSource,
+    isSyncingFromSource,
+    syncError,
+    lastSyncResult,
+  } = useCourseRequirementStore((state) => ({
+    syncRequirementsFromSource: state.syncRequirementsFromSource,
+    isSyncingFromSource: state.isSyncingFromSource,
+    syncError: state.syncError,
+    lastSyncResult: state.lastSyncResult,
+  }));
 
-  const bulkAddRequirements = useCourseRequirementStore(
-    (state) => state.bulkAddRequirements,
-  );
-
-  const importer = useCsvImporter<BulkRequirementRequestItem>();
-
-  const handleImport = () => {
-    importer.actions.processImport(async (parsedData) => {
-      setIsSubmitting(true);
-      setImportResult(null);
-      try {
-
-        const result = await bulkAddRequirements(parsedData);
-        if (result) {
-
-          setImportResult(result as unknown as CourseBulkImportResultDto);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsSubmitting(false);
-      }
-    });
-  };
-
-  const handleCloseDialog = () => {
-    setIsImportOpen(false);
-    importer.actions.reset();
-    setImportResult(null);
+  const handleSync = async () => {
+    if (!timetableNumericId) {
+      return;
+    }
+    await syncRequirementsFromSource(timetableNumericId);
   };
 
   return (
@@ -57,44 +43,60 @@ const CourseRequirementsWizardStep: React.FC<Props> = ({ timetableId }) => {
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
           justifyContent="space-between"
-          alignItems="center"
+          alignItems={{ xs: "stretch", sm: "center" }}
         >
           <Box>
-            <Typography variant="h6">Bulk Import</Typography>
+            <Typography variant="h6">Sync Course Requirements</Typography>
             <Typography variant="body2" color="text.secondary">
-              Quickly add all module requirements by uploading a CSV file.
+              Pull the latest requirement definitions from the academic rules
+              API. Newly discovered items are added automatically and existing
+              entries stay up to date.
             </Typography>
           </Box>
           <Button
             variant="contained"
-            onClick={() => setIsImportOpen(true)}
-            sx={{ minWidth: "200px" }}
+            onClick={handleSync}
+            disabled={!timetableNumericId || isSyncingFromSource}
+            sx={{ minWidth: "220px" }}
           >
-            Import from CSV
+            {isSyncingFromSource ? "Syncing..." : "Sync from API"}
           </Button>
         </Stack>
+        {syncError && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {syncError}
+          </Alert>
+        )}
+        {lastSyncResult && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+              {lastSyncResult.message}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Created: {lastSyncResult.requirementsCreated} • Updated:{" "}
+              {lastSyncResult.requirementsUpdated} • Skipped:{" "}
+              {lastSyncResult.skipped}
+            </Typography>
+            {lastSyncResult.warnings?.length ? (
+              <Box component="ul" sx={{ pl: 3, mb: 0, mt: 1 }}>
+                {lastSyncResult.warnings.map((warning, index) => (
+                  <li key={index}>
+                    <Typography variant="body2" color="warning.main">
+                      {warning}
+                    </Typography>
+                  </li>
+                ))}
+              </Box>
+            ) : null}
+          </Alert>
+        )}
       </Paper>
 
       <Divider sx={{ my: 3 }}>
-        <Typography variant="overline">OR</Typography>
+        <Typography variant="overline">MANAGE REQUIREMENTS</Typography>
       </Divider>
 
       <CourseRequirementsTab timetableId={timetableId} />
-
-      {/* --- Pass all props explicitly as required by the new contract --- */}
-      <CsvImportDialog
-        open={isImportOpen}
-        onClose={handleCloseDialog}
-        entityName="Course Requirements"
-        templatePath="/templates/requirements_template.csv"
-        file={importer.state.file}
-        isParsing={importer.state.isParsing}
-        isSubmitting={isSubmitting}
-        result={importResult as any}
-        error={importer.state.error}
-        onFileSelect={importer.actions.handleFileSelect}
-        onProcessImport={handleImport}
-      />
     </>
   );
 };
