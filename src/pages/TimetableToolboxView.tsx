@@ -11,6 +11,7 @@ import CourseRequirementsTab from "./CourseRequirementsTab";
 import AssistedSchedulingTab from "./AssistedSchedulingTab";
 import { StudentAuditTab } from "../components/audit/StudentAuditTab";
 import { TabIndex } from "../utils/tabIndex.ts";
+import { useStudentAudit } from "../hooks/useStudentAudit";
 
 interface Props {
   onLessonClick: (classId: number) => void;
@@ -25,6 +26,11 @@ const TimetableToolboxView: React.FC<Props> = ({ onLessonClick }) => {
     setActiveTab,
     generateSchedule,
   } = useTimetableStore();
+
+  const timetableId = structure?.id ? structure.id.toString() : "";
+  const { state: auditState, actions: auditActions } = useStudentAudit(
+    timetableId,
+  );
 
   const calendarControls = useCalendarControls(
     structure ? dayjs(structure.startDate) : undefined,
@@ -68,7 +74,7 @@ const TimetableToolboxView: React.FC<Props> = ({ onLessonClick }) => {
     <>
       <TimetableHeader
         calendarControls={
-          activeTab === TabIndex.SCHEDULE ? calendarControls : { view: null }
+          activeTab === TabIndex.SCHEDULE ? calendarControls : null
         }
         isGenerating={isGenerating}
         onGenerate={() => generateSchedule(structure.id.toString())}
@@ -118,7 +124,7 @@ const TimetableToolboxView: React.FC<Props> = ({ onLessonClick }) => {
           <AssistedSchedulingTab />
         )}
         {activeTab === TabIndex.AUDIT_STUDENTS && (
-          <StudentAuditTab timetableId={structure.id.toString()} />
+          <StudentAuditTab auditState={auditState} auditActions={auditActions} />
         )}
       </Box>
     </>

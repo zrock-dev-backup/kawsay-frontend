@@ -14,7 +14,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useCalendarControls } from "../../hooks/timetable/useCalendarControls.ts";
 
 interface TimetableHeaderProps {
-  calendarControls: ReturnType<typeof useCalendarControls>;
+  calendarControls: ReturnType<typeof useCalendarControls> | null;
   isGenerating: boolean;
   onGenerate: () => void;
 }
@@ -25,14 +25,12 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
   isGenerating,
   onGenerate,
 }) => {
-  const {
-    view,
-    displayDate,
-    handleViewChange,
-    handlePrev,
-    handleNext,
-    handleToday,
-  } = calendarControls;
+  const view = calendarControls?.view ?? null;
+  const displayDate = calendarControls?.displayDate;
+  const handleViewChange = calendarControls?.handleViewChange;
+  const handlePrev = calendarControls?.handlePrev;
+  const handleNext = calendarControls?.handleNext;
+  const handleToday = calendarControls?.handleToday;
 
   return (
     <Stack
@@ -42,7 +40,7 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
       sx={{ mb: 2, flexWrap: "wrap", gap: 2 }}
     >
       <Stack direction="row" spacing={1} alignItems="center">
-        {view && (
+        {view && handlePrev && handleToday && handleNext && displayDate && (
           <>
             <IconButton onClick={handlePrev} aria-label="previous period">
               <ChevronLeftIcon />
@@ -62,7 +60,7 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
         )}
       </Stack>
       <Stack direction="row" spacing={1} alignItems="center">
-        {view && (
+        {view && handleViewChange && (
           <ToggleButtonGroup
             value={view}
             exclusive
