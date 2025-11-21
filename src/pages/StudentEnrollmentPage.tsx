@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   Alert,
@@ -15,13 +15,27 @@ import EnrollmentWorkspace from "../components/enrollment/EnrollmentWorkspace.ts
 const StudentEnrollmentPage: React.FC = () => {
   const { timetableId } = useParams<{ timetableId: string }>();
 
+  useEffect(() => {
+    if (timetableId) {
+      localStorage.setItem("lastTimetableId", timetableId);
+      window.dispatchEvent(
+        new CustomEvent("kawsay:lastTimetableChanged", {
+          detail: timetableId,
+        }),
+      );
+    }
+  }, [timetableId]);
+
+  const numericTimetableId = timetableId ? Number(timetableId) : null;
+  const enrollmentHook = useStudentEnrollment(numericTimetableId);
+
   if (!timetableId) {
     return (
       <Alert severity="error">Timetable ID is missing from the URL.</Alert>
     );
   }
 
-  const { state, actions } = useStudentEnrollment(Number(timetableId));
+  const { state, actions } = enrollmentHook;
 
   return (
     <Container maxWidth="xl">
@@ -31,6 +45,12 @@ const StudentEnrollmentPage: React.FC = () => {
       <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 2 }}>
         Timetable ID: {timetableId}
       </Typography>
+
+      {state.error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {state.error}
+        </Alert>
+      )}
 
       {state.submitStatus && (
         <Alert

@@ -8,6 +8,8 @@ import { API_BASE_URL } from "../services/api.helpers";
 
 export const EndOfModulePage: React.FC = () => {
   const { timetableId } = useParams<{ timetableId: string }>();
+  const safeTimetableId = timetableId ?? "";
+  const { state, actions } = useEndOfModule(safeTimetableId);
 
   const destinationTimetableId = timetableId
     ? (parseInt(timetableId, 10) + 1).toString()
@@ -19,7 +21,6 @@ export const EndOfModulePage: React.FC = () => {
     );
   }
 
-  const { state, actions } = useEndOfModule(timetableId);
   const importConfig = {
     endpoint: `${API_BASE_URL}/eom/${timetableId}/ingest-grades`,
     entityName: "Final Grades",

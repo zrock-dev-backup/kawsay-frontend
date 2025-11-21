@@ -19,6 +19,12 @@ export const TimetableListItem: React.FC<Props> = ({ timetable }) => {
   const navigate = useNavigate();
 
   const handleNavigate = () => {
+    localStorage.setItem("lastTimetableId", timetable.id.toString());
+    window.dispatchEvent(
+      new CustomEvent("kawsay:lastTimetableChanged", {
+        detail: timetable.id.toString(),
+      }),
+    );
     navigate(`/table/${timetable.id}`);
   };
 

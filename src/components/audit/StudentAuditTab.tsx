@@ -100,6 +100,7 @@ export const StudentAuditTab: React.FC<Props> = ({
         students={state.students}
         isLoading={state.isLoading}
         isBulkActionLoading={state.isBulkActionLoading}
+        error={state.error}
         onResolveIssues={actions.openResolutionModal}
         onBulkConfirm={actions.confirmBulkEnrollment}
         onClearError={actions.clearError}

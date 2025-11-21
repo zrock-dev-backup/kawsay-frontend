@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   AppBar,
@@ -32,24 +32,6 @@ import { useDetailsDrawerStore } from "../stores/useDetailsDrawerStore.ts";
 import { useThemeContext } from "../contexts/ThemeContext.tsx";
 import UserMenu from "./common/UserMenu.tsx";
 
-const globalNavItems = [
-  {
-    text: "Dashboard",
-    icon: <DashboardIcon />,
-    path: "/selection",
-  },
-  {
-    text: "Faculty Roster",
-    icon: <GroupIcon />,
-    path: "/faculty",
-  },
-  {
-    text: "Student Enrollment",
-    icon: <HowToRegIcon />,
-    path: "/enrollment/1", // TODO: be dynamic
-  },
-];
-
 const Layout: React.FC = () => {
   const { isOpen, title, content, closeDrawer } = useDetailsDrawerStore();
   const location = useLocation();
@@ -61,6 +43,51 @@ const Layout: React.FC = () => {
     const storedValue = localStorage.getItem("drawerOpen");
     return storedValue ? JSON.parse(storedValue) : true;
   });
+  const [enrollmentPath, setEnrollmentPath] = useState<string>(() => {
+    const storedTimetableId = localStorage.getItem("lastTimetableId");
+    return storedTimetableId ? `/enrollment/${storedTimetableId}` : "/enrollment/1";
+  });
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "lastTimetableId" && event.newValue) {
+        setEnrollmentPath(`/enrollment/${event.newValue}`);
+      }
+    };
+    const handleCustom = (event: Event) => {
+      const customEvent = event as CustomEvent<string>;
+      if (customEvent.detail) {
+        setEnrollmentPath(`/enrollment/${customEvent.detail}`);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("kawsay:lastTimetableChanged", handleCustom);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("kawsay:lastTimetableChanged", handleCustom);
+    };
+  }, []);
+
+  const globalNavItems = useMemo(
+    () => [
+      {
+        text: "Dashboard",
+        icon: <DashboardIcon />,
+        path: "/selection",
+      },
+      {
+        text: "Faculty Roster",
+        icon: <GroupIcon />,
+        path: "/faculty",
+      },
+      {
+        text: "Student Enrollment",
+        icon: <HowToRegIcon />,
+        path: enrollmentPath,
+      },
+    ],
+    [enrollmentPath],
+  );
 
   const handleDrawerClose = () => setOpen(false);
   const handleDrawerToggle = () => setOpen(!open);

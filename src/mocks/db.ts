@@ -34,6 +34,8 @@ import type {
   TimetableAssignmentDto,
 } from "../interfaces/teacherDtos.ts";
 import { getMockClasses } from "./data/mockClasses.ts";
+import { getMockAvailableClasses } from "./data/mockAvailableClasses.ts";
+import type { EnrollmentResponse } from "../services/enrollmentApi.ts";
 
 class MockDb {
   public timetables: TimetableStructure[];
@@ -49,6 +51,7 @@ class MockDb {
   public cohorts: CohortDetailDto[];
   public issueDetails: Record<string, StudentIssueDetailDto[]>;
   public timetableAssignments: TimetableAssignmentDto[];
+  public enrollments: EnrollmentResponse[];
 
   private nextTimetableId: number;
   private nextRequirementId: number;
@@ -58,6 +61,7 @@ class MockDb {
   private nextSectionId: number;
   private nextTeacherId: number;
   private nextAssignmentId: number;
+  private nextEnrollmentId: number;
 
   constructor() {
     this.timetables = getMockTimetables();
@@ -71,8 +75,9 @@ class MockDb {
     this.cohorts = getMockCohorts();
     this.studentAudit = getMockStudentAudit();
     this.issueDetails = getMockIssueDetails();
-    this.availableClasses = [];
+    this.availableClasses = getMockAvailableClasses();
     this.timetableAssignments = [];
+    this.enrollments = [];
 
     this.nextTimetableId = this.timetables.length + 1;
     this.nextRequirementId = this.requirements.length + 1;
@@ -82,6 +87,7 @@ class MockDb {
     this.nextSectionId = 10000;
     this.nextTeacherId = this.teachers.length + 1;
     this.nextAssignmentId = 1;
+    this.nextEnrollmentId = 1;
   }
 
   public getNextTimetableId = (): number => this.nextTimetableId++;
@@ -92,6 +98,7 @@ class MockDb {
   public getNextSectionId = (): number => this.nextSectionId++;
   public getNextTeacherId = (): number => this.nextTeacherId++;
   public getNextAssignmentId = (): number => this.nextAssignmentId++;
+  public getNextEnrollmentId = (): number => this.nextEnrollmentId++;
 }
 
 export const db = new MockDb();

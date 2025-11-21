@@ -1,5 +1,13 @@
 import React from "react";
-import {Chip, IconButton, List, ListItem, ListItemText, Tooltip,} from "@mui/material";
+import {
+  Chip,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import type {AvailableClassDto} from "../../interfaces/classDtos.ts";
 
@@ -16,6 +24,15 @@ const AvailableClassesList: React.FC<Props> = ({
                                                }) => {
     return (
         <List dense>
+            {classes.length === 0 && (
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ px: 2, py: 1 }}
+                >
+                    No classes available for the selected student.
+                </Typography>
+            )}
             {classes.map((cls) => (
                 <ListItem
                     key={cls.id}

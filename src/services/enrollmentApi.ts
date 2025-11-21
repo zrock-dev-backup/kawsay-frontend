@@ -1,12 +1,12 @@
 import { API_BASE_URL, handleResponse } from "./api.helpers.ts";
 
-interface EnrollmentRequest {
+export interface EnrollmentRequest {
   studentId: number;
   classId: number;
   force: boolean;
 }
 
-interface EnrollmentResponse {
+export interface EnrollmentResponse {
   id: number;
   studentId: number;
   classId: number;

@@ -38,8 +38,8 @@ export const studentAuditHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  // POST /students/:id/resolve-issues
-  http.post(`${STUDENT_URL}/:id/resolve-issues`, async ({ params }) => {
+  // POST /students/:id/resolve-issue
+  http.post(`${STUDENT_URL}/:id/resolve-issue`, async ({ params }) => {
     const studentId = Number(params.id);
     const student = db.studentAudit.find((s) => s.studentId === studentId);
 

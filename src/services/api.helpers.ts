@@ -1,13 +1,26 @@
-export const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/kawsay`;
+const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
+const rawApiBase = import.meta.env.VITE_API_BASE_URL;
+const fallbackBase =
+  typeof window !== "undefined" ? window.location.origin : undefined;
+const resolvedApiBase =
+  rawApiBase ?? (isDemoMode ? fallbackBase : undefined);
 
-if (!import.meta.env.VITE_API_BASE_URL) {
+if (!resolvedApiBase) {
   console.error(
-    "CRITICAL ERROR: VITE_API_BASE_URL is not defined in .env file.",
+    "CRITICAL ERROR: VITE_API_BASE_URL is not defined. Set it in .env or enable demo mode via VITE_DEMO_MODE=true.",
   );
   throw new Error(
-    "API Base URL not configured. Define VITE_API_BASE_URL in .env",
+    "API Base URL not configured. Define VITE_API_BASE_URL in .env or enable demo mode.",
   );
 }
+
+if (!rawApiBase && isDemoMode) {
+  console.warn(
+    "[Demo Mode] VITE_API_BASE_URL not set. Falling back to window.location.origin for mocked APIs.",
+  );
+}
+
+export const API_BASE_URL = `${resolvedApiBase}/kawsay`;
 
 export async function handleResponse<T>(response: Response): Promise<T> {
   const url = response.url;

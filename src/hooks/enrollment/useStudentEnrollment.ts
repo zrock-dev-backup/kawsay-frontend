@@ -16,7 +16,7 @@ export interface CartItem {
   isProposal: boolean;
 }
 
-export function useStudentEnrollment(timetableId: number) {
+export function useStudentEnrollment(timetableId: number | null) {
   const [students, setStudents] = useState<StudentDto[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<StudentDto | null>(
     null,
@@ -35,6 +35,12 @@ export function useStudentEnrollment(timetableId: number) {
   } | null>(null);
 
   useEffect(() => {
+    if (!timetableId) {
+      setStudents([]);
+      setIsLoading(false);
+      return;
+    }
+
     const loadStudents = async () => {
       try {
         const studentData = await fetchStudents(timetableId);
@@ -51,7 +57,7 @@ export function useStudentEnrollment(timetableId: number) {
   }, [timetableId]);
 
   useEffect(() => {
-    if (!selectedStudent) {
+    if (!selectedStudent || !timetableId) {
       setAvailableClasses([]);
       setCart([]);
       return;
@@ -121,7 +127,7 @@ export function useStudentEnrollment(timetableId: number) {
   }, []);
 
   const handleSubmitCart = async () => {
-    if (!selectedStudent || cart.length === 0) return;
+    if (!selectedStudent || cart.length === 0 || !timetableId) return;
 
     setIsSubmitting(true);
     setSubmitStatus(null);
@@ -141,12 +147,14 @@ export function useStudentEnrollment(timetableId: number) {
         message: `Successfully enrolled ${selectedStudent.name} in ${cart.length} classes.`,
       });
       setCart([]);
-      const [studentData, classData] = await Promise.all([
-        fetchStudents(timetableId),
-        fetchAvailableClassesForStudent(selectedStudent.id, timetableId),
-      ]);
-      setStudents(studentData);
-      setAvailableClasses(classData);
+      if (timetableId) {
+        const [studentData, classData] = await Promise.all([
+          fetchStudents(timetableId),
+          fetchAvailableClassesForStudent(selectedStudent.id, timetableId),
+        ]);
+        setStudents(studentData);
+        setAvailableClasses(classData);
+      }
     } catch (err) {
       setSubmitStatus({
         type: "error",
