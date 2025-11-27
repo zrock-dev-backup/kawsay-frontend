@@ -9,6 +9,12 @@ const timetables = getMockTimetables();
 const formatIso = (y: number, m: number, d: number) =>
   new Date(Date.UTC(y, m - 1, d)).toISOString();
 
+const formatDateKey = (y: number, m: number, d: number) => {
+  const mm = `${m}`.padStart(2, "0");
+  const dd = `${d}`.padStart(2, "0");
+  return `${y}-${mm}-${dd}`;
+};
+
 export const getMockClasses = (): Class[] => {
   const total = 60;
   const list: Class[] = [];
@@ -25,6 +31,20 @@ export const getMockClasses = (): Class[] => {
 
     const classType: Class["classType"] = i % 3 === 0 ? "Lab" : "Masterclass";
 
+    // Build a few simple occurrences so the MonthView can display lessons
+    const occurrences = [] as { id?: number; date: string; startPeriodId: number }[];
+    const occCount = 2 + (i % 4); // 2..5 occurrences per class
+    for (let o = 0; o < occCount; o++) {
+      // spread occurrences within the class start..end window
+      const offset = (o * 3 + i) % Math.max(1, endDay - startDay + 1);
+      const dayNum = startDay + offset;
+      occurrences.push({
+        id: id * 100 + o,
+        date: formatDateKey(year, month, Math.min(Math.max(dayNum, 1), 28)),
+        startPeriodId: timetable.periods[i % timetable.periods.length].id,
+      });
+    }
+
     list.push({
       id,
       timetableId: timetable.id,
@@ -38,7 +58,7 @@ export const getMockClasses = (): Class[] => {
       courseCode: course.code,
       teacherId: teacher.id,
       teacherName: teacher.fullName,
-      classOccurrences: [],
+      classOccurrences: occurrences,
       periodPreferences: [
         {
           dayId: timetable.days[i % timetable.days.length].id,
