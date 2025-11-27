@@ -1,20 +1,52 @@
 import type { Class } from "../../interfaces/classDtos";
+import { getMockCourses, getMockTeachers } from "./mockCoursesAndTeachers";
+import { getMockTimetables } from "./mockTimetables";
 
-export const getMockClasses = (): Class[] => [
-  {
-    id: 1,
-    timetableId: 1, // Belongs to the "Draft" timetable
-    length: 2,
-    frequency: 2,
-    classType: "Masterclass",
-    startDate: "2025-09-08T00:00:00.000Z",
-    endDate: "2025-11-03T00:00:00.000Z",
-    courseId: 1,
-    courseName: "Advanced Software Engineering",
-    courseCode: "CSE401",
-    teacherId: 1,
-    teacherName: "Dr. Evelyn Reed",
-    classOccurrences: [],
-    periodPreferences: [{ dayId: 1, startPeriodId: 2 }],
-  },
-];
+const courses = getMockCourses();
+const teachers = getMockTeachers();
+const timetables = getMockTimetables();
+
+const formatIso = (y: number, m: number, d: number) =>
+  new Date(Date.UTC(y, m - 1, d)).toISOString();
+
+export const getMockClasses = (): Class[] => {
+  const total = 60;
+  const list: Class[] = [];
+
+  for (let i = 0; i < total; i++) {
+    const id = i + 1;
+    const course = courses[i % courses.length];
+    const teacher = teachers[i % teachers.length] ?? teachers[0];
+    const timetable = i % 6 === 0 ? timetables[1] : timetables[0];
+    const year = timetable.id === 1 ? 2025 : 2026;
+    const month = timetable.id === 1 ? 9 : 2;
+    const startDay = 1 + (i % 20);
+    const endDay = Math.min(startDay + (6 + (i % 8)), 28);
+
+    const classType: Class["classType"] = i % 3 === 0 ? "Lab" : "Masterclass";
+
+    list.push({
+      id,
+      timetableId: timetable.id,
+      length: 1 + (i % 3),
+      frequency: 1 + (i % 2),
+      classType,
+      startDate: formatIso(year, month, startDay),
+      endDate: formatIso(year, month + 1, endDay),
+      courseId: course.id,
+      courseName: course.name,
+      courseCode: course.code,
+      teacherId: teacher.id,
+      teacherName: teacher.fullName,
+      classOccurrences: [],
+      periodPreferences: [
+        {
+          dayId: timetable.days[i % timetable.days.length].id,
+          startPeriodId: timetable.periods[i % timetable.periods.length].id,
+        },
+      ],
+    } as Class);
+  }
+
+  return list;
+};
