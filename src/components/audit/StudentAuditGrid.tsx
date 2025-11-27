@@ -22,6 +22,9 @@ import { useTheme } from "@mui/material/styles";
 
 import { AgGridReact } from "ag-grid-react";
 
+import { PredictionCell } from "./PredictionCell"; // Importar componente
+import type { StudentPredictionDto } from "../../interfaces/predictionDtos";
+
 import {
   ColDef,
   IRowNode,
@@ -61,6 +64,8 @@ interface Props {
   resolvingStudentId: number | null;
   error?: string | null;
   density: "comfortable" | "compact";
+  predictions: Record<number, StudentPredictionDto>;
+  isPredicting: boolean; 
   onResolveIssues: (studentId: number) => Promise<void>;
   onBulkConfirm: (studentIds: number[]) => Promise<void>;
   onClearError: () => void;
@@ -73,6 +78,8 @@ export const StudentAuditGrid: React.FC<Props> = ({
   resolvingStudentId,
   error,
   density,
+  predictions,
+  isPredicting,
   onResolveIssues,
   onBulkConfirm,
   onClearError,
@@ -94,7 +101,7 @@ export const StudentAuditGrid: React.FC<Props> = ({
     return {
       "custom-row-even": (params) => (params.node.rowIndex ?? 0) % 2 === 0,
       "custom-row-odd": (params) => (params.node.rowIndex ?? 0) % 2 !== 0,
-      "custom-row-selected": (params) => params.node.isSelected(),
+      "custom-row-selected": (params) => params.node.isSelected() ?? false,
     };
   }, []);
 
@@ -137,6 +144,21 @@ export const StudentAuditGrid: React.FC<Props> = ({
           color: theme.palette.text.secondary,
           fontWeight: 400,
         },
+      },{
+        headerName: "AI Success Prediction",
+        width: 220,
+        cellRenderer: (params: { data?: StudentAuditDto }) => {
+            if (!params.data) return null;
+            const prediction = predictions[params.data.studentId];
+            return (
+                <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+                    <PredictionCell 
+                        prediction={prediction} 
+                        isLoading={isPredicting} 
+                    />
+                </Box>
+            );
+        }
       },
       {
         field: "status",
@@ -184,7 +206,7 @@ export const StudentAuditGrid: React.FC<Props> = ({
         },
       },
     ],
-    [resolvingStudentId, handleRowAction, theme],
+    [resolvingStudentId, handleRowAction, theme, predictions, isPredicting],
   );
 
   const onSelectionChanged = useCallback(

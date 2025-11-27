@@ -10,6 +10,7 @@ import { studentAuditHandlers } from "./studentAuditHandlers.ts";
 import { studentHandlers } from "./studentHandlers.ts";
 import { timetableHandlers } from "./timetableHandlers.ts";
 import { facultyHandlers } from "./facultyHandlers.ts";
+import { predictionHandlers } from "./predictionHandlers.ts";
 
 export const handlers = [
   ...timetableHandlers,
@@ -24,4 +25,5 @@ export const handlers = [
   ...issueResolutionHandlers,
   ...formDataHandlers,
   ...facultyHandlers,
+  ...predictionHandlers, 
 ];

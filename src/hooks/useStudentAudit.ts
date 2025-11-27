@@ -7,12 +7,14 @@ import type {
   ResolveIssueRequestDto,
   StudentIssueDetailDto,
 } from "../interfaces/issueDtos";
+import type { StudentPredictionDto } from "../interfaces/predictionDtos"; // Importar DTO
 import {
   bulkEnroll,
   fetchStudentAudit,
   fetchStudentIssues,
   resolveStudentIssue,
 } from "../services/studentAuditApi";
+import { fetchBatchPredictions } from "../services/predictionApi"; 
 
 export interface UseStudentAuditState {
   students: StudentAuditDto[];
@@ -28,6 +30,10 @@ export interface UseStudentAuditState {
   isSubmittingResolution: boolean;
   resolutionError: string | null;
   resolvingStudentId: number | null;
+  
+  // Estado para predicciones
+  predictions: Record<number, StudentPredictionDto>;
+  isPredicting: boolean;
 }
 
 export interface UseStudentAuditActions {
@@ -38,6 +44,7 @@ export interface UseStudentAuditActions {
   openResolutionModal: (studentId: number) => Promise<void>;
   closeResolutionModal: () => void;
   submitResolution: (payload: ResolveIssueRequestDto) => Promise<boolean>;
+  runRiskAnalysis: () => Promise<void>; // Nueva acción
 }
 
 const initialState: Omit<UseStudentAuditState, "students"> = {
@@ -53,6 +60,8 @@ const initialState: Omit<UseStudentAuditState, "students"> = {
   isSubmittingResolution: false,
   resolutionError: null,
   resolvingStudentId: null,
+  predictions: {},
+  isPredicting: false,
 };
 
 export function useStudentAudit(timetableId: string): {
@@ -88,6 +97,7 @@ export function useStudentAudit(timetableId: string): {
     fetchAuditData();
   }, [fetchAuditData]);
 
+  // ... (código existente: filteredStudents, confirmBulkEnrollment, etc.) ...
   const filteredStudents = useMemo(() => {
     if (state.filter === "All") return state.allStudents;
     return state.allStudents.filter(
@@ -190,6 +200,39 @@ export function useStudentAudit(timetableId: string): {
     [state.studentForResolution, fetchAuditData, closeResolutionModal],
   );
 
+  // --- Lógica de Predicción ---
+  const runRiskAnalysis = useCallback(async () => {
+    if (state.allStudents.length === 0) return;
+    setAuditState({ isPredicting: true });
+
+    // NOTA: Como el frontend no tiene las notas históricas reales en este DTO,
+    // generamos datos simulados para cumplir con el contrato de la API de ML.
+    // En producción, estos datos deberían venir del backend o de un store de historial.
+    const inputs = state.allStudents.map(student => ({
+      studentId: student.studentId,
+      courseId: 101, // ID ficticio de curso actual
+      semester: 5,   // Semestre ficticio
+      gradeLab: Math.floor(Math.random() * 40) + 60, // Nota random 60-100
+      gradeMasterclass: Math.floor(Math.random() * 40) + 60
+    }));
+
+    try {
+      const results = await fetchBatchPredictions(inputs);
+      const predictionMap: Record<number, StudentPredictionDto> = {};
+      results.forEach(p => {
+        predictionMap[p.studentId] = p;
+      });
+      
+      setAuditState({ predictions: predictionMap, isPredicting: false });
+    } catch (err) {
+      console.error("Prediction failed", err);
+      setAuditState({ 
+        error: "Failed to run AI risk analysis.", 
+        isPredicting: false 
+      });
+    }
+  }, [state.allStudents]);
+
   return {
     state: {
       ...state,
@@ -203,6 +246,7 @@ export function useStudentAudit(timetableId: string): {
       openResolutionModal,
       closeResolutionModal,
       submitResolution,
+      runRiskAnalysis, // Exportar nueva acción
     },
   };
 }

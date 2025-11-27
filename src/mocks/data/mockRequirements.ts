@@ -56,5 +56,11 @@ export const getMockRequirementIssues = (): Record<
       issueType: "AdminHold",
       details: "Financial hold on account.",
     },
+    {
+      studentId: 1099,
+      studentName: "Lucas Silva",
+      issueType: "CourseLoadLimit",
+      details: "Requesting overload approval based on high GPA.",
+    },
   ],
 });

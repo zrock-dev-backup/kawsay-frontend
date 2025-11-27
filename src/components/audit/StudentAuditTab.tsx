@@ -8,9 +8,12 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Typography,
+  Button,
+  CircularProgress,
 } from "@mui/material";
 import ViewComfyIcon from "@mui/icons-material/ViewComfy";
 import ViewCompactIcon from "@mui/icons-material/ViewCompact";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { StudentAuditGrid } from "./StudentAuditGrid";
 import { IssueResolutionModal } from "./IssueResolutionModal";
 import {
@@ -52,6 +55,24 @@ export const StudentAuditTab: React.FC<Props> = ({
           justifyContent: "space-between",
         }}
       >
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              {/* ... Select existente ... */}
+            </FormControl>
+            
+            {/* --- BOTÓN DE ANÁLISIS ML --- */}
+            <Button 
+                variant="outlined" 
+                color="secondary"
+                size="medium"
+                startIcon={state.isPredicting ? <CircularProgress size={16} color="inherit"/> : <AutoAwesomeIcon />}
+                onClick={actions.runRiskAnalysis}
+                disabled={state.isPredicting || state.students.length === 0}
+            >
+                {state.isPredicting ? "Analyzing..." : "Run AI Risk Analysis"}
+            </Button>
+        </Box>
+
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel>Filter by Status</InputLabel>
           <Select
@@ -106,6 +127,8 @@ export const StudentAuditTab: React.FC<Props> = ({
         onClearError={actions.clearError}
         resolvingStudentId={state.resolvingStudentId}
         density={density}
+        predictions={state.predictions}
+        isPredicting={state.isPredicting}
       />
 
       <IssueResolutionModal state={state} actions={actions} />
